@@ -16,6 +16,7 @@ import fr.sirs.util.StreamingIterable;
 import fr.sirs.util.FXFreeTab;
 import fr.sirs.util.DatePickerConverter;
 
+import fr.sirs.util.property.SirsPreferences;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -34,6 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
 import javafx.beans.value.ChangeListener;
@@ -771,7 +773,7 @@ else if (helper.isParcelleVegetation()){
                 } else if (ModelHelper.isReferenceType(eRef.getEReferenceType())) {
 %>
             final AbstractSIRSRepository<<%= helper.getClassName(eRef) %>> <%= eRef.getName()%>Repo = session.getRepositoryForClass(<%= helper.getClassName(eRef) %>.class);
-            SIRS.initCombo(ui_<%= eRef.getName()  %>, SIRS.observableList(<%= eRef.getName()%>Repo.getAll()), newElement.get<%= Helper.ucFirst(eRef.getName())  %>() == null? null : <%= eRef.getName()%>Repo.get(newElement.get<%= Helper.ucFirst(eRef.getName())  %>()));
+            SIRS.initCombo(ui_<%= eRef.getName()  %>, SIRS.observableList(<%= eRef.getName()%>Repo.getAll()), (newElement.get<%= Helper.ucFirst(eRef.getName())  %>() == null || newElement.get<%= Helper.ucFirst(eRef.getName())  %>().trim().isEmpty()) ? null : <%= eRef.getName()%>Repo.get(newElement.get<%= Helper.ucFirst(eRef.getName())  %>()));
 <%
                 } else {
 
@@ -782,8 +784,10 @@ else if (helper.isParcelleVegetation()){
 %>
         {
             final Preview linearPreview = newElement.get<%= Helper.ucFirst(eRef.getName())  %>() == null ? null : previewRepository.get(newElement.get<%= Helper.ucFirst(eRef.getName())  %>());
+            // HACK-REDMINE-4408 : hide archived troncons from selection lists
             SIRS.initCombo(ui_<%= eRef.getName()  %>, SIRS.observableList(
-                previewRepository.getByClass(linearPreview == null ? <%= helper.getClassName(eRef) %>.class : linearPreview.getJavaClassOr(<%= helper.getClassName(eRef) %>.class))).sorted(), linearPreview);
+                previewRepository.getByClass(linearPreview == null ? <%= helper.getClassName(eRef) %>.class : linearPreview.getJavaClassOr(<%= helper.getClassName(eRef) %>.class))).sorted(),
+                linearPreview, SirsPreferences.getHideArchivedProperty(), true);
         }
 <%
                 }
@@ -899,6 +903,8 @@ else if (helper.isParcelleVegetation()){
         }
     }
 
+
+
 /////////////////////////////////////////////////////////////////
 //
 //                     SAVING OPERATION
@@ -966,8 +972,16 @@ else if (helper.isParcelleVegetation()){
                 if(Helper.isOwnerReference(eRef)){
 %>
         // Reference principale : prevoir la suppression des documents qui ne seraient plus references
-        final ObservableList<String> toDeleteList<%= Helper.ucFirst(eRef.getName())%> = FXCollections.observableArrayList(element.get<%= Helper.ucFirst(eRef.getName())%>());
-        element.get<%= Helper.ucFirst(eRef.getName())%>().clear();
+        final List<String> toDeletes = element.get<%= Helper.ucFirst(eRef.getName())%>();
+        final ObservableList<String> toDeleteList<%= Helper.ucFirst(eRef.getName())%>;
+        if(toDeletes != null) {
+            toDeleteList<%= Helper.ucFirst(eRef.getName())%> = FXCollections.observableArrayList(toDeletes.stream().filter(it -> it != null).collect(java.util.stream.Collectors.toList()));
+            element.get<%= Helper.ucFirst(eRef.getName())%>().clear();
+        } else {
+            toDeleteList<%= Helper.ucFirst(eRef.getName())%> = FXCollections.observableArrayList();
+        }
+        // final ObservableList<String> toDeleteList<%= Helper.ucFirst(eRef.getName())%> = FXCollections.observableArrayList(element.get<%= Helper.ucFirst(eRef.getName())%>());
+        // element.get<%= Helper.ucFirst(eRef.getName())%>().clear();
 <%
                 }
                 if(eRef.getEOpposite()!=null){
@@ -1133,5 +1147,21 @@ else if (helper.isParcelleVegetation()){
         }
     }
 %>
+    }
+
+    /**
+     * Method called when closing the FXFreeTab containing this Pane.
+     * <p>
+     * This method is necessary as when reopening the element's pane,
+     * a new tab is created and the old one remains existing with its listeners,
+     * leading to as many calls to the listeners as the tab was closed/reopened
+     * <p>
+     * Method to be overriden in case more listeners are added in the FXPane of the element.
+     */
+    @Override
+    public void removeListenersBeforeClosingTab() {
+<% if(helper.hasBornesTemporelles() ) { %>
+            uiValidityPeriod.removeListeners();
+<%}%>
     }
 }

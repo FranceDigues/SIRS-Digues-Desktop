@@ -230,6 +230,56 @@
                   </GridPane>
                </content>
             </Tab>
+            <Tab fx:id="uiConfTab" text="Dossier de configuration">
+                <content>
+                  <GridPane hgap="10.0" vgap="10.0">
+                     <children>
+                        <Label text="Emplacement du dossier de configuration" GridPane.columnSpan="2" />
+                        <HBox spacing="5.0" GridPane.columnSpan="2147483647" GridPane.rowIndex="1">
+                           <children>
+                              <TextField fx:id="confFolderField" HBox.hgrow="ALWAYS" />
+                              <Button fx:id="chooConfButton" mnemonicParsing="false" text="Modifier" HBox.hgrow="NEVER" />
+                           </children>
+                        </HBox>
+                        <HBox GridPane.columnSpan="2147483647" GridPane.rowIndex="4">
+                           <children>
+                              <Label fx:id="uiConfInfo" style="-fx-font-weight: bold;" text="Cette modification nécessite le redémarage de l'application pour être prise en compte." HBox.hgrow="ALWAYS">
+                                 <HBox.margin>
+                                    <Insets right="10.0" />
+                                 </HBox.margin>
+                              </Label>
+                              <Button fx:id="uiRestartConfAppBtn" mnemonicParsing="false" text="Redémarrer" textFill="RED">
+                                 <HBox.margin>
+                                    <Insets right="5.0" />
+                                 </HBox.margin>
+                              </Button>
+                              <Button fx:id="uiUndoConfAppBtn" mnemonicParsing="false" text="Annuler" textFill="#221f1f" />
+                           </children>
+                        </HBox>
+                     </children>
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="NEVER" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                        <ColumnConstraints hgrow="NEVER" />
+                     </columnConstraints>
+                     <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </padding>
+                     <rowConstraints>
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                     </rowConstraints>
+                  </GridPane>
+                </content>
+            </Tab>
         </tabs>
       </TabPane>
    </center>

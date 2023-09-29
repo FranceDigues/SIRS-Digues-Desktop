@@ -27,25 +27,20 @@ import org.apache.sis.util.ArgumentChecks;
  */
 public enum ShowCasePossibility {
 
-    ABSTRACT("Abrégé", Boolean.TRUE),
-    FULL_NAME("Nom Complet", Boolean.FALSE),
-    BOTH("Abrégé : Nom Complet", null);
+    ABSTRACT("Abrégé"),
+    FULL_NAME("Nom Complet"),
+    BOTH("Abrégé : Nom Complet");
 
     public final String name;
-    public final Boolean booleanValue;
 
-    private ShowCasePossibility(final String name, final Boolean value) {
+    private ShowCasePossibility(final String name) {
         this.name = name;
-        this.booleanValue = value;
     }
 
     /**
      * Renvoie l'énum ShowCasePossibility associé à la chaîne de caractère en
  paramètre.
      *
-     * @param searchedString
-     * @return
-     * @throws IllegalArgumentException
      */
     public static ShowCasePossibility getFromName(String searchedString) throws IllegalArgumentException {
         ArgumentChecks.ensureNonNull("searchedString", searchedString);

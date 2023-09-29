@@ -23,27 +23,16 @@ import fr.sirs.SIRS;
 import fr.sirs.Session;
 import fr.sirs.core.component.Previews;
 import fr.sirs.core.component.SystemeReperageRepository;
-import fr.sirs.core.model.AvecForeignParent;
-import fr.sirs.core.model.DomanialiteLit;
-import fr.sirs.core.model.Element;
-import fr.sirs.core.model.LabelMapper;
-import fr.sirs.core.model.LargeurLit;
-import fr.sirs.core.model.Lit;
-import fr.sirs.core.model.OccupationRiveraineLit;
-import fr.sirs.core.model.OuvrageAssocieLit;
-import fr.sirs.core.model.PenteLit;
-import fr.sirs.core.model.Preview;
-import fr.sirs.core.model.RegimeEcoulementLit;
-import fr.sirs.core.model.SystemeReperage;
-import fr.sirs.core.model.TronconDigue;
-import fr.sirs.core.model.TronconLit;
-import fr.sirs.core.model.ZoneAtterrissementLit;
+import fr.sirs.core.model.*;
 import fr.sirs.digue.FXSystemeReperagePane;
 import fr.sirs.theme.AbstractTheme;
 import fr.sirs.theme.AbstractTheme.ThemeManager;
 import fr.sirs.theme.TronconTheme;
+import fr.sirs.theme.ui.pojotable.ElementCopier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -84,6 +73,7 @@ public class FXTronconLitPane extends AbstractFXElementPane<TronconLit> {
     @FXML protected TextArea ui_commentaire;
     @FXML protected ComboBox ui_litId;
     @FXML protected Button ui_litId_link;
+    @FXML ComboBox ui_typologieTronconId;
     @FXML protected ComboBox ui_systemeRepDefautId;
 
 
@@ -120,6 +110,7 @@ public class FXTronconLitPane extends AbstractFXElementPane<TronconLit> {
         ui_litId_link.setOnAction((ActionEvent e)->Injector.getSession().showEditionTab(ui_litId.getSelectionModel().getSelectedItem()));
         ui_libelle.disableProperty().bind(disableFieldsProperty());
         ui_commentaire.disableProperty().bind(disableFieldsProperty());
+        ui_typologieTronconId.disableProperty().bind(disableFieldsProperty());
         ui_systemeRepDefautId.disableProperty().bind(disableFieldsProperty());
 
         srController.editableProperty().bind(disableFieldsProperty().not());
@@ -193,6 +184,10 @@ public class FXTronconLitPane extends AbstractFXElementPane<TronconLit> {
         ui_libelle.textProperty().bindBidirectional(newElement.libelleProperty());
         // * commentaire
         ui_commentaire.textProperty().bindBidirectional(newElement.commentaireProperty());
+        // * Typologie
+        SIRS.initCombo(ui_typologieTronconId, SIRS.observableList(
+                        previewRepository.getByClass(RefTypologieTroncon.class)).sorted(),
+                newElement.getTypologieTronconId() == null ? null : previewRepository.get(newElement.getTypologieTronconId()));
 
         final SystemeReperageRepository srRepo = Injector.getBean(SystemeReperageRepository.class);
         final SystemeReperage defaultSR = newElement.getSystemeRepDefautId() == null? null : srRepo.get(newElement.getSystemeRepDefautId());;
@@ -307,8 +302,7 @@ public class FXTronconLitPane extends AbstractFXElementPane<TronconLit> {
 
     @Override
     public void preSave() {
-        final Session session = Injector.getBean(Session.class);
-        final TronconLit element = (TronconLit) elementProperty().get();
+        final TronconLit element = elementProperty().get();
 
         Object cbValue;
         cbValue = ui_litId.getValue();
@@ -328,6 +322,18 @@ public class FXTronconLitPane extends AbstractFXElementPane<TronconLit> {
         } else if (cbValue == null) {
             element.setSystemeRepDefautId(null);
         }
+
+        cbValue = ui_typologieTronconId.getValue();
+        if (cbValue instanceof Preview) {
+            element.setTypologieTronconId(((Preview)cbValue).getElementId());
+        } else if (cbValue instanceof Element) {
+            element.setTypologieTronconId(((Element)cbValue).getId());
+        } else if (cbValue == null) {
+            element.setTypologieTronconId(null);
+        } else {
+            SIRS.LOGGER.log(Level.WARNING, "Value not supported for TronconLit ui_typologieTronconId : {0}", ui_typologieTronconId);
+        }
+
     }
 
     protected class LitThemePojoTable<T extends AvecForeignParent> extends ForeignParentPojoTable<T>{
@@ -338,6 +344,7 @@ public class FXTronconLitPane extends AbstractFXElementPane<TronconLit> {
             super(group.getDataClass(), group.getTableTitle(), container);
             foreignParentIdProperty.addListener(this::updateTable);
             this.group = group;
+            this.elementCopier = new ElementCopier(this.pojoClass, container, this.session, this.repo, TronconLit.class);
         }
 
         private void updateTable(ObservableValue<? extends String> observable, String oldValue, String newValue){

@@ -20,18 +20,19 @@ package fr.sirs.ui;
 
 import fr.sirs.SIRS;
 import fr.sirs.util.SaveableConfiguration;
-import fr.sirs.util.SirsStringConverter;
 import fr.sirs.util.property.SirsPreferences;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javafx.beans.DefaultProperty;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
@@ -40,7 +41,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -50,7 +50,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-import static javafx.scene.layout.Region.USE_COMPUTED_SIZE;
 import org.apache.sis.util.ArgumentChecks;
 
 /**
@@ -66,12 +65,14 @@ public class FXSirsPreferenceEditor extends ScrollPane implements SaveableConfig
     private static final HashMap<SirsPreferences.PROPERTIES, Node> EDITOR_OVERRIDES = new HashMap<>();
     static {
         EDITOR_OVERRIDES.put(SirsPreferences.PROPERTIES.DESIGNATION_AUTO_INCREMENT, new IncrementCheckBox());
-        
+
         EDITOR_OVERRIDES.put(SirsPreferences.PROPERTIES.ABSTRACT_SHOWCASE, new ShowCaseComboBox());
+
+        EDITOR_OVERRIDES.put(SirsPreferences.PROPERTIES.HIDE_ARCHIVED_PARENT, new ArchivedParentCheckBox());
     }
 
     final ObservableMap<SirsPreferences.PROPERTIES, String> editedProperties = FXCollections.observableHashMap();
-    
+
     public FXSirsPreferenceEditor() {
         final GridPane propertyPane = new GridPane();
         propertyPane.setAlignment(Pos.CENTER);
@@ -87,8 +88,20 @@ public class FXSirsPreferenceEditor extends ScrollPane implements SaveableConfig
         propertyPane.setHgap(10);
         propertyPane.setPadding(new Insets(10));
 
+        // We don't want basemap properties appear in general property configuration.
+        final List<SirsPreferences.PROPERTIES> withoutBasemapProp = Arrays.stream(SirsPreferences.PROPERTIES.values())
+                .filter(p ->
+                        !SirsPreferences.PROPERTIES.BASEMAP_CHOICE.equals(p) &&
+                        !SirsPreferences.PROPERTIES.BASEMAP_FILE_TYPE.equals(p) &&
+                        !SirsPreferences.PROPERTIES.BASEMAP_LOCAL_FILE.equals(p) &&
+                        !SirsPreferences.PROPERTIES.BASEMAP_OSM_TILE_URL.equals(p) &&
+                        !SirsPreferences.PROPERTIES.BASEMAP_WM_TYPE.equals(p) &&
+                        !SirsPreferences.PROPERTIES.BASEMAP_WM_URL.equals(p)
+                )
+                .collect(Collectors.toList());
+
         int row = 0;
-        for (final SirsPreferences.PROPERTIES p : SirsPreferences.PROPERTIES.values()) {
+        for (final SirsPreferences.PROPERTIES p : withoutBasemapProp) {
             final Label propLibelle = new Label(p.title);
             propLibelle.setTooltip(new Tooltip(p.description));
             propertyPane.add(propLibelle, 0, row);

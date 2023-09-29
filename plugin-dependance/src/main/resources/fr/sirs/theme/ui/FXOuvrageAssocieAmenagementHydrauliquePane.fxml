@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import fr.sirs.theme.ui.*?>
+<?import fr.sirs.util.FXFreeTab?>
+<?import org.geotoolkit.gui.javafx.util.*?>
+<?import jidefx.scene.control.field.*?>
+<?import jfxtras.scene.control.*?>
+<?import javafx.scene.web.*?>
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+
+
+<fx:root fx:id="uiBorderPane" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <center>
+        <TabPane TabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+            <tabs>
+
+                <!-- ATTRIBUTE TAB-->
+                <Tab text="Informations">
+                    <ScrollPane>
+                        <content>
+                            <VBox spacing="30.0" BorderPane.alignment="CENTER">
+                                <children>
+
+                                    <FXValidityPeriodPane fx:id="uiValidityPeriod"/>
+
+                                    <!-- AbstractAmenagementHydraulique -->
+                                    <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="NEVER" />
+                                            <ColumnConstraints hgrow="ALWAYS" />
+                                        </columnConstraints>
+                                        <children>
+                                            <Label text="%amenagementHydrauliqueId" GridPane.rowIndex="0" />
+                                            <ComboBox fx:id="ui_amenagementHydrauliqueId" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                            <Button fx:id="ui_amenagementHydrauliqueId_link" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+
+                                        </children>
+                                        <padding>
+                                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                        </padding>
+                                    </GridPane>
+
+                                    <!-- FORM WHICH WILL CONTAIN ALL SIMPLE EDITORS -->
+                                    <FXPositionDependancePane fx:id="uiPosition" />
+                                    
+                                    <!-- INNER STRUCTURE -->
+                                    <VBox>
+                                        <children>
+                                            <HBox alignment="CENTER_LEFT" styleClass="pos-top">
+                                                <children>
+                                                    <Label styleClass="label-header" text="Information de structure" />
+                                                </children>
+                                                <padding>
+                                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                                </padding>
+                                            </HBox>
+                                            <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+                                                <columnConstraints>
+                                                    <ColumnConstraints hgrow="NEVER" />
+                                                    <ColumnConstraints hgrow="ALWAYS" />
+                                                </columnConstraints>
+                                                <children>
+                                                    <Label text="%typeId" GridPane.rowIndex="0" />
+                                                    <ComboBox fx:id="ui_typeId" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                                    <Label text="%libelle" GridPane.rowIndex="1" />
+                                                    <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="1"  />
+
+                                                    <Label text="%numCouche" GridPane.rowIndex="2"/>
+                                                    <Spinner fx:id="ui_numCouche" GridPane.columnIndex="1" GridPane.rowIndex="2"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+
+                                                    <Label text="%sourceId" GridPane.rowIndex="3" />
+                                                    <ComboBox fx:id="ui_sourceId" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                                                    <Label text="%materiauId" GridPane.rowIndex="4" />
+                                                    <ComboBox fx:id="ui_materiauId" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                                                    <Label text="%diametre" GridPane.rowIndex="5" />
+                                                    <Spinner fx:id="ui_diametre" GridPane.columnIndex="1" GridPane.rowIndex="5"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+
+                                                    <Label text="%cote" GridPane.rowIndex="6" />
+                                                    <Spinner fx:id="ui_cote" GridPane.columnIndex="1" GridPane.rowIndex="6"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+
+                                                    <Label text="%section" GridPane.rowIndex="7" />
+                                                    <Spinner fx:id="ui_section" GridPane.columnIndex="1" GridPane.rowIndex="7"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+
+                                                    <Label text="%etatId" GridPane.rowIndex="8" />
+                                                    <ComboBox fx:id="ui_etatId" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+
+                                                    <Label text="%fonctionnementId" GridPane.rowIndex="9" />
+                                                    <ComboBox fx:id="ui_fonctionnementId" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+
+                                                </children>
+                                                <padding>
+                                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                                </padding>
+                                            </GridPane>
+                                        </children>
+                                    </VBox>
+
+                                    <!-- OuvrageAssocieAmenagementHydraulique -->
+                                    <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="NEVER" />
+                                            <ColumnConstraints hgrow="ALWAYS" />
+                                        </columnConstraints>
+                                        <children>
+                                            <Label text="%superficie" GridPane.rowIndex="0" />
+                                            <Spinner fx:id="ui_superficie" GridPane.columnIndex="1" GridPane.rowIndex="0"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                                            
+                                            <Label text="%hauteur" GridPane.rowIndex="1" />
+                                            <Spinner fx:id="ui_hauteur" GridPane.columnIndex="1" GridPane.rowIndex="1"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                                            
+                                            <Label text="%profondeur" GridPane.rowIndex="2" />
+                                            <Spinner fx:id="ui_profondeur" GridPane.columnIndex="1" GridPane.rowIndex="2"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                                            
+                                            <Label text="%nombre" GridPane.rowIndex="3" />
+                                            <Spinner fx:id="ui_nombre" GridPane.columnIndex="1" GridPane.rowIndex="3"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                                            
+                                            <Label text="%ouvrageDeversant" GridPane.rowIndex="4" />
+                                            <CheckBox fx:id="ui_ouvrageDeversant" GridPane.columnIndex="1" GridPane.rowIndex="4"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+
+                                        </children>
+                                        <padding>
+                                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                        </padding>
+                                    </GridPane>
+
+                                    <TextArea fx:id="ui_commentaire" maxHeight="-Infinity"  prefHeight="200.0" />
+
+                                </children>
+                                <padding>
+                                    <Insets bottom="10.0" left="50.0" right="50.0" top="30.0" />
+                                </padding>
+                            </VBox>
+                        </content>
+                    </ScrollPane>
+                </Tab>
+
+                <!-- REFERENCE TABS -->
+                <FXFreeTab fx:id="ui_amenagementHydrauliqueAssocieIds" text="%amenagementHydrauliqueAssocieIds"/>
+                <FXFreeTab fx:id="ui_desordreDependanceAssocieIds" text="%desordreDependanceAssocieIds"/>
+                <FXFreeTab fx:id="ui_proprietaireIds" text="%proprietaireIds"/>
+                <FXFreeTab fx:id="ui_gestionnaireIds" text="%gestionnaireIds"/>
+                <FXFreeTab fx:id="ui_observations" text="%observations"/>
+                <FXFreeTab fx:id="ui_photos" text="%photos"/>
+
+            </tabs>
+        </TabPane>
+    </center>
+
+</fx:root>
+

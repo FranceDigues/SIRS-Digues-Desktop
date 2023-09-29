@@ -2,7 +2,7 @@
  * This file is part of SIRS-Digues 2.
  *
  * Copyright (C) 2016, FRANCE-DIGUES,
- * 
+ *
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
@@ -20,14 +20,19 @@ package fr.sirs.owc;
 
 import fr.sirs.Injector;
 import fr.sirs.Plugin;
+import fr.sirs.Plugin.MigrationNames;
 import fr.sirs.Plugins;
+import javafx.scene.control.TableColumn;
 import org.geotoolkit.owc.xml.OwcExtension;
 import fr.sirs.Session;
 import fr.sirs.core.SirsCore;
+
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
+
 import org.apache.sis.referencing.CommonCRS;
 import org.apache.sis.storage.DataStoreException;
 import org.geotoolkit.data.FeatureCollection;
@@ -46,7 +51,9 @@ import org.geotoolkit.map.MapBuilder;
 import org.geotoolkit.map.MapItem;
 import org.geotoolkit.map.MapLayer;
 import org.geotoolkit.owc.gtkext.ParameterType;
+
 import static org.geotoolkit.owc.xml.OwcMarshallerPool.*;
+
 import org.geotoolkit.ogc.xml.v110.FilterType;
 import org.geotoolkit.owc.xml.v10.OfferingType;
 import org.geotoolkit.se.xml.v110.ParameterValueType;
@@ -118,13 +125,17 @@ public class OwcExtensionSirs extends OwcExtension {
                 final ParameterType param = (ParameterType) field;
                 if (Plugin.PLUGIN_FLAG.equals(param.getKey())) {
                     pluginName = param.getValue();
+                    // HACK_REDMINE_7732 - Allow the upload of old contextes carto created before a plugin change of name
+                    pluginName = Plugin.MigrationNames.migrate(pluginName);
                 } else if (KEY_LAYER_NAME.equals(param.getKey())) {
                     layerName = param.getValue();
+                    // HACK_REDMINE_7732 - Allow the upload of old contextes carto created before a layerName change of name
+                    layerName= Plugin.MigrationNames.migrate(layerName);
                 } else if (KEY_SQLQUERY.equals(param.getKey())) {
                     sqlQuery = param.getValue();
                 }
             }
-            if(field instanceof FilterType){
+            if (field instanceof FilterType) {
                 try {
 //                    final StyleXmlIO io = new StyleXmlIO();
                     filter = STYLE_XML_IO.getTransformer110().visitFilter((FilterType)field);
@@ -289,5 +300,4 @@ public class OwcExtensionSirs extends OwcExtension {
         }
         return null;
     }
-
 }

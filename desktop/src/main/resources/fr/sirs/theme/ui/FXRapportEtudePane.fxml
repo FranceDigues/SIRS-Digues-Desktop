@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import fr.sirs.util.FXFileTextField?>
+<?import fr.sirs.util.FXFreeTab?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<fx:root fx:id="uiBorderPane" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+  <center>
+    <TabPane TabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+      <tabs>
+
+<!-- ATTRIBUTE TAB-->
+        <Tab text="Informations">
+          <ScrollPane>
+            <content>
+          <VBox spacing="30.0" BorderPane.alignment="CENTER">
+            <children>
+
+            <HBox fx:id="ui_parent_box" spacing="20.0" alignment="CENTER_LEFT" styleClass="gray-light">
+              <children>
+                <Label fx:id="systemeEndiguementId" text="%systemeEndiguementId" maxHeight="-Infinity" maxWidth="-Infinity"/>
+                <ComboBox fx:id="ui_systemeEndiguementId"/>
+                <Button fx:id="ui_systemeEndiguementId_link"/>
+              </children>
+              <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+              </padding>
+            </HBox>
+
+
+<!-- FORM WHICH WILL CONTAIN ALL SIMPLE EDITORS -->
+            <!-- Rapport Etude -->
+            <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="NEVER" />
+                <ColumnConstraints hgrow="ALWAYS" />
+              </columnConstraints>
+              <children>
+                   <!-- EString -->
+                   <Label text="%auteur" GridPane.rowIndex="0" />
+                   <TextField fx:id="ui_auteur" GridPane.columnIndex="1" GridPane.rowIndex="0"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                  <!-- EDate -->
+                  <Label text="%date" GridPane.rowIndex="1" />
+                  <DatePicker fx:id="ui_date" GridPane.columnIndex="1" GridPane.rowIndex="1"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                  <!-- EString -->
+                  <Label text="%libelle" GridPane.rowIndex="2" />
+                  <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="2"  />
+                  <Label text="%typeRapportEtudeId" GridPane.rowIndex="3" />
+                  <ComboBox fx:id="ui_typeRapportEtudeId" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                  <Button fx:id="ui_typeRapportEtudeId_link" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+
+              </children>
+              <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+              </padding>
+            </GridPane>
+            <!-- Rapport Etude -->
+            <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="NEVER"/>
+                    <ColumnConstraints hgrow="ALWAYS"/>
+                </columnConstraints>
+                <children>
+                    <!-- EString -->
+                    <Label text="%referencePapier" GridPane.rowIndex="0"/>
+                    <TextField fx:id="ui_referencePapier" GridPane.columnIndex="1" GridPane.rowIndex="0" maxHeight="-Infinity" maxWidth="-Infinity"/>
+                    <!-- EString -->
+                    <Label text="%chemin" GridPane.rowIndex="1" />
+                    <FXFileTextField fx:id="ui_chemin" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                </children>
+                <padding>
+                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                </padding>
+            </GridPane>
+            <TextArea fx:id="ui_commentaire" maxHeight="-Infinity"  prefHeight="200.0" />
+
+            </children>
+            <padding>
+              <Insets bottom="10.0" left="50.0" right="50.0" top="30.0" />
+            </padding>
+          </VBox>
+            </content>
+          </ScrollPane>
+        </Tab>
+
+<!-- REFERENCE TABS -->
+        <FXFreeTab fx:id="ui_prestationIds" text="%prestationIds"/>
+        <Tab fx:id="ui_positionDocument" text="%positionDocument"/>
+      </tabs>
+    </TabPane>
+  </center>
+
+</fx:root>

@@ -34,6 +34,7 @@ import org.apache.sis.measure.Range;
  * une période de temps.
  *
  * @author Samuel Andrés (Geomatys)
+ * @author Maxime Gavens (Geomatys)
  */
 public abstract class TemporalTronconChoicePrintPane extends TronconChoicePrintPane {
 
@@ -43,14 +44,23 @@ public abstract class TemporalTronconChoicePrintPane extends TronconChoicePrintP
     protected DatePicker uiOptionFin;
 
     @FXML
-    protected DatePicker uiOptionDebutArchive;
+    protected DatePicker uiOptionDebutLastObservation;
     @FXML
-    protected DatePicker uiOptionFinArchive;
+    protected DatePicker uiOptionFinLastObservation;
 
     @FXML
     protected CheckBox uiOptionNonArchive;
     @FXML
+    protected DatePicker uiOptionDebutNonArchive;
+    @FXML
+    protected DatePicker uiOptionFinNonArchive;
+
+    @FXML
     protected CheckBox uiOptionArchive;
+    @FXML
+    protected DatePicker uiOptionDebutArchive;
+    @FXML
+    protected DatePicker uiOptionFinArchive;
 
     public TemporalTronconChoicePrintPane(final Class forBundle) {
         super(forBundle);
@@ -64,13 +74,19 @@ public abstract class TemporalTronconChoicePrintPane extends TronconChoicePrintP
                 }
                 uiOptionDebutArchive.setValue(null);
                 uiOptionFinArchive.setValue(null);
+            } else {
+                uiOptionDebutNonArchive.setValue(null);
+                uiOptionFinNonArchive.setValue(null);
             }
         });
         uiOptionArchive.selectedProperty().addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
-            if (newValue && uiOptionNonArchive.isSelected()) {
-                uiOptionNonArchive.setSelected(false);
-            }
-            else {
+            if (newValue) {
+                if (uiOptionNonArchive.isSelected()) {
+                    uiOptionNonArchive.setSelected(false);
+                }
+                uiOptionDebutNonArchive.setValue(null);
+                uiOptionFinNonArchive.setValue(null);
+            } else {
                 uiOptionDebutArchive.setValue(null);
                 uiOptionFinArchive.setValue(null);
             }
@@ -78,11 +94,17 @@ public abstract class TemporalTronconChoicePrintPane extends TronconChoicePrintP
 
         uiOptionDebutArchive.disableProperty().bind(uiOptionNonArchive.selectedProperty());
         uiOptionFinArchive.disableProperty().bind(uiOptionNonArchive.selectedProperty());
+        uiOptionDebutNonArchive.disableProperty().bind(uiOptionArchive.selectedProperty());
+        uiOptionFinNonArchive.disableProperty().bind(uiOptionArchive.selectedProperty());
 
         DatePickerConverter.register(uiOptionDebut);
         DatePickerConverter.register(uiOptionFin);
         DatePickerConverter.register(uiOptionDebutArchive);
         DatePickerConverter.register(uiOptionFinArchive);
+        DatePickerConverter.register(uiOptionDebutNonArchive);
+        DatePickerConverter.register(uiOptionFinNonArchive);
+        DatePickerConverter.register(uiOptionDebutLastObservation);
+        DatePickerConverter.register(uiOptionFinLastObservation);
     }
 
     /**
@@ -101,6 +123,7 @@ public abstract class TemporalTronconChoicePrintPane extends TronconChoicePrintP
 
         final Range<LocalDate> selectedRange;
         final Range<LocalDate> archiveRange;
+        final Range<LocalDate> nonArchiveRange;
 
         TemporalPredicate() {
             if (uiOptionNonArchive.isSelected())
@@ -112,10 +135,18 @@ public abstract class TemporalTronconChoicePrintPane extends TronconChoicePrintP
 
             LocalDate start = uiOptionDebutArchive.getValue();
             LocalDate end = uiOptionFinArchive.getValue();
-            if (archiveOption < 0 || (start == null && end == null)) {
+            if (archiveOption == -1 || (start == null && end == null)) {
                 archiveRange = null;
             } else {
                 archiveRange = new Range<>(LocalDate.class, start == null? LocalDate.MIN : start, true, end == null? LocalDate.MAX : end, true);
+            }
+
+            start = uiOptionDebutNonArchive.getValue();
+            end = uiOptionFinNonArchive.getValue();
+            if (archiveOption == 1 || (start == null && end == null)) {
+                nonArchiveRange = null;
+            } else {
+                nonArchiveRange = new Range<>(LocalDate.class, start == null? LocalDate.MIN : start, true, end == null? LocalDate.MAX : end, true);
             }
 
             start = uiOptionDebut.getValue();
@@ -129,13 +160,21 @@ public abstract class TemporalTronconChoicePrintPane extends TronconChoicePrintP
 
         @Override
         public boolean test(AvecBornesTemporelles input) {
-            if (archiveOption < 0 && input.getDate_fin() != null)
-                return false;
-            else if (archiveOption > 0 && input.getDate_fin() == null)
-                return false;
-
-            if (archiveRange != null && !archiveRange.contains(input.getDate_fin()))
-                return false;
+            // Si on choisit "exclure les éléments archivés"..
+            if (archiveOption == -1) {
+                // on retire l'élément s'il est archivé et..
+                if (input.getDate_fin() != null
+                        // que l'intervalle est nulle ou qu'il contient l'élément
+                        && (nonArchiveRange == null || nonArchiveRange.contains(input.getDate_fin())))
+                    return false;
+            // Si on choisit "inclure les éléments archivés"..
+            } else if (archiveOption == 1) {
+                // On rétire les éléments non archivés
+                if (input.getDate_fin() == null) return false;
+                // Si un intervalle temporel est donné, on rétire les éléments
+                // archivés en dehors de l'intervalle.
+                if (archiveRange != null && !archiveRange.contains(input.getDate_fin())) return false;
+            }
 
             return selectedRange == null || selectedRange.contains(input.getDate_debut());
         }

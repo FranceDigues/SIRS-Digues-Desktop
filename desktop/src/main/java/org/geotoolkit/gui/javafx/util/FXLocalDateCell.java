@@ -1,18 +1,18 @@
 /**
  * This file is part of SIRS-Digues 2.
- *
+ * <p>
  * Copyright (C) 2016, FRANCE-DIGUES,
- *
+ * <p>
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- *
+ * <p>
  * SIRS-Digues 2 is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * SIRS-Digues 2. If not, see <http://www.gnu.org/licenses/>
  */
@@ -21,13 +21,8 @@ package org.geotoolkit.gui.javafx.util;
 import fr.sirs.util.DatePickerConverter;
 import java.time.LocalDate;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TableCell;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -54,18 +49,21 @@ public class FXLocalDateCell<S> extends TableCell<S, LocalDate> {
         setContentDisplay(ContentDisplay.CENTER);
         del.setPrefSize(16, 16);
         del.setFocusTraversable(false);
-        del.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if (isEditing()) {
-                    commitEdit(null);
-                }
+        del.setOnAction(event -> {
+            if (isEditing()) {
+                commitEdit(null);
             }
         });
         del.setStyle("-fx-background-color:transparent; -fx-focus-color: transparent;");
         field.setOnAction(event -> commitEdit(field.getValue()));
         DatePickerConverter.register(field);
     }
+
+    public FXLocalDateCell(final boolean blockDateInFuture) {
+        this();
+        if (blockDateInFuture) blockDateInFuture();
+    }
+
 
     @Override
     public void startEdit() {
@@ -103,6 +101,16 @@ public class FXLocalDateCell<S> extends TableCell<S, LocalDate> {
         else {
             setText(item.toString());
         }
+    }
+
+    protected void blockDateInFuture() {
+        field.setDayCellFactory(param -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                setDisable(empty || date.isAfter(LocalDate.now()));
+            }
+        });
     }
 }
 

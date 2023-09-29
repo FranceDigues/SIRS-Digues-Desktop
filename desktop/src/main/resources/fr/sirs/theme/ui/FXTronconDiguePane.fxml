@@ -1,18 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import fr.sirs.util.FXFreeTab?>
 <?import fr.sirs.theme.ui.FXValidityPeriodPane?>
-<?import fr.sirs.*?>
-<?import javafx.scene.effect.*?>
-<?import org.geotoolkit.gui.javafx.util.*?>
+<?import fr.sirs.theme.ui.FXAmenagementHydrauliqueAttachementPane?>
 <?import jfxtras.scene.control.*?>
-<?import javafx.scene.web.*?>
-<?import java.net.*?>
-<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
 <fx:root prefHeight="768.0" prefWidth="1024.0" type="BorderPane" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1">
     <center>
@@ -21,95 +15,99 @@
                 <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" style="-fx-background-color: rgb(245,245,245);" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
                     <tabs>
                         <!-- ATTRIBUTE TAB-->
-        <Tab text="Informations">
-          <ScrollPane>
-            <content>
-          <VBox spacing="30.0" BorderPane.alignment="CENTER">
-            <children>
+                        <Tab text="Informations">
+                            <ScrollPane>
+                                <content>
+                                    <VBox spacing="30.0" BorderPane.alignment="CENTER">
+                                        <children>
 
-  <FXValidityPeriodPane fx:id="uiValidityPeriod"/>
+                                            <FXValidityPeriodPane fx:id="uiValidityPeriod"/>
+                                            <FXAmenagementHydrauliqueAttachementPane fx:id="uiAmenagementHydrauliqueAttachement"/>
 
-<!-- FORM WHICH WILL CONTAIN ALL SIMPLE EDITORS -->
+                                            <!-- FORM WHICH WILL CONTAIN ALL SIMPLE EDITORS -->
 
 
-            <!-- TronconDigue -->
-            <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
-              <columnConstraints>
-                <ColumnConstraints hgrow="NEVER" />
-                <ColumnConstraints hgrow="ALWAYS" fillWidth="true" />
-                <ColumnConstraints hgrow="SOMETIMES" fillWidth="true" />
-              </columnConstraints>
-              <!--rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-              </rowConstraints-->
-              <children>
-                   <!-- EString -->                 
-                   <Label text="%libelle" GridPane.rowIndex="0" />
-                   <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
-                   <Label text="%digueId" GridPane.rowIndex="1" />
-                   <ComboBox fx:id="ui_digueId" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                   <Button fx:id="ui_digueId_link" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                   <Label text="%typeRiveId" GridPane.rowIndex="2" />
-                   <ComboBox fx:id="ui_typeRiveId" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                   <Label text="%typeTronconId" GridPane.rowIndex="3" />
-                   <ComboBox fx:id="ui_typeTronconId" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                   <Label text="%systemeRepDefautId" GridPane.rowIndex="4" />
-                   <ComboBox fx:id="ui_systemeRepDefautId" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                            <!-- TronconDigue -->
+                                            <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+                                                <columnConstraints>
+                                                    <ColumnConstraints hgrow="NEVER" />
+                                                    <ColumnConstraints hgrow="ALWAYS" fillWidth="true" />
+                                                    <ColumnConstraints hgrow="SOMETIMES" fillWidth="true" />
+                                                </columnConstraints>
+                                                <!--rowConstraints>
+                                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                </rowConstraints-->
+                                                <children>
+                                                    <!-- EString -->
+                                                    <Label text="%libelle" GridPane.rowIndex="0" />
+                                                    <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
+                                                    <Label text="%digueId" GridPane.rowIndex="1" />
+                                                    <ComboBox fx:id="ui_digueId" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                                    <Button fx:id="ui_digueId_link" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                                                    <Label text="%typeRiveId" GridPane.rowIndex="2" />
+                                                    <ComboBox fx:id="ui_typeRiveId" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                                    <Label text="%typeTronconId" GridPane.rowIndex="3" />
+                                                    <ComboBox fx:id="ui_typeTronconId" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                                    <Label text="%typologieTronconId" GridPane.rowIndex="4" />
+                                                    <ComboBox fx:id="ui_typologieTronconId" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                                    <Label text="%systemeRepDefautId" GridPane.rowIndex="5" />
+                                                    <ComboBox fx:id="ui_systemeRepDefautId" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
-              </children>
-              <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-              </padding>
-            </GridPane>
-            <TextArea fx:id="ui_commentaire" maxHeight="-Infinity"  prefHeight="200.0" />
+                                                </children>
+                                                <padding>
+                                                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                                </padding>
+                                            </GridPane>
+                                            <TextArea fx:id="ui_commentaire" maxHeight="-Infinity"  prefHeight="200.0" />
 
-            </children>
-            <padding>
-              <Insets bottom="10.0" left="50.0" right="50.0" top="30.0" />
-            </padding>
-          </VBox>
-            </content>
-          </ScrollPane>
-        </Tab>
+                                        </children>
+                                        <padding>
+                                            <Insets bottom="10.0" left="50.0" right="50.0" top="30.0" />
+                                        </padding>
+                                    </VBox>
+                                </content>
+                            </ScrollPane>
+                        </Tab>
                         <Tab text="Systèmes de repérage">
-                     <content>
-                        <SplitPane dividerPositions="0.5" prefHeight="200.0" prefWidth="200.0">
-                           <items>
-                              <BorderPane maxWidth="300.0">
-                                 <center>
-                                    <ListView fx:id="uiSRList" BorderPane.alignment="CENTER" />
-                                 </center>
-                                 <top>
-                                    <GridPane styleClass="buttonbar" BorderPane.alignment="CENTER">
-                                      <columnConstraints>
-                                        <ColumnConstraints hgrow="ALWAYS" />
-                                        <ColumnConstraints hgrow="NEVER" />
-                                          <ColumnConstraints hgrow="SOMETIMES" />
-                                      </columnConstraints>
-                                      <rowConstraints>
-                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                                      </rowConstraints>
-                                       <children>
-                                          <Label styleClass="label-header" text="Système de repérage">
-                                             <GridPane.margin>
-                                                <Insets left="10.0" />
-                                             </GridPane.margin>
-                                          </Label>
-                                          <Button fx:id="uiSRAdd" mnemonicParsing="false" onAction="#srAdd" styleClass="btn-without-style" GridPane.columnIndex="1" />
-                                          <Button fx:id="uiSRDelete" mnemonicParsing="false" onAction="#srDelete" styleClass="btn-without-style" GridPane.columnIndex="2" />
-                                       </children>
-                                    </GridPane>
-                                 </top>
-                              </BorderPane>
-                              <BorderPane fx:id="uiSrTab" />
-                           </items>
-                        </SplitPane>
-                     </content>
+                            <content>
+                                <SplitPane dividerPositions="0.5" prefHeight="200.0" prefWidth="200.0">
+                                    <items>
+                                        <BorderPane maxWidth="300.0">
+                                            <center>
+                                                <ListView fx:id="uiSRList" BorderPane.alignment="CENTER" />
+                                            </center>
+                                            <top>
+                                                <GridPane styleClass="buttonbar" BorderPane.alignment="CENTER">
+                                                    <columnConstraints>
+                                                        <ColumnConstraints hgrow="ALWAYS" />
+                                                        <ColumnConstraints hgrow="NEVER" />
+                                                        <ColumnConstraints hgrow="SOMETIMES" />
+                                                    </columnConstraints>
+                                                    <rowConstraints>
+                                                        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                                    </rowConstraints>
+                                                    <children>
+                                                        <Label styleClass="label-header" text="Système de repérage">
+                                                            <GridPane.margin>
+                                                                <Insets left="10.0" />
+                                                            </GridPane.margin>
+                                                        </Label>
+                                                        <Button fx:id="uiSRAdd" mnemonicParsing="false" onAction="#srAdd" styleClass="btn-without-style" GridPane.columnIndex="1" />
+                                                        <Button fx:id="uiSRDelete" mnemonicParsing="false" onAction="#srDelete" styleClass="btn-without-style" GridPane.columnIndex="2" />
+                                                    </children>
+                                                </GridPane>
+                                            </top>
+                                        </BorderPane>
+                                        <BorderPane fx:id="uiSrTab" />
+                                    </items>
+                                </SplitPane>
+                            </content>
                         </Tab>
                         <Tab fx:id="uiGestionsTab" text="Gestionnaires" />
-                  <Tab fx:id="uiProprietesTab" text="Propriétaires" />
-                  <Tab fx:id="uiGardesTab" text="Gardiens" />
+                        <Tab fx:id="uiProprietesTab" text="Propriétaires" />
+                        <Tab fx:id="uiGardesTab" text="Gardiens" />
+                        <FXFreeTab fx:id="ui_photos" text="Photos" />
                     </tabs>
                     <BorderPane.margin>
                         <Insets />

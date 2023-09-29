@@ -56,15 +56,16 @@ import org.opengis.util.GenericName;
 public class PluginCarto extends Plugin {
     private static final String NAME = "plugin-carto";
     private static final String TITLE = "Module cartographie";
+    private static final int TIMEOUT = 60000;
 
     /**
      * List available service types.
      * TODO : transform this shit into SPI/ Factory.
      */
     public static enum SERVICE implements BiFunction<URL, ClientSecurity, DataStore> {
-        WMS_111("WMS - 1.1.1", (url, auth) -> new WebMapClient(url, auth, WMSVersion.v111)),
-        WMS_130("WMS - 1.3.0", (url, auth) -> new WebMapClient(url, auth, WMSVersion.v130)),
-        WMTS_100("WMTS - 1.0.0", (url, auth) -> new WebMapTileClient(url, auth, WMTSVersion.v100));
+        WMS_111("WMS - 1.1.1", (url, auth) -> new WebMapClient(url, auth, WMSVersion.v111, TIMEOUT)),
+        WMS_130("WMS - 1.3.0", (url, auth) -> new WebMapClient(url, auth, WMSVersion.v130, TIMEOUT)),
+        WMTS_100("WMTS - 1.0.0", (url, auth) -> new WebMapTileClient(url, auth, WMTSVersion.v100, TIMEOUT));
 
         public final String title;
         private final BiFunction<URL, ClientSecurity, DataStore> connector;

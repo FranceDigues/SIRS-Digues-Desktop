@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
+import fr.sirs.util.MouseSelectionUtils;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -44,7 +45,6 @@ import javafx.scene.effect.Light.Point;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
@@ -100,7 +100,7 @@ public class FXOpenElementEditorAction extends FXMapAction {
 
         private final AbstractMouseHandler mouseListener;
 
-        final Rectangle selection = new Rectangle();
+        final Rectangle selection = MouseSelectionUtils.defaultRectangle();
         final Point anchor = new Point();
 
         public OpenElementEditorHandler(final FXMap map) {
@@ -123,30 +123,10 @@ public class FXOpenElementEditorAction extends FXMapAction {
             //====================================
 
             Pane root = this.decorationPane;
-//            final Rectangle selection = new Rectangle();
-//            final Point anchor = new Point();
 
-            map.setOnMousePressed(event -> {
-                anchor.setX(event.getX());
-                anchor.setY(event.getY());
-                selection.setX(event.getX());
-                selection.setY(event.getY());
-                selection.setFill(null); // transparent
-                selection.setStroke(Color.BLUE); // border
-                selection.getStrokeDashArray().add(10.0);
-                root.getChildren().add(selection);
-            });
-
-            map.setOnMouseDragged(event -> {
-                selection.setWidth(Math.abs(event.getX() - anchor.getX()));
-                selection.setHeight(Math.abs(event.getY() - anchor.getY()));
-                selection.setX(Math.min(anchor.getX(), event.getX()));
-                selection.setY(Math.min(anchor.getY(), event.getY()));
-            });
-
-            map.setOnMouseReleased(event -> {
-                root.getChildren().remove(selection);
-            });
+            map.setOnMousePressed(MouseSelectionUtils.mousePressed(selection, anchor, root));
+            map.setOnMouseDragged(MouseSelectionUtils.mouseDragged(selection, anchor));
+            map.setOnMouseReleased(MouseSelectionUtils.mouseRelease(selection, root));
             //====================================
 
             SIRS.LOGGER.log(Level.FINE, "Information handler installed.");
@@ -160,6 +140,9 @@ public class FXOpenElementEditorAction extends FXMapAction {
             super.uninstall(component);
             component.removeEventHandler(MouseEvent.MOUSE_CLICKED, mouseListener);
             component.removeEventHandler(ScrollEvent.SCROLL, mouseListener);
+            component.setOnMousePressed(null);
+            component.setOnMouseDragged(null);
+            component.setOnMouseReleased(null);
             SIRS.LOGGER.log(Level.FINE, "Information handler UNinstalled.");
             return true;
         }
@@ -238,7 +221,7 @@ public class FXOpenElementEditorAction extends FXMapAction {
                         } else if (foundElements.size() == 1) {
                             displayElement(foundElements.iterator().next());
                         } else if (externalFeatures.size() == 1) {
-
+                            SIRS.LOGGER.log(Level.INFO, "Selection of external feature unsupported.");
                         }
                         //remise à 0 du carré de sélection
                         selection.setWidth(0);

@@ -470,6 +470,8 @@ public class FXMainFrame extends BorderPane {
         for(final AbstractSIRSRepository repo : repos){
             repo.clearCache();
         }
+        // HACK-REDMINE-4408 : preview cache must be refreshed too
+        session.getPreviews().clearCache();
     }
 
     /**
@@ -525,7 +527,7 @@ public class FXMainFrame extends BorderPane {
         button.setWrapText(true);
         button.setMinWidth(USE_PREF_SIZE);
         button.setMinHeight(USE_COMPUTED_SIZE);
-        button.setPrefWidth(115);
+        button.setPrefWidth(170);
         button.setPrefHeight(USE_COMPUTED_SIZE);
         button.setMaxWidth(USE_PREF_SIZE);
         button.setMaxHeight(Double.MAX_VALUE);

@@ -20,9 +20,17 @@ package fr.sirs.core.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import fr.sirs.core.SirsCore;
+import fr.sirs.util.json.LocalDateDeserializer;
+import fr.sirs.util.json.LocalDateSerializer;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+
+import java.time.LocalDate;
 
 /**
  *
@@ -30,7 +38,7 @@ import javafx.beans.property.StringProperty;
  * @author Alexis Manin (Geomatys)
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class Preview implements AvecLibelle, Comparable {
+public class Preview implements AvecFinTemporelle, AvecLibelle, Comparable {
 
     @JsonProperty("docId")
     private String docId;
@@ -109,6 +117,23 @@ public class Preview implements AvecLibelle, Comparable {
         this.valid = valid;
     }
 
+    @JsonProperty("date_fin")
+    private final ObjectProperty<LocalDate>  date_fin = new SimpleObjectProperty<>();
+    @Override
+    public ObjectProperty<LocalDate> date_finProperty() {
+        return date_fin;
+    }
+
+    @JsonSerialize(using=LocalDateSerializer.class)
+    public LocalDate getDate_fin() {
+        return date_fin.get();
+    }
+
+    @JsonDeserialize(using= LocalDateDeserializer.class)
+    public void setDate_fin(LocalDate date_fin) {
+        this.date_fin.set(date_fin);
+    }
+
     @JsonProperty("designation")
     public String getDesignation() {
         return designationProperty.get();
@@ -138,7 +163,17 @@ public class Preview implements AvecLibelle, Comparable {
 
     @Override
     public String toString() {
-        return "Preview{" + "docId=" + docId + ", docClass=" + docClass + ", elementId=" + elementId + ", elementClass=" + elementClass + ", author=" + author + ", valid=" + valid + ", designation=" + designationProperty + ", label=" + libelleProperty.get() + '}';
+        return "Preview{" +
+                "docId='" + docId + '\'' +
+                ", docClass='" + docClass + '\'' +
+                ", elementId='" + elementId + '\'' +
+                ", elementClass='" + elementClass + '\'' +
+                ", author='" + author + '\'' +
+                ", valid=" + valid +
+                ", date_fin=" + date_fin +
+                ", designationProperty=" + designationProperty +
+                ", libelleProperty=" + libelleProperty +
+                '}';
     }
 
     @Override
@@ -167,9 +202,12 @@ public class Preview implements AvecLibelle, Comparable {
             final Preview other = (Preview) o;
 
             // Class comparison
-            final int classComparison = elementClass == null ?
-                    other.elementClass == null? 0 : 1
-                    : elementClass.compareTo(other.elementClass);
+            int classComparison;
+            if (elementClass == null) {
+                classComparison = other.elementClass == null ? 0 : 1;
+            } else {
+                classComparison = other.elementClass == null ? -1 : elementClass.compareTo(other.elementClass);
+            }
             if (classComparison != 0) {
                 return classComparison;
             }
@@ -201,5 +239,4 @@ public class Preview implements AvecLibelle, Comparable {
 
         return -1;
     }
-
 }

@@ -41,17 +41,7 @@ import fr.sirs.core.component.DigueRepository;
 import fr.sirs.core.component.Previews;
 import fr.sirs.core.component.SystemeEndiguementRepository;
 import fr.sirs.core.component.TronconDigueRepository;
-import fr.sirs.core.model.Digue;
-import fr.sirs.core.model.EtapeObligationReglementaire;
-import fr.sirs.core.model.Objet;
-import fr.sirs.core.model.ObligationReglementaire;
-import fr.sirs.core.model.Positionable;
-import fr.sirs.core.model.Preview;
-import fr.sirs.core.model.RefEtapeObligationReglementaire;
-import fr.sirs.core.model.RefTypeObligationReglementaire;
-import fr.sirs.core.model.SystemeEndiguement;
-import fr.sirs.core.model.SystemeReperage;
-import fr.sirs.core.model.TronconDigue;
+import fr.sirs.core.model.*;
 import fr.sirs.core.model.report.ModeleRapport;
 import fr.sirs.ui.report.FXModeleRapportsPane;
 import fr.sirs.util.DatePickerConverter;
@@ -71,6 +61,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
@@ -305,12 +296,15 @@ public class RapportsPane extends BorderPane {
         final LocalDate periodeDebut = uiPeriod.isSelected() ? uiPeriodeDebut.getValue() : null;
         final LocalDate periodeFin = uiPeriod.isSelected() ? uiPeriodeFin.getValue() : null;
         final NumberRange dateRange;
+        final AvecBornesTemporelles.IntersectDateRange intersectDateRangePredicate;
         if (periodeDebut == null && periodeFin == null) {
             dateRange = null;
+            intersectDateRangePredicate = null;
         } else {
             final long dateDebut = periodeDebut == null ? 0 : periodeDebut.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
             final long dateFin = periodeFin == null ? Long.MAX_VALUE : periodeFin.atTime(23, 59, 59).toInstant(ZoneOffset.UTC).toEpochMilli();
             dateRange = NumberRange.create(dateDebut, true, dateFin, true);
+            intersectDateRangePredicate = new AvecBornesTemporelles.IntersectDateRange(dateRange);
         }
 
         final Double prDebut = uiPrDebut.getValue() == null? -1d : uiPrDebut.getValue();
@@ -355,12 +349,7 @@ public class RapportsPane extends BorderPane {
                                 Objet next = it.next();
                                 if (dateRange != null) {
                                     //on vérifie la date
-                                    final LocalDate objDateDebut = next.getDate_debut();
-                                    final LocalDate objDateFin = next.getDate_fin();
-                                    final long debut = objDateDebut == null ? 0 : objDateDebut.atTime(0, 0, 0).toInstant(ZoneOffset.UTC).toEpochMilli();
-                                    final long fin = objDateFin == null ? Long.MAX_VALUE : objDateFin.atTime(23, 59, 59).toInstant(ZoneOffset.UTC).toEpochMilli();
-                                    final NumberRange objDateRange = NumberRange.create(debut, true, fin, true);
-                                    if (!dateRange.intersectsAny(objDateRange)) {
+                                    if (!intersectDateRangePredicate.test(next)) {
                                         continue;
                                     }
                                 }

@@ -20,9 +20,17 @@ dependency-reduced-pom.xml
 
 # Netbeans files
 nbactions.xml
+launcher/nbactions-PUBLIC.xml
 nb-configuration.xml
 nbproject/
 
 # IntelliJ files
 .idea/
 *.iml
+
+# Pycharm
+SirsMobile/style/__pycache__/
+
+# SirsMobile and plugin QGIS conf file
+SirsMobile/formTemplatePilote.json
+SirsMobile/user_preference_correspondence.json

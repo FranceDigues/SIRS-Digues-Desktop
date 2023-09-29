@@ -266,4 +266,32 @@ public abstract class Plugin {
      */
     public void findUpgradeTasks(final int fromMajor, final int fromMinor, final CouchDbConnector dbConnector, final LinkedHashSet<Task> upgradeTasks, final DatabaseRegistry... dbRegistry) {
     }
+
+    public enum MigrationNames {
+        dependanceAddAH("plugin-dependance","plugin-dependance-ah"),
+        desordreAddAH("Désordre (dépendance)", "Désordre (dépendance et AH)");
+
+        private final String oldName;
+        private final String newName;
+
+        MigrationNames (String oldName, String newName) {
+            this.oldName = oldName;
+            this.newName = newName;
+        }
+
+        public String getOldName() {
+            return oldName;
+        }
+
+        public String getNewName() {
+            return newName;
+        }
+
+        public static String migrate(String name) {
+            for (Plugin.MigrationNames migName : MigrationNames.values()) {
+                if (migName.getOldName().equalsIgnoreCase(name)) return migName.getNewName();
+            }
+            return name;
+        }
+    }
 }

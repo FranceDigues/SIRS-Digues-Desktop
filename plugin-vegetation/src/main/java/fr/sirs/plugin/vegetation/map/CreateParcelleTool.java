@@ -45,14 +45,14 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+
+import static fr.sirs.plugin.vegetation.map.EditVegetationUtils.LABEL_DESIGNATION;
+import static fr.sirs.plugin.vegetation.map.EditVegetationUtils.generateHeaderLabel;
 import static javafx.scene.layout.Region.USE_PREF_SIZE;
 import javafx.scene.layout.VBox;
 import org.geotoolkit.data.bean.BeanFeature;
@@ -102,7 +102,7 @@ public class CreateParcelleTool extends AbstractEditionTool{
         public EditionTool create(FXMap map, Object layer) {
             return new CreateParcelleTool(map);
         }
-    };
+    }
 
 
     //session and repo
@@ -119,10 +119,10 @@ public class CreateParcelleTool extends AbstractEditionTool{
     private ParcelleVegetation parcelle = parcelleRepo.create();
     private TronconDigue tronconDigue = null;
     private final Label lblTroncon = new Label();
+    private final TextField ui_Designation = new TextField();
     private final Label lblFirstPoint = new Label();
     private final Label lblLastPoint = new Label();
     private final Button end = new Button("Enregistrer");
-    private final Button cancel = new Button("Annuler");
 
     private FeatureMapLayer tronconLayer = null;
     private FeatureMapLayer borneLayer = null;
@@ -141,6 +141,8 @@ public class CreateParcelleTool extends AbstractEditionTool{
                 parcelle.setPlanId(plan.getId());
                 parcelle.setModeAuto(true);
                 parcelle.setGeometryMode(FXPositionableLinearMode.MODE);
+
+                parcelle.setDesignation(ui_Designation.getText());
 
                 //calcule de la geometrie
                 parcelle.setGeometry(LinearReferencingUtilities.buildGeometry(
@@ -167,6 +169,7 @@ public class CreateParcelleTool extends AbstractEditionTool{
                 reset();
             }
         });
+        Button cancel = new Button("Annuler");
         cancel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -175,12 +178,6 @@ public class CreateParcelleTool extends AbstractEditionTool{
             }
         });
 
-        final Label lbl1 = new Label("Tronçon :");
-        final Label lbl2 = new Label("Borne de début :");
-        final Label lbl3 = new Label("Borne de fin :");
-        lbl1.getStyleClass().add("label-header");
-        lbl2.getStyleClass().add("label-header");
-        lbl3.getStyleClass().add("label-header");
         lblTroncon.getStyleClass().add("label-text");
         lblFirstPoint.getStyleClass().add("label-text");
         lblLastPoint.getStyleClass().add("label-text");
@@ -189,19 +186,22 @@ public class CreateParcelleTool extends AbstractEditionTool{
         wizard.getStyleClass().add("blue-light");
 
         final VBox vbox = new VBox(15,
-                lbl1,
+                generateHeaderLabel("Tronçon :"),
                 lblTroncon,
-                lbl2,
+                generateHeaderLabel(LABEL_DESIGNATION),
+                ui_Designation,
+                generateHeaderLabel("Borne de début :"),
                 lblFirstPoint,
-                lbl3,
+                generateHeaderLabel("Borne de fin :"),
                 lblLastPoint,
-                new HBox(30, end,cancel));
+                new HBox(30, end, cancel));
         vbox.setMaxSize(USE_PREF_SIZE,USE_PREF_SIZE);
         wizard.setCenter(vbox);
     }
 
     private void reset(){
         parcelle = parcelleRepo.create();
+        ui_Designation.setText(parcelle.getDesignation());
         parcelle.setModeAuto(true);
         end.disableProperty().unbind();
         end.disableProperty().bind( parcelle.linearIdProperty().isNull()

@@ -33,25 +33,37 @@ import org.opengis.feature.PropertyType;
  * @param <T>
  */
 public abstract class FXAbstractImportPointLeve<T extends PointZ> extends FXAbstractImportCoordinate {
-    
-    protected final ObservableList<Feature> selectionProperty = FXCollections.observableArrayList();
+
+    protected static final String ATT_Z_KEY = "attZ";
+    protected static final String ATT_DESIGNATION_KEY = "attDesignation";
+
+    protected final ObservableList<Feature> selectionProperty;
     protected final PojoTable pojoTable;
     @FXML protected ComboBox<PropertyType> uiAttDesignation;
     @FXML protected ComboBox<PropertyType> uiAttZ;
-    
+
     FXAbstractImportPointLeve(final PojoTable pojoTable) {
         super();
         this.pojoTable = pojoTable;
         uiAttDesignation.setConverter(stringConverter);
         uiAttZ.setConverter(stringConverter);
+        selectionProperty = FXCollections.observableArrayList();
     }
-    
+
     @FXML
     void importSelection(ActionEvent event) {
+        saveFieldValue();
         final ObservableList<T> pt = getSelectionPoint();
         if(pt==null || pt.isEmpty()) return;
         pojoTable.getAllValues().addAll(pt);
     }
-    
+
+    @Override
+    protected void saveFieldValue() {
+        super.saveFieldValue();
+        savePreference(ATT_Z_KEY, stringConverter.toString(uiAttZ.getSelectionModel().getSelectedItem()));
+        savePreference(ATT_DESIGNATION_KEY, stringConverter.toString(uiAttDesignation.getSelectionModel().getSelectedItem()));
+    }
+
     protected abstract ObservableList<T> getSelectionPoint();
 }

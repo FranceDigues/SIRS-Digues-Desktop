@@ -217,6 +217,8 @@ public class FXFeatureTable extends FXPropertyPane{
         return "";
     }
 
+    public TableView<Feature> getTable() { return table; }
+
     public boolean isLoadAll() {
         return loadAll;
     }

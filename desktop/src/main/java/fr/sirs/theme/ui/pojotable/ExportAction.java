@@ -18,13 +18,19 @@
  */
 package fr.sirs.theme.ui.pojotable;
 
+import fr.sirs.core.model.Element;
 import fr.sirs.map.ExportTask;
+import fr.sirs.theme.ui.PojoTable;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.TableColumn;
 import javafx.stage.DirectoryChooser;
 import org.geotoolkit.data.FileFeatureStoreFactory;
 import org.geotoolkit.data.bean.BeanFeatureSupplier;
@@ -42,15 +48,18 @@ import org.geotoolkit.storage.DataStores;
  * @author Samuel Andrés (Geomatys) [extraction de la PojoTable]
  */
 public class ExportAction implements EventHandler<ActionEvent> {
-    
-    private final BeanFeatureSupplier featureSupplier;
 
-    public ExportAction(BeanFeatureSupplier sup) {
+    private final BeanFeatureSupplier featureSupplier;
+    private final ObservableList<TableColumn<Element, ?>> currentColumns;
+
+    public ExportAction(BeanFeatureSupplier sup, final ObservableList<TableColumn<Element, ?>> currentColumns) {
         this.featureSupplier = sup;
+        this.currentColumns = currentColumns;
     }
 
     @Override
-    public void handle(ActionEvent event) {final DirectoryChooser chooser = new DirectoryChooser();
+    public void handle(ActionEvent event) {
+        final DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle(GeotkFX.getString(org.geotoolkit.gui.javafx.contexttree.menu.ExportItem.class, "folder"));
         final File folder = chooser.showDialog(null);
 
@@ -62,7 +71,7 @@ public class ExportAction implements EventHandler<ActionEvent> {
                 layer.setName(store.getNames().iterator().next().tip().toString());
 
                 FileFeatureStoreFactory factory = (FileFeatureStoreFactory) DataStores.getFactoryById("csv");
-                TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory));
+                TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory, extractVisibleColumnNames()));
             } catch (Exception ex) {
                 Dialog d = new Alert(Alert.AlertType.ERROR, "Impossible de créer le fichier CSV", ButtonType.OK);
                 d.setResizable(true);
@@ -71,5 +80,19 @@ public class ExportAction implements EventHandler<ActionEvent> {
             }
         }
     }
-    
+
+    protected String[] extractVisibleColumnNames() {
+        final List<String> propertyNames = new ArrayList<>();
+
+        for (final TableColumn column : currentColumns) {
+            if (column.isVisible()) {
+                if (column instanceof PojoTable.PropertyColumn) {
+                    propertyNames.add(((PojoTable.PropertyColumn) column).getName());
+                } else if (column instanceof PojoTable.EnumColumn) {
+                    propertyNames.add(((PojoTable.EnumColumn) column).getName());
+                }
+            }
+        }
+        return propertyNames.toArray(new String[propertyNames.size()]);
+    }
 }

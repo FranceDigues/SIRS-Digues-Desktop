@@ -18,8 +18,8 @@
  */
 package fr.sirs.util;
 
+import fr.sirs.CorePlugin;
 import fr.sirs.Injector;
-import fr.sirs.SIRS;
 import static fr.sirs.core.SirsCore.DIGUE_ID_FIELD;
 import fr.sirs.core.component.Previews;
 import fr.sirs.core.model.Desordre;
@@ -43,9 +43,14 @@ import static fr.sirs.util.JRDomWriterDesordreSheet.PHOTO_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterDesordreSheet.PRESTATION_TABLE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterDesordreSheet.RESEAU_OUVRAGE_TABLE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterDesordreSheet.VOIRIE_TABLE_DATA_SOURCE;
+import static fr.sirs.util.JRDomWriterDesordreSheet.IMAGE_DATA_SOURCE;
+import java.awt.Dimension;
+import java.awt.Image;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
@@ -57,16 +62,23 @@ import net.sf.jasperreports.engine.JRField;
  */
 public class DesordreDataSource extends ObjectDataSource<Desordre> {
 
-    public DesordreDataSource(Iterable<Desordre> iterable) {
+    private static Logger LOGGER = Logger.getLogger(DesordreDataSource.class.getName());
+
+    private final boolean printLocationInsert;
+
+    public DesordreDataSource(Iterable<Desordre> iterable, final boolean printLocationInsert) {
         super(iterable);
+        this.printLocationInsert = printLocationInsert;
     }
 
-    public DesordreDataSource(final Iterable<Desordre> iterable, final Previews previewLabelRepository){
+    public DesordreDataSource(final Iterable<Desordre> iterable, final Previews previewLabelRepository, final boolean printLocationInsert){
         super(iterable, previewLabelRepository);
+        this.printLocationInsert = printLocationInsert;
     }
-    
-    public DesordreDataSource(final Iterable<Desordre> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter){
+
+    public DesordreDataSource(final Iterable<Desordre> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter, final boolean printLocationInsert){
         super(iterable, previewLabelRepository, stringConverter);
+        this.printLocationInsert = printLocationInsert;
     }
 
     @Override
@@ -83,7 +95,7 @@ public class DesordreDataSource extends ObjectDataSource<Desordre> {
                     }
                 } catch (IllegalArgumentException e){
                     // SYM-1735 : problème d'impression des fiches de désordres attachés à des berges lorsque le module berges n'est pas chargé
-                    SIRS.LOGGER.log(Level.INFO, "un problème a été rencontré lors de l'extraction de la digue d'une fiche", e);
+                    LOGGER.log(Level.INFO, "un problème a été rencontré lors de l'extraction de la digue d'une fiche", e);
                 }
             }
             return null;
@@ -95,17 +107,17 @@ public class DesordreDataSource extends ObjectDataSource<Desordre> {
                     photos.addAll(observation.photos);
                 }
             }
-            photos.sort(PHOTO_COMPARATOR);
+            photos.sort(SirsComparator.PHOTO_COMPARATOR);
             return new ObjectDataSource<>(photos, previewRepository, stringConverter);
         }
         else if(OBSERVATION_TABLE_DATA_SOURCE.equals(name)){
             final ObservableList<Observation> observations = currentObject.getObservations();
-            observations.sort(OBSERVATION_COMPARATOR);
+            observations.sort(SirsComparator.OBSERVATION_COMPARATOR);
             return new ObjectDataSource<>(observations, previewRepository, stringConverter);
         }
         else if(PRESTATION_TABLE_DATA_SOURCE.equals(name)){
             final List<Prestation> prestationList = Injector.getSession().getRepositoryForClass(Prestation.class).get(currentObject.getPrestationIds());
-            prestationList.sort(ELEMENT_COMPARATOR);
+            prestationList.sort(SirsComparator.ELEMENT_COMPARATOR);
             return new ObjectDataSource<>(prestationList, previewRepository, stringConverter);
         }
         else if(RESEAU_OUVRAGE_TABLE_DATA_SOURCE.equals(name)){
@@ -126,7 +138,7 @@ public class DesordreDataSource extends ObjectDataSource<Desordre> {
                 }
             }
 
-            reseauOuvrageList.sort(ELEMENT_COMPARATOR);
+            reseauOuvrageList.sort(SirsComparator.ELEMENT_COMPARATOR);
             return new ObjectDataSource<>(reseauOuvrageList, previewRepository, stringConverter);
         }
         else if(VOIRIE_TABLE_DATA_SOURCE.equals(name)){
@@ -142,10 +154,20 @@ public class DesordreDataSource extends ObjectDataSource<Desordre> {
                 }
             }
 
-            voirieList.sort(ELEMENT_COMPARATOR);
+            voirieList.sort(SirsComparator.ELEMENT_COMPARATOR);
             return new ObjectDataSource<>(voirieList, previewRepository, stringConverter);
+        } else if (IMAGE_DATA_SOURCE.equals(name)) {
+            if (this.printLocationInsert) {
+                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1200));
+                if (img != null) {
+                    return img;
+                } else {
+                    return noImage();
+                }
+            } else {
+                return null;
+            }
         }
         else return super.getFieldValue(jrf);
     }
-    
 }

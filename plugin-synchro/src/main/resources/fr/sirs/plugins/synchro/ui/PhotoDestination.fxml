@@ -11,10 +11,12 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
 
 <?import fr.sirs.plugins.synchro.ui.FXTronconPathSelector?>
 
-<fx:root  prefHeight="350.0" prefWidth="500.0" stylesheets="@../MobilePluginStyle.css" type="StackPane" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root  prefHeight="380.0" prefWidth="500.0" stylesheets="@../MobilePluginStyle.css" type="StackPane" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <TitledPane maxWidth="1.7976931348623157E308" minWidth="10.0" styleClass="header" text="Destination">
          <content>
@@ -44,9 +46,12 @@
                         </ProgressIndicator>
                      </children>
                   </GridPane>
-                  <!--<AnchorPane prefHeight="200.0" prefWidth="200.0">-->
                       <FXTronconPathSelector  fx:id="pathSelector" prefHeight="300.0" prefWidth="200.0"/>
-                  <!--</AnchorPane>-->
+                      <HBox alignment="CENTER_RIGHT" maxWidth="1.7976931348623157E308" minWidth="10.0" spacing="10.0">
+                          <children>
+                              <Button fx:id="uiImportBtn" mnemonicParsing="false" onAction="#importPhotos" text="Importer" HBox.hgrow="NEVER" />
+                          </children>
+                      </HBox>
                </children>
             </VBox>
          </content>

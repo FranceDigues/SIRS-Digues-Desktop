@@ -5,7 +5,7 @@
     <!-- Name of the plugin, used for packaging and description -->
     <artifactId>plugin-reglementary</artifactId>
     <!-- Version must be composed of two integers (major and minor version) separated by a dot. -->
-    <version>1.12</version>
+    <version>1.16</version>
     <packaging>jar</packaging>
 
     <name>Plugin réglementaire</name>
@@ -19,7 +19,7 @@
     </parent>
 
     <properties>
-        <plugin.core.version.min>25</plugin.core.version.min>
+        <plugin.core.version.min>44</plugin.core.version.min>
     </properties>
 
     <dependencies>
@@ -29,6 +29,12 @@
             <!-- SIRS application version is defined at archetype generation goal -->
             <version>2.x-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- TODO : try to remove it using standard java api -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
         </dependency>
     </dependencies>
 

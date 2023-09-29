@@ -25,16 +25,16 @@
       <RowConstraints />
   </rowConstraints>
    <children>
-      <TreeTableView fx:id="tree1" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2" GridPane.rowSpan="10">
+      <TreeTableView fx:id="tree" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2" GridPane.rowSpan="10">
         <columns>
-          <TreeTableColumn maxWidth="1.7976931348623157E308" minWidth="200.0" prefWidth="-1.0" text="Nom" />
-          <TreeTableColumn maxWidth="1.7976931348623157E308" minWidth="100.0" prefWidth="-1.0" text="Date de modification" />
-            <TreeTableColumn maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" text="Taille" />
-            <TreeTableColumn maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" text="N° inventaire" />
-            <TreeTableColumn maxWidth="1.7976931348623157E308" minWidth="140.0" prefWidth="-1.0" text="Lieu classement" />
-            <TreeTableColumn maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="-1.0" text="Intégré au DO de synthèse" />
-            <TreeTableColumn maxWidth="70.0" minWidth="50.0" prefWidth="-1.0" text="Publier" />
-            <TreeTableColumn maxWidth="70.0" minWidth="50.0" prefWidth="-1.0" text="Ouvrir" />
+          <TreeTableColumn fx:id="ui_name" maxWidth="1.7976931348623157E308" minWidth="200.0" prefWidth="-1.0" text="Nom" />
+          <TreeTableColumn fx:id="ui_modifDate" maxWidth="1.7976931348623157E308" minWidth="100.0" prefWidth="-1.0" text="Date de modification" />
+            <TreeTableColumn fx:id="ui_size" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" text="Taille" />
+            <TreeTableColumn fx:id="ui_inventory" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" text="N° inventaire" />
+            <TreeTableColumn fx:id="ui_classement" maxWidth="1.7976931348623157E308" minWidth="140.0" prefWidth="-1.0" text="Lieu classement" />
+            <TreeTableColumn fx:id="ui_doSynthesis" maxWidth="1.7976931348623157E308" minWidth="50.0" prefWidth="-1.0" text="Intégré au DO de synthèse" />
+            <TreeTableColumn fx:id="ui_publish" maxWidth="70.0" minWidth="50.0" prefWidth="-1.0" text="Publier" />
+            <TreeTableColumn fx:id="ui_open" maxWidth="70.0" minWidth="50.0" prefWidth="-1.0" text="Ouvrir" />
         </columns>
          <columnResizePolicy>
             <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

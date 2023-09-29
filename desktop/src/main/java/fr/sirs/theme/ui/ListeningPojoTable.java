@@ -57,7 +57,7 @@ public class ListeningPojoTable<T> extends PojoTable {
                 if(producer!=null) setTableItems(producer);
         });
 
-    public ListeningPojoTable(Class pojoClass, String title, final ObjectProperty<Element> container) {
+    public ListeningPojoTable(Class pojoClass, String title, final ObjectProperty<? extends Element> container) {
         super(pojoClass, title, container);
     }
 

@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.19.1.final using JasperReports Library version 6.0.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="summaryTable" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="966d62a7-748d-4aeb-bd58-9729ca20d4d5">
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#5681A5">
+		<box>
+			<pen lineWidth="0.5" lineColor="#A4CAEB"/>
+			<topPen lineWidth="0.5" lineColor="#A4CAEB"/>
+			<leftPen lineWidth="0.5" lineColor="#A4CAEB"/>
+			<bottomPen lineWidth="0.5" lineColor="#A4CAEB"/>
+			<rightPen lineWidth="0.5" lineColor="#A4CAEB"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#DFE9F2">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue() %2 == 0)]]></conditionExpression>
+			<style backcolor="#FFFFFF">
+				<box>
+					<pen lineWidth="0.5" lineColor="#A4CAEB"/>
+					<topPen lineWidth="0.5" lineColor="#A4CAEB"/>
+					<leftPen lineWidth="0.5" lineColor="#A4CAEB"/>
+					<bottomPen lineWidth="0.5" lineColor="#A4CAEB"/>
+					<rightPen lineWidth="0.5" lineColor="#A4CAEB"/>
+				</box>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[new Boolean($V{REPORT_COUNT}.intValue() %2 != 0)]]></conditionExpression>
+			<style backcolor="#DFE9F2">
+				<box>
+					<pen lineWidth="0.5" lineColor="#A4CAEB"/>
+					<topPen lineWidth="0.5" lineColor="#A4CAEB"/>
+					<leftPen lineWidth="0.5" lineColor="#A4CAEB"/>
+					<bottomPen lineWidth="0.5" lineColor="#A4CAEB"/>
+					<rightPen lineWidth="0.5" lineColor="#A4CAEB"/>
+				</box>
+			</style>
+		</conditionalStyle>
+	</style>
+	<subDataset name="prestationDataSet" uuid="260ec8e0-4acf-449c-8e16-f47ec8db03c0">
+		<queryString>
+			<![CDATA[]]>
+		</queryString>
+		<field name="horodatageDate" class="java.time.LocalDate"/>
+		<field name="prestation.designation" class="java.lang.String"/>
+		<field name="prestation.libelle" class="java.lang.String"/>
+		<field name="prestation.linearId" class="java.lang.String"/>
+		<field name="prestation.typePrestationId" class="java.lang.String"/>
+		<field name="date_debut" class="java.time.LocalDate"/>
+		<field name="date_fin" class="java.time.LocalDate"/>
+		<field name="prestation.intervenantsIds" class="java.util.List"/>
+		<field name="prestation.author" class="java.lang.String"/>
+		<field name="prestation.commentaire" class="java.lang.String"/>
+		<field name="prestation.id" class="java.lang.String"/>
+		<field name="page" class="java.lang.String"/>
+		<variable name="author_login" class="java.lang.String">
+			<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLogin($F{prestation.author})]]></variableExpression>
+		</variable>
+		<variable name="typePrestation" class="java.lang.String">
+			<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLibelleFromId($F{prestation.typePrestationId}, "RefPrestation")]]></variableExpression>
+		</variable>
+		<variable name="tronconLibelle" class="java.lang.String">
+			<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLibelleFromId($F{prestation.linearId}, "TronconDigue")]]></variableExpression>
+		</variable>
+		<variable name="dateDebutFormat" class="java.lang.String">
+			<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayFormattedDate($F{date_debut})]]></variableExpression>
+		</variable>
+		<variable name="dateFinFormat" class="java.lang.String">
+			<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayFormattedDate($F{date_fin})]]></variableExpression>
+		</variable>
+	</subDataset>
+	<parameter name="title" class="java.lang.String"/>
+	<parameter name="collectionBeanParam" class="net.sf.jasperreports.engine.data.JRBeanCollectionDataSource"/>
+	<parameter name="systemeEndiguement" class="java.lang.String"/>
+	<parameter name="dateDebutPicker" class="java.time.LocalDate"/>
+	<parameter name="dateFinPicker" class="java.time.LocalDate"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<variable name="dateDebutFormatPicker" class="java.lang.String">
+		<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayFormattedDate($P{dateDebutPicker})]]></variableExpression>
+	</variable>
+	<variable name="dateFinFormatPicker" class="java.lang.String">
+		<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayFormattedDate($P{dateFinPicker})]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="54" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="800" height="30" uuid="ef7f228e-3b4c-46b2-bcf8-20b45209b949"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Sommaire - Registre horodaté"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1" y="30" width="799" height="20" uuid="1d48a41b-3861-4fb6-8175-248e4a1441ec"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="none"/>
+				<textFieldExpression><![CDATA[$P{systemeEndiguement}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<detail>
+		<band height="287" splitType="Stretch">
+			<componentElement>
+				<reportElement x="1" y="10" width="800" height="277" isRemoveLineWhenBlank="true" uuid="87b8c7d8-bab1-4492-b0e4-255af077e46e">
+					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					<property name="com.jaspersoft.studio.table.style.table_header" value="Table_TH"/>
+					<property name="com.jaspersoft.studio.table.style.column_header" value="Table_CH"/>
+					<property name="com.jaspersoft.studio.table.style.detail" value="Table_TD"/>
+				</reportElement>
+				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+					<datasetRun subDataset="prestationDataSet" uuid="20f2dd14-5608-4cd8-8edd-2ad113f9a0f5">
+						<dataSourceExpression><![CDATA[$P{collectionBeanParam}]]></dataSourceExpression>
+					</datasetRun>
+					<jr:column width="45" uuid="710518e9-280e-4345-ab2a-d5241939e4a5">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="horodatageDate"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="45" height="29" forecolor="#FFFFFF" uuid="ddac8d61-2183-43b8-a29f-87d5fc081fce">
+									<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+								</reportElement>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Date horodatage]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="45" height="15" isPrintWhenDetailOverflows="true" uuid="8dc8f98f-fa9e-41c0-8af5-56801e49aa94"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{horodatageDate} == null ? " - " : $F{horodatageDate}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="45" uuid="18c479e6-54f6-4006-a2db-ba6effb5ab6c">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="prestation.designation"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="45" height="29" forecolor="#FFFFFF" uuid="d7e8ff08-d8e1-4e84-8a11-1a9ea76927a9"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Désignation]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<property name="com.jaspersoft.studio.unit.height" value="px"/>
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="45" height="15" isPrintWhenDetailOverflows="true" uuid="2783d580-c0f8-4aba-a483-e6303340b8c4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{prestation.designation}==null ? " - " : $F{prestation.designation}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="105" uuid="8fd27a15-4501-46ca-a309-ea95af16229e">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="prestation.libelle"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="105" height="29" forecolor="#FFFFFF" uuid="0963a429-4977-4f22-8a64-7fd1c49beefb"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Libellé]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="105" height="15" isPrintWhenDetailOverflows="true" uuid="67e1faf2-345c-4df6-84c6-5cda38f0b513"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{prestation.libelle}==null ? " - " : $F{prestation.libelle}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="130" uuid="4dc90b0e-7287-456b-a8ff-0507be47a429">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="tronconLibelle"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="130" height="29" forecolor="#FFFFFF" uuid="07a3e61a-d324-4a9a-8b3b-fa82a8f1dbfa">
+									<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+								</reportElement>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Tronçon]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="130" height="15" isPrintWhenDetailOverflows="true" uuid="e1dcbabe-ac86-42fc-a241-38ad01135621"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{tronconLibelle}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="80" uuid="cc4ceea7-9c0e-45b4-9e75-24b691f0877a">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="typePrestation"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="80" height="29" forecolor="#FFFFFF" uuid="00897e09-fbf2-42dc-8751-cf94f8179e30"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Type de prestation]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="80" height="15" isPrintWhenDetailOverflows="true" uuid="359e2a99-0ca2-40ca-a346-a8eca3805781">
+									<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+								</reportElement>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="styled">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{typePrestation}==null ? " - " : $V{typePrestation}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="45" uuid="cb32dff6-0d94-4ca0-a406-ed0f26ad599d">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="startDate"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="45" height="29" forecolor="#FFFFFF" uuid="d7d03bba-e731-4946-b7be-42dc976689ba"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Date de 
+début]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="45" height="15" isPrintWhenDetailOverflows="true" uuid="0fb55ba8-f95a-4a04-9969-0eccc3b0ff2f">
+									<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+								</reportElement>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{dateDebutFormat}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="45" uuid="1dd331b5-d4bc-4785-944b-3ba5bdc85f57">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="endDate"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="45" height="29" forecolor="#FFFFFF" uuid="43c9e1a0-a95e-407c-9412-710e9ef1a2bc"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Date de fin]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="45" height="15" isPrintWhenDetailOverflows="true" uuid="2eabfcdf-7f7f-444f-92e5-985fe6189809"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{dateFinFormat}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="50" uuid="aebc8045-c5d5-404d-bc93-bd91d3293268">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="intervenant"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="50" height="29" forecolor="#FFFFFF" uuid="5f93383b-6e2a-483c-ab71-a8b850791e72"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Intervenant]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="50" height="15" isPrintWhenDetailOverflows="true" uuid="247a0a2c-0238-4c6b-98d5-c893db0d1fbf"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayIntervenants($F{prestation.intervenantsIds})]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="50" uuid="683ea33f-948f-4262-b9cd-f6a364b25819">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="author_login"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="50" height="29" forecolor="#FFFFFF" uuid="46542cae-67fa-4976-a292-2b2fefa23483"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Nom auteur]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="50" height="15" isPrintWhenDetailOverflows="true" uuid="89ab9772-2d33-4e8d-b6de-7e204e97bc60"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{author_login}==null ? " - " : $V{author_login}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="165" uuid="5c2b9625-c37f-4281-9611-13e244ee20e3">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="commentaire"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="165" height="29" forecolor="#FFFFFF" uuid="9c2352fc-9734-4242-a50b-9e5ff979df0c"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Commentaire]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="165" height="15" isPrintWhenDetailOverflows="true" uuid="6453119b-3084-410e-bc59-271af0590611">
+									<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+									<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+									<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+								</reportElement>
+								<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+									<font size="7"/>
+									<paragraph leftIndent="3" rightIndent="3"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{prestation.commentaire}==null ? " - " : $F{prestation.commentaire}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="40" uuid="40b3df81-a40f-4582-83db-e2d92880cd94">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="page"/>
+						<jr:columnHeader style="Table_CH" height="29" rowSpan="1">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="40" height="29" forecolor="#FFFFFF" uuid="c81d79da-020d-4b6c-afb9-dd1464557190"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<text><![CDATA[Référence (page)]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table_TD" height="15">
+							<textField isStretchWithOverflow="true">
+								<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="40" height="15" isPrintWhenDetailOverflows="true" uuid="c51de157-cfcc-4f2a-8bbc-067713c1fa2a"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle">
+									<font size="7"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$F{page}==null ? " n/a " : $F{page}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+				</jr:table>
+			</componentElement>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="42" splitType="Stretch">
+			<textField>
+				<reportElement x="1" y="3" width="800" height="33" uuid="fb9ea3b7-14ea-439d-b5e7-cb8ef8575224"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["Période "+$V{dateDebutFormatPicker}+" - "+$V{dateFinFormatPicker}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

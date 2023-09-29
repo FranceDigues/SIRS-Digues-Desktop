@@ -2,7 +2,7 @@
  * This file is part of SIRS-Digues 2.
  *
  * Copyright (C) 2016, FRANCE-DIGUES,
- * 
+ *
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
@@ -23,7 +23,7 @@ import fr.sirs.SIRS;
 import fr.sirs.Session;
 import fr.sirs.core.model.Preview;
 import fr.sirs.core.model.TronconDigue;
-import static fr.sirs.plugin.vegetation.FXPlanTable.Mode.PLANIFICATION;
+import fr.sirs.util.property.SirsPreferences;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
@@ -34,14 +34,16 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 
+import static fr.sirs.plugin.vegetation.FXPlanTable.Mode.PLANIFICATION;
+
 /**
  * Panneau de planification des parcelles du plan, ouvert lors de la sélection d'un plan dans la liste proposée au chemin suivant :
- * 
+ *
  * "Plan de gestion" > "planification"
  *
  * @author Johann Sorel (Geomatys)
  * @author Samuel Andrés (Geomatys)
- * 
+ *
  * @see FXPlanTable
  */
 public class FXPlanificationPane extends BorderPane {
@@ -61,7 +63,9 @@ public class FXPlanificationPane extends BorderPane {
 
         // Choix du tronçon.
         final ComboBox<Preview> uiTroncons = new ComboBox<>();
-        SIRS.initCombo(uiTroncons, SIRS.observableList(session.getPreviews().getByClass(TronconDigue.class)).sorted(), null);
+        // HACK-REDMINE-4408 : hide archived Troncons from selection lists
+        SIRS.initCombo(uiTroncons, SIRS.observableList(session.getPreviews().getByClass(TronconDigue.class)).sorted(),
+                null, SirsPreferences.getHideArchivedProperty(), true);
         final Label lblTroncon = new Label("Tronçon : ");
         lblTroncon.getStyleClass().add("label-header");
 

@@ -72,7 +72,7 @@ import javafx.scene.control.TableColumn;
             directory = SirsCore.CONFIGURATION_PATH;
         }
 
-        String fileName = pojoClass.getName().replace(".", "_").replace(" ", "_") + "_preferences.json";
+        final String fileName = pojoClass.getName().replace(".", "_").replace(" ", "_") + "_preferences.json";
         this.filePrefPath = directory.resolve(fileName);
         this.loadReferencesFromJsonPath();
     }
@@ -89,9 +89,8 @@ import javafx.scene.control.TableColumn;
      *
      * @param columns
      */
-
     public void applyPreferencesToTableColumns(List<TableColumn<Element, ?>> columns) {
-        
+
         try{
         Map<String, TableColumn<Element, ?>> changedColumns = new HashMap<>();
         withPreferencesColumns.forEach((preferedPosition, columnState) -> {
@@ -112,7 +111,11 @@ import javafx.scene.control.TableColumn;
                             TableColumn<Element, ?> changedCol = col;
                             changedColumns.put(columnState.getName(), col);
                             columns.remove(col);
-                            columns.add(preferedPosition, col);
+                            if (preferedPosition > columns.size()) {
+                                columns.add(col);
+                            } else {
+                                columns.add(preferedPosition, col);
+                            }
                         }
                     });
         });
@@ -209,24 +212,28 @@ import javafx.scene.control.TableColumn;
      */
     final public boolean loadReferencesFromJsonPath() {
 
-        try (final InputStream preferencesStream = Files.newInputStream(filePrefPath)) {
+        if (filePrefPath!=null && Files.exists(filePrefPath)) {
+            try (final InputStream preferencesStream = Files.newInputStream(filePrefPath)) {
 
-            Map<Integer, ColumnState> readPref = objectMapper.readValue(preferencesStream, new TypeReference<Map<Integer, ColumnState>>() {
-            });
-
-            //Si on trouve des préférences on met à jour la Map withPreferencesColumns
-            if ((readPref == null) || (readPref.isEmpty())) {
-                SIRS.LOGGER.log(Level.INFO, "Fichier {0} vide.", filePrefPath.toString());
-            } else {
-                readPref.forEach((colPosition, state) -> {
-                    this.withPreferencesColumns.put(colPosition, state);
+                final Map<Integer, ColumnState> readPref = objectMapper.readValue(preferencesStream, new TypeReference<Map<Integer, ColumnState>>() {
                 });
-            }
-            return true;
 
-        } catch (IOException ioe) {
-            SIRS.LOGGER.log(Level.WARNING, "Exception loading columns preferences for a PojoTable.", ioe);
-            return false;
+                //Si on trouve des préférences on met à jour la Map withPreferencesColumns
+                if ((readPref == null) || (readPref.isEmpty())) {
+                    SIRS.LOGGER.log(Level.INFO, "Fichier {0} vide.", filePrefPath.toString());
+                } else {
+                    readPref.forEach((colPosition, state) -> {
+                        this.withPreferencesColumns.put(colPosition, state);
+                    });
+                }
+                return true;
+            } catch (IOException ioe) {
+                SIRS.LOGGER.log(Level.WARNING, "Exception loading columns preferences for a PojoTable.", ioe);
+                return false;
+            }
+        } else {
+             SIRS.LOGGER.log(Level.INFO, "No preference files found for columns preferences at {0}", filePrefPath.toString());
+             return false;
         }
 
     }

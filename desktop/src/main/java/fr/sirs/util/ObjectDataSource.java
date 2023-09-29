@@ -24,7 +24,6 @@ import fr.sirs.core.SirsCore;
 import fr.sirs.core.component.Previews;
 import fr.sirs.core.model.AbstractObservation;
 import fr.sirs.core.model.AbstractPhoto;
-import fr.sirs.core.model.Element;
 import fr.sirs.core.model.OuvrageHydrauliqueAssocie;
 import fr.sirs.core.model.ReferenceType;
 import fr.sirs.core.model.ReseauHydrauliqueFerme;
@@ -32,6 +31,8 @@ import fr.sirs.core.model.SIRSFileReference;
 import fr.sirs.core.model.Utilisateur;
 import fr.sirs.util.property.Reference;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +40,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -108,7 +108,7 @@ public class ObjectDataSource<T> implements JRDataSource {
                 if (img != null) {
                     return SwingFXUtils.fromFXImage(img, null);
                 } else {
-                    return javax.imageio.ImageIO.read(ObjectDataSource.class.getResource("/fr/sirs/images/imgNotFound.png"));
+                    return noImage();
                 }
             }
 
@@ -232,59 +232,6 @@ public class ObjectDataSource<T> implements JRDataSource {
     }
 
     /**
-     * Pour le classement des observations de la plus récente à la plus
-     * ancienne.
-     */
-    static final Comparator<AbstractObservation> OBSERVATION_COMPARATOR = (o1, o2) -> {
-        if (o1 == null && o2 == null) {
-            return 0;
-        } else if (o1 == null || o2 == null) {
-            return (o1 == null) ? -1 : 1;
-        } else if (o1.getDate() == null && o2.getDate() == null) {
-            return 0;
-        } else if (o1.getDate() == null || o2.getDate() == null) {
-            return (o1.getDate() == null) ? 1 : -1;
-        } else {
-            return -o1.getDate().compareTo(o2.getDate());
-        }
-    };
-
-    /**
-     * Pour le classement des photographies de la plus récente à la plus
-     * ancienne.
-     */
-    static final Comparator<AbstractPhoto> PHOTO_COMPARATOR = (p1, p2) -> {
-        if (p1 == null && p2 == null) {
-            return 0;
-        } else if (p1 == null || p2 == null) {
-            return (p1 == null) ? -1 : 1;
-        } else if (p1.getDate() == null && p2.getDate() == null) {
-            return 0;
-        } else if (p1.getDate() == null || p2.getDate() == null) {
-            return (p1.getDate() == null) ? 1 : -1;
-        } else {
-            return -p1.getDate().compareTo(p2.getDate());
-        }
-    };
-
-    /**
-     * Pour le classement des éléments par désignation (ordre alphabétique).
-     */
-    static final Comparator<Element> ELEMENT_COMPARATOR = (p1, p2) -> {
-        if (p1 == null && p2 == null) {
-            return 0;
-        } else if (p1 == null || p2 == null) {
-            return (p1 == null) ? -1 : 1;
-        } else if (p1.getDesignation() == null && p2.getDesignation() == null) {
-            return 0;
-        } else if (p1.getDesignation() == null || p2.getDesignation() == null) {
-            return (p1.getDesignation() == null) ? 1 : -1;
-        } else {
-            return p1.getDesignation().compareTo(p2.getDesignation());
-        }
-    };
-
-    /**
      * Méthode retournant la dernière observation parmi une observable liste
      * d'objet héritant de la classe AbstractObservation
      *
@@ -295,7 +242,7 @@ public class ObjectDataSource<T> implements JRDataSource {
         if ((observations!=null) && (observations.size() > 0)) {
             
              //min car OBSERVATION_COMPARATOR classe les observations dans l'ordre inverse des dates (LocalDate)
-            AbstractObservation lastObservation = Collections.min(observations, OBSERVATION_COMPARATOR);
+            AbstractObservation lastObservation = Collections.min(observations, SirsComparator.OBSERVATION_COMPARATOR);
             
             Optional<LocalDate> observationDate = Optional.ofNullable(lastObservation.getDate());
             Optional<String> observationEvolution = Optional.ofNullable(lastObservation.getEvolution());
@@ -316,4 +263,11 @@ public class ObjectDataSource<T> implements JRDataSource {
         return "Ni commentaire ni observation.";
     }
 
+    public static BufferedImage noImage() {
+        try {
+            return javax.imageio.ImageIO.read(ObjectDataSource.class.getResource("/fr/sirs/images/imgNotFound.png"));
+        } catch (IOException ex) {
+            throw new RuntimeException("Missing resource: /fr/sirs/images/imgNotFound.png", ex);
+        }
+    }
 }

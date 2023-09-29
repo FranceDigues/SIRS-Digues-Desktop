@@ -109,7 +109,7 @@ public class ExportMenu extends TreeMenuItem {
                     final File folder = chooser.showDialog(null);
 
                     if(folder!=null){
-                        TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory));
+                        TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory, null));
                     }
                 }
             });

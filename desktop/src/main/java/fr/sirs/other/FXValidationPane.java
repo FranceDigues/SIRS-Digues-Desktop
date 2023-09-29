@@ -54,6 +54,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -63,6 +64,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -71,7 +73,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
-import org.apache.sis.util.ArgumentChecks;
 import org.geotoolkit.gui.javafx.util.ButtonTableCell;
 import org.geotoolkit.gui.javafx.util.TaskManager;
 import org.geotoolkit.internal.GeotkFX;
@@ -217,6 +218,7 @@ public class FXValidationPane extends BorderPane {
         allByValidationState.removeIf(p -> SQLQuery.class.getCanonicalName().equals(p.getElementClass()));
 
         table.setItems(FXCollections.observableArrayList(allByValidationState));
+        table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         choiceBox.setConverter(new StringConverter<Choice>() {
 
@@ -388,46 +390,9 @@ public class FXValidationPane extends BorderPane {
             button.setOnAction((ActionEvent event) -> {
                     final Preview vSummary = getItem();
                     if (vSummary != null) {
-                        final Session session = Injector.getSession();
-                        final AbstractSIRSRepository repo = session.getRepositoryForType(vSummary.getDocClass());
-                        final Element document = (Element) repo.get(vSummary.getDocId());
-
-                        final Element element;
-                        /* Si l'elementid est null, c'est que l'élément est le
-                         * document lui-même. Sinon, c'est que l'élément est
-                         * inclus quelque part dans le document et il faut le
-                         * rechercher.
-                         */
-                        if (vSummary.getElementId() == null) {
-                            element = document;
-                        } else {
-                            element = document.getChildById(vSummary.getElementId());
-                        }
-                        final boolean isValid = element.getValid();
-                        element.setValid(!isValid);
-                        if (!isValid && (element.getDesignation() == null || element.getDesignation().isEmpty())) {
-                            final Optional<Task<Integer>> incrementTask = session.getElementCreator().tryAutoIncrement(element.getClass());
-                            incrementTask.ifPresent(task -> {
-                                try {
-                                    TaskManager.INSTANCE.submit(task);
-                                    final Integer newDesignation = task.get();
-                                    if (newDesignation != null) {
-                                        final String designationToSet = newDesignation.toString();
-                                        SirsCore.fxRunAndWait(() -> {
-                                            element.setDesignation(designationToSet);
-                                            vSummary.setDesignation(designationToSet);
-                                        });
-                                    }
-                                } catch (Exception ex) {
-                                    SirsCore.LOGGER.log(Level.WARNING, "Cannot determine an auto-increment", ex);
-                                }
-                            });
-                        }
-
-                        repo.update(document);
-
-                        vSummary.setValid(!vSummary.getValid());
+                        updateValid(vSummary, !vSummary.getValid());
                         updateButton(vSummary.getValid());
+                        updateSelectedItems(vSummary.getValid());
                     }
                 });
         }
@@ -442,6 +407,45 @@ public class FXValidationPane extends BorderPane {
             }
         }
 
+        private void updateValid(final Preview item, final boolean valid) {
+            final Session session = Injector.getSession();
+            final AbstractSIRSRepository repo = session.getRepositoryForType(item.getDocClass());
+            final Element document = (Element) repo.get(item.getDocId());
+
+            final Element element;
+            /* Si l'elementid est null, c'est que l'élément est le
+            * document lui-même. Sinon, c'est que l'élément est
+            * inclus quelque part dans le document et il faut le
+            * rechercher.
+            */
+            if (item.getElementId() == null) {
+                element = document;
+            } else {
+                element = document.getChildById(item.getElementId());
+            }
+            element.setValid(valid);
+            if (valid && (element.getDesignation() == null || element.getDesignation().isEmpty())) {
+                final Optional<Task<Integer>> incrementTask = session.getElementCreator().tryAutoIncrement(element.getClass());
+                incrementTask.ifPresent(task -> {
+                    try {
+                        TaskManager.INSTANCE.submit(task);
+                        final Integer newDesignation = task.get();
+                        if (newDesignation != null) {
+                            final String designationToSet = newDesignation.toString();
+                            SirsCore.fxRunAndWait(() -> {
+                                element.setDesignation(designationToSet);
+                                item.setDesignation(designationToSet);
+                            });
+                        }
+                    } catch (Exception ex) {
+                        SirsCore.LOGGER.log(Level.WARNING, "Cannot determine an auto-increment", ex);
+                    }
+                });
+            }
+            repo.update(document);
+            item.setValid(valid);
+        }
+
         @Override
         protected void updateItem(Preview item, boolean empty) {
             super.updateItem(item, empty);
@@ -454,6 +458,14 @@ public class FXValidationPane extends BorderPane {
                 setGraphic(button);
                 updateButton(item.getValid());
             }
+        }
+
+        private void updateSelectedItems(final boolean valid) {
+            ObservableList<Preview> selectedItems = table.getSelectionModel().getSelectedItems();
+            for (Preview p: selectedItems) {
+                updateValid(p, valid);
+            }
+            table.refresh();
         }
     }
 

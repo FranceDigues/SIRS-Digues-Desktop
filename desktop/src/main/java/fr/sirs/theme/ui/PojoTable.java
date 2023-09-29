@@ -1,18 +1,18 @@
 /**
  * This file is part of SIRS-Digues 2.
- *
+ * <p>
  * Copyright (C) 2016, FRANCE-DIGUES,
- *
+ * <p>
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- *
+ * <p>
  * SIRS-Digues 2 is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * SIRS-Digues 2. If not, see <http://www.gnu.org/licenses/>
  */
@@ -20,9 +20,8 @@ package fr.sirs.theme.ui;
 
 import com.sun.javafx.property.PropertyReference;
 import com.vividsolutions.jts.geom.Point;
-import fr.sirs.Injector;
-import fr.sirs.Printable;
-import fr.sirs.SIRS;
+import fr.sirs.*;
+
 import static fr.sirs.SIRS.AUTHOR_FIELD;
 import static fr.sirs.SIRS.COMMENTAIRE_FIELD;
 import static fr.sirs.SIRS.DATE_MAJ_FIELD;
@@ -36,28 +35,15 @@ import static fr.sirs.SIRS.VALID_FIELD;
 import static fr.sirs.SIRS.ID_FIELD;
 import static fr.sirs.SIRS.REVISION_FIELD;
 import static fr.sirs.SIRS.NEW_FIELD;
-import fr.sirs.Session;
-import fr.sirs.StructBeanSupplier;
+import static fr.sirs.core.SirsCore.*;
+
 import fr.sirs.core.Repository;
 import fr.sirs.core.SirsCore;
 import fr.sirs.core.component.AbstractSIRSRepository;
 import fr.sirs.core.component.Previews;
-import fr.sirs.core.model.AbstractObservation;
-import fr.sirs.core.model.AbstractPhoto;
-import fr.sirs.core.model.AvecBornesTemporelles;
-import fr.sirs.core.model.AvecForeignParent;
-import fr.sirs.core.model.AvecGeometrie;
-import fr.sirs.core.model.AvecPhotos;
-import fr.sirs.core.model.Desordre;
-import fr.sirs.core.model.Element;
-import fr.sirs.core.model.LabelMapper;
-import fr.sirs.core.model.Objet;
-import fr.sirs.core.model.PointZ;
-import fr.sirs.core.model.Positionable;
-import fr.sirs.core.model.Preview;
-import fr.sirs.core.model.SystemeEndiguement;
+import fr.sirs.core.model.*;
 import fr.sirs.theme.ColumnOrder;
-import fr.sirs.util.ConvertPositionableCoordinates;
+import fr.sirs.util.*;
 import fr.sirs.theme.ui.columns.ColumnState;
 import fr.sirs.theme.ui.columns.TableColumnsPreferences;
 import fr.sirs.theme.ui.pojotable.ChoiceStage;
@@ -72,10 +58,6 @@ import fr.sirs.theme.ui.pojotable.ImportAction;
 import fr.sirs.theme.ui.pojotable.ShowOnMapColumn;
 import fr.sirs.theme.ui.pojotable.SimpleCell;
 import fr.sirs.ui.Growl;
-import fr.sirs.util.FXReferenceEqualsOperator;
-import fr.sirs.util.LabelComparator;
-import fr.sirs.util.SEClassementEqualsOperator;
-import fr.sirs.util.SirsStringConverter;
 import fr.sirs.util.odt.ODTUtils;
 import fr.sirs.util.property.Computed;
 import fr.sirs.util.property.Internal;
@@ -91,16 +73,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -149,10 +122,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Separator;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -161,6 +135,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -172,7 +147,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Popup;
 import javafx.util.Callback;
 import javafx.util.Duration;
-import jidefx.scene.control.field.NumberField;
+import javafx.util.StringConverter;
 import org.apache.sis.feature.AbstractIdentifiedType;
 import org.apache.sis.feature.DefaultAssociationRole;
 import org.apache.sis.feature.DefaultAttributeType;
@@ -203,6 +178,7 @@ import org.opengis.filter.Filter;
  * @author Alexis Manin (Geomatys)
  * @author Samuel Andrés (Geomatys)
  * @author Matthieu Bastianelli (Geomatys)
+ * @author Maxime Gavens (Geomatys)
  */
 public class PojoTable extends BorderPane implements Printable {
 
@@ -213,9 +189,10 @@ public class PojoTable extends BorderPane implements Printable {
     private static final Image ICON_SHOWONMAP = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_GLOBE, 16, FontAwesomeIcons.DEFAULT_COLOR), null);
 
     public static final String[] COLUMNS_TO_IGNORE = new String[]{
-        AUTHOR_FIELD, VALID_FIELD, FOREIGN_PARENT_ID_FIELD, LONGITUDE_MIN_FIELD,
-        LONGITUDE_MAX_FIELD, LATITUDE_MIN_FIELD, LATITUDE_MAX_FIELD, DATE_MAJ_FIELD,
-        COMMENTAIRE_FIELD, GEOMETRY_MODE_FIELD, REVISION_FIELD, ID_FIELD, NEW_FIELD
+            AUTHOR_FIELD, VALID_FIELD, FOREIGN_PARENT_ID_FIELD, LONGITUDE_MIN_FIELD,
+            LONGITUDE_MAX_FIELD, LATITUDE_MIN_FIELD, LATITUDE_MAX_FIELD, DATE_MAJ_FIELD,
+            COMMENTAIRE_FIELD, GEOMETRY_MODE_FIELD, REVISION_FIELD, ID_FIELD, NEW_FIELD,
+            TIMESTAMP_START_DATE_START_VALIDITY, TIMESTAMP_END_DATE_START_VALIDITY, TIMESTAMP_END_DATE_END_VALIDITY
     };
 
     /**
@@ -408,10 +385,6 @@ public class PojoTable extends BorderPane implements Printable {
     }
 
     /**
-     * @param pojoClass
-     * @param title
-     * @param container
-     * @param repo
      * @param applyPreferences : boolean value use to indicate to not apply
      * preferences in the constructor. It is used in {@link ParamPojoTable}
      * which add columns to uiTable after super constructor's call.
@@ -492,9 +465,7 @@ public class PojoTable extends BorderPane implements Printable {
         cellEditableProperty.bind(editableProperty);
 
         detaillableProperty.addListener(
-                (ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
-                    editCol.setVisible(newValue);
-                });
+                (ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> editCol.setVisible(newValue));
 
         uiTable.getColumns().add(deleteColumn);
         uiTable.getColumns().add((TableColumn) editCol);
@@ -679,7 +650,7 @@ public class PojoTable extends BorderPane implements Printable {
                     //Copie des éléments sélectionnés vers la cible identifiée.
                     this.elementCopier.copyPojosTo(target, elements);
 
-                    if (elementCopier.getAvecForeignParent()) {
+                    if (elementCopier.getAvecForeignParent() || elementCopier.getRapportEtude()) {
                         //On rafraîchie les éléments du tableau.
                         updateTableItems(dataSupplierProperty, null, dataSupplierProperty.get());
                     }
@@ -712,7 +683,7 @@ public class PojoTable extends BorderPane implements Printable {
                 final Optional<ButtonType> res = alert.showAndWait();
                 if (res.isPresent() && ButtonType.YES.equals(res.get())) {
                     deletePojos(elements);
-                    if (uiFicheMode.isSelected())  {
+                    if (uiFicheMode.isSelected()) {
                         updateFiche();
                     }
                 }
@@ -803,9 +774,13 @@ public class PojoTable extends BorderPane implements Printable {
         uiImport.managedProperty().bind(importPointProperty);
         uiImport.setOnAction(new ImportAction(pojoClass, this));
 
+        if (ProfilTravers.class.isAssignableFrom(pojoClass)) {
+            importPointProperty.set(true);
+        }
+
         uiExport.getStyleClass().add(BUTTON_STYLE);
         uiExport.disableProperty().bind(Bindings.isNull(uiTable.getSelectionModel().selectedItemProperty()));
-        uiExport.setOnAction(new ExportAction(getStructBeanSupplier()));
+        uiExport.setOnAction(new ExportAction(getStructBeanSupplier(), getColumns()));
 
         if (PointZ.class.isAssignableFrom(pojoClass)) {
             uiTable.getColumns().add(new DistanceComputedPropertyColumn(DOUBLE_CELL_FACTORY, parentElementProperty, uiTable));
@@ -870,6 +845,9 @@ public class PojoTable extends BorderPane implements Printable {
         uiCurrent.setTooltip(new Tooltip("Aller au numéro..."));
         uiDelete.setTooltip(new Tooltip("Supprimer les éléments sélectionnés"));
         uiFilter.setTooltip(new Tooltip("Filtrer les données"));
+        if (ProfilTravers.class.isAssignableFrom(pojoClass)) {
+            uiImport.setTooltip(new Tooltip("Importer des paramètres hydrauliques"));
+        }
 
         if (BUG_JAVAFX_COLUMN_MOVE) {
             //Place toutes les colonnes non visible en fin de tableau (excepté le bouton de suppression)
@@ -894,7 +872,7 @@ public class PojoTable extends BorderPane implements Printable {
         //Application des préférence utilisateur (position, visibilité et largeur
         // de colonne. Le booléan applyPreferences permet de ne pas appliqué ces
         // préférence depuis ce contructeur.
-        if (applyPreferences){
+        if (applyPreferences) {
             applyPreferences();
             listenPreferences();
         }
@@ -908,6 +886,7 @@ public class PojoTable extends BorderPane implements Printable {
     //==========================================================================
 
     //==========================================================================
+
     /**
      * Méthode permettant de lancer une sauvegarde de préférences utilisateur
      * lorsqu'un changement de la tableView {@code  uiTable} a été détécté.
@@ -966,7 +945,7 @@ public class PojoTable extends BorderPane implements Printable {
      * TODO : should call 3 methods : one by listener.
      *
      */
-    final protected void listenPreferences(){
+    final protected void listenPreferences() {
         //Ajout Listener pour identifier et sauvegarder les modifications de colonnes par l'utilisateur :
         //Identification des changements d'épaisseur.
         uiTable.getColumns().forEach(col -> col.widthProperty().addListener((ov, t, t1) -> {
@@ -1092,6 +1071,9 @@ public class PojoTable extends BorderPane implements Printable {
         return titleProperty;
     }
 
+    protected Callback<TableColumn.CellDataFeatures, ObservableValue> getDefaultValueFactory() { return DEFAULT_VALUE_FACTORY;}
+    protected Predicate getDefaultVisiblePredicate() { return DEFAULT_VISIBLE_PREDICATE;}
+
     protected final ObservableList<TableColumn<Element, ?>> getColumns() {
         return uiTable.getColumns();
     }
@@ -1104,7 +1086,7 @@ public class PojoTable extends BorderPane implements Printable {
         return getTable().getSelectionModel().selectedItemProperty();
     }
 
-    protected final TableView<Element> getTable() {
+    public final TableView<Element> getTable() {
         return uiTable;
     }
 
@@ -1369,21 +1351,25 @@ public class PojoTable extends BorderPane implements Printable {
     }
 
     protected void goTo(ActionEvent event) {
+        final int tableSize = uiTable.getItems().size();
+        final int currentIndex = uiTable.getSelectionModel().getSelectedIndex() + 1;
         final Popup popup = new Popup();
-        NumberField indexEditor = new NumberField(NumberField.NumberType.Integer);
+        final Spinner<Integer> numberField = new Spinner<>();
 
-        popup.getContent().add(indexEditor);
-        popup.setAutoHide(false);
-
-        indexEditor.setOnAction((ActionEvent event1) -> {
-            final Number indexToSelect = indexEditor.valueProperty().get();
-            if (indexToSelect != null) {
-                final int index = indexToSelect.intValue();
-                if (index >= 0 && index < uiTable.getItems().size()) {
-                    uiTable.getSelectionModel().select(index);
+        numberField.setEditable(true);
+        numberField.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, tableSize, currentIndex));
+        popup.getContent().add(numberField);
+        popup.setAutoHide(true);
+        numberField.setOnKeyReleased((k) -> {
+            if (k.getCode() == KeyCode.ENTER) {
+                final int index = numberField.getValue() - 1;
+                if (index >= 0 && index < tableSize) {
+                    TableView.TableViewSelectionModel<Element> selectionModel = uiTable.getSelectionModel();
+                    selectionModel.select(index);
                 }
+                popup.hide();
+                updateFiche();
             }
-            popup.hide();
         });
         final Point2D sc = uiCurrent.localToScreen(0, 0);
         popup.show(uiSearch, sc.getX(), sc.getY());
@@ -1391,7 +1377,10 @@ public class PojoTable extends BorderPane implements Printable {
 
     /**
      * @return {@link TableView} used for element display.
+     * Deprecated - to be removed but first fix {@link FXSystemeReperagePane} method updateFields (I could not solve it)
+     * Duplicate with method getTable()
      */
+    @Deprecated
     public TableView getUiTable() {
         return uiTable;
     }
@@ -1475,9 +1464,7 @@ public class PojoTable extends BorderPane implements Printable {
                 }
             }
             if (allValues.isEmpty()) {
-                Platform.runLater(() -> {
-                    uiSearch.setGraphic(searchNone);
-                });
+                Platform.runLater(() -> uiSearch.setGraphic(searchNone));
             }
 
             // Apply filter on properties
@@ -1489,12 +1476,14 @@ public class PojoTable extends BorderPane implements Printable {
             }
 
             // Apply "Plain text" filter
-            final String str = currentSearch.get();
-            if ((str == null || str.isEmpty()) && firstFilter == null) {
+            final String searched = currentSearch.get();
+            if ((searched == null || searched.isEmpty()) && firstFilter == null) {
                 filteredValues = allValues.filtered((Element t) -> true);
             } else {
                 final Set<String> result = new HashSet<>();
-                SearchResponse search = Injector.getElasticSearchEngine().search(QueryBuilders.simpleQueryStringQuery("*" + str + "*").analyzeWildcard(true).lenient(true));
+                // Remove wildcard analyze as it returned too much result without obvious link with the searched text.
+                // Handle case in getSearchTextInCellsPredicate method
+                SearchResponse search = Injector.getElasticSearchEngine().search(QueryBuilders.simpleQueryStringQuery("*" + searched + "*").analyzeWildcard(false).lenient(true));
                 Iterator<SearchHit> iterator = search.getHits().iterator();
                 while (iterator.hasNext() && !currentThread.isInterrupted()) {
                     result.add(iterator.next().getId());
@@ -1506,8 +1495,10 @@ public class PojoTable extends BorderPane implements Printable {
 
                 final Predicate<Element> filterPredicate;
                 if (firstFilter == null) {
-                    filterPredicate = element -> element == null || result.contains(element.getId());
-                } else if (str == null || str.isEmpty()) {
+                    final SirsStringConverter converter = new SirsStringConverter();
+                    filterPredicate = element -> element == null || result.contains(element.getId())
+                            || getSearchTextInCellsPredicate(searched, converter).test(element);
+                } else if (searched == null || searched.isEmpty()) {
                     filterPredicate = element -> element == null || firstFilter.evaluate(element);
                 } else {
                     filterPredicate = element -> element == null || result.contains(element.getId()) && firstFilter.evaluate(element);
@@ -1546,9 +1537,7 @@ public class PojoTable extends BorderPane implements Printable {
                 if (ex != null) {
                     SIRS.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
                 }
-                Platform.runLater(() -> {
-                    uiSearch.setGraphic(searchNone);
-                });
+                Platform.runLater(() -> uiSearch.setGraphic(searchNone));
             } else if (Worker.State.RUNNING.equals(newValue)) {
                 Platform.runLater(() -> uiSearch.setGraphic(searchRunning));
             }
@@ -1556,6 +1545,45 @@ public class PojoTable extends BorderPane implements Printable {
 
         tableUpdaterProperty.set(TaskManager.INSTANCE.submit("Recherche...", updater));
     }
+
+    /**
+     * @param searched : searched text
+     * @param converter : converter to convert {@link PropertyColumn#getCellData(Object)} )} in String;
+     * @return a {@link Predicate<Element>} testing if the cells of {@link #getUiTable()} associated with the tested element
+     *        refer to the searched text.
+     */
+    private Predicate<Element> getSearchTextInCellsPredicate(final String searched, final StringConverter converter) {
+        return element -> uiTable.getColumns().stream()//Search in tableview's cells
+                .filter(col -> col instanceof PropertyColumn)
+                .map(col -> {
+                    final Object cellData = col.getCellData(element);
+                    if (cellData != null) {
+                        if (((PropertyColumn) col).getReference() == null) {
+                            final String res = converter.toString(cellData);
+                            return ((res == null) || res.isEmpty()) ? cellData.toString() : res; //try to handle not Sirs Object like LocalDate  todo include it in SirsStringConverter?
+                        } else if (cellData instanceof String) {
+                            return toDisplayedText((String) cellData);
+                        }
+                    }
+                    return null;
+                })
+                .filter(s -> s != null && !s.isEmpty())
+                .anyMatch(str -> str.toLowerCase().contains(searched.toLowerCase()));
+    }
+
+    private String toDisplayedText(final String value) {
+        if (value == null || value.isEmpty()) return "";
+        try {
+            final Preview tmpPreview = Injector.getSession().getPreviews().get(value);
+            if (tmpPreview != null) {
+                return new SirsStringConverter().toString(tmpPreview);
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.INFO, "Failed to convert input value to cell text; return input value;", e);
+        }
+        return value;
+    }
+
 
     /**
      * Delete the elements given in parameter. They are suppressed from the
@@ -1592,10 +1620,7 @@ public class PojoTable extends BorderPane implements Printable {
     }
 
     /**
-     * Try to find and display a form to edit input object.
-     *
-     * @param pojo The object we want to edit.
-     * @return
+     * Same as {@link PojoTable#editPojo(Object, Predicate)} with {@link SIRS#CONSULTATION_PREDICATE}.
      */
     protected Object editPojo(Object pojo) {
         return editPojo(pojo, SIRS.CONSULTATION_PREDICATE);
@@ -1603,9 +1628,9 @@ public class PojoTable extends BorderPane implements Printable {
 
     /**
      *
-     * @param pojo
-     * @param editionPredicate
-     * @return
+     * Try to find and display a form to edit input object.
+     *
+     * @param pojo The object we want to edit.
      */
     protected Object editPojo(Object pojo, Predicate<Element> editionPredicate) {
         final int index;
@@ -1672,6 +1697,8 @@ public class PojoTable extends BorderPane implements Printable {
             final Element parent = parentElementProperty.get();
             final Element owner = ownerElementProperty.get();
 
+            boolean mustAddToNotNullOwner = false;
+
             /* Dans le cas où on a un parent, il n'est pas nécessaire de faire
             addChild(), car la liste des éléments de la table est directement
             cette liste d'éléments enfants, sur laquelle on fait un add().*/
@@ -1681,11 +1708,13 @@ public class PojoTable extends BorderPane implements Printable {
                 if (parent instanceof AvecBornesTemporelles) {
                     timePeriod = (AvecBornesTemporelles) parent;
                 }
-            } /* Mais dans le cas où on a un référant principal, il faut faire un
+            } /*
+            ADD TO OWNER
+            Mais dans le cas où on a un référant principal, il faut faire un
             addChild(), car la liste des éléments de la table n'est pas une
             liste d'éléments enfants. Le référant principal n'a qu'une liste
             d'identifiants qu'il convient de mettre à jour avec addChild().*/ else if (owner != null) {
-                owner.addChild(newlyCreated);
+                mustAddToNotNullOwner = true;
                 if (owner instanceof AvecBornesTemporelles) {
                     timePeriod = (AvecBornesTemporelles) owner;
                 }
@@ -1743,6 +1772,17 @@ public class PojoTable extends BorderPane implements Printable {
                         Thread.currentThread().interrupt();
                     }
                 }
+            }
+            /*
+            ADD TO OWNER
+            -> le 'addChild' est effectué après avoir ajouté l'élément en base
+            afin de récupérer l'id attribué, nécessaire au addChild de certain
+            'owner'.
+            */
+            if (mustAddToNotNullOwner) {
+                owner.addChild(newlyCreated); //We already know that owner is not null.
+                final Class ownerClaz = owner.getClass();
+                Injector.getSession().getRepositoryForClass(ownerClaz).update(ownerClaz.cast(owner));
             }
 
             /*
@@ -1810,7 +1850,7 @@ public class PojoTable extends BorderPane implements Printable {
             col = new EnumColumn(desc);
         } else {
             col = new PropertyColumn(desc);
-            col.sortableProperty().bind(importPointProperty.not());
+            col.sortableProperty().setValue(Boolean.TRUE);
         }
         col.setId(desc.getName());
         return Optional.of(col);
@@ -1928,7 +1968,7 @@ public class PojoTable extends BorderPane implements Printable {
 // INTERNAL CLASSES
 //
 ////////////////////////////////////////////////////////////////////////////////
-    private class EnumColumn extends TableColumn<Element, Object> {
+    public class EnumColumn extends TableColumn<Element, Object> {
 
         private final String name;
 
@@ -2042,7 +2082,11 @@ public class PojoTable extends BorderPane implements Printable {
                 } else if (LocalDateTime.class.isAssignableFrom(type)) {
                     setCellFactory((TableColumn<Element, Object> param) -> new FXLocalDateTimeCell());
                 } else if (LocalDate.class.isAssignableFrom(type)) {
-                    setCellFactory((TableColumn<Element, Object> param) -> new FXLocalDateCell());
+                    if (TIMESTAMP_START_DATE.equalsIgnoreCase(name) || TIMESTAMP_END_DATE.equalsIgnoreCase(name)) {
+                        setCellFactory((TableColumn<Element, Object> param) -> new FXLocalDateCell(true));
+                    } else {
+                        setCellFactory((TableColumn<Element, Object> param) -> new FXLocalDateCell());
+                    }
                 } else if (Point.class.isAssignableFrom(type)) {
                     setCellFactory((TableColumn<Element, Object> param) -> new FXPointCell());
                 } else {
@@ -2086,14 +2130,50 @@ public class PojoTable extends BorderPane implements Printable {
             final Object oldValue = value.getValue();
 
             try {
-                ((WritableValue) value).setValue(event.getNewValue());
+                final Object newValue = event.getNewValue();
+                ((WritableValue) value).setValue(newValue);
+                final Class<?> rowClass = rowElement.getClass();
 
                 //On recalcule les coordonnées si la colonne modifiée correspond à une des propriétées de coordonnées géo ou linéaire.
                 String modifiedPropretieName = ((PojoTable.PropertyColumn) col).getName();
-                if ((event.getRowValue() != null) && (Positionable.class.isAssignableFrom(event.getRowValue().getClass()))) {
+                if ((rowElement != null) && (Positionable.class.isAssignableFrom(rowClass))) {
 
-                    ConvertPositionableCoordinates.computeForModifiedPropertie((Positionable) event.getRowValue(), modifiedPropretieName);
+                    ConvertPositionableCoordinates.computeForModifiedPropertie((Positionable) rowElement, modifiedPropretieName);
 
+                }
+
+                if (rowElement instanceof Prestation) {
+
+                    Prestation prestation = (Prestation) rowElement;
+                    // REDMINE 7782 - Update prestation's registreAttribution value depending on the typePrestationId.
+                    if ("typePrestationId".equals(modifiedPropretieName)
+                            && (newValue instanceof String && !newValue.equals(oldValue))) {
+                        FXPrestationPane.autoSelectRegistre(prestation, (String) newValue);
+                    } else if (SirsCore.DATE_FIN_FIELD.equals(modifiedPropretieName)) {
+                        // REDMINE 7782 - when changing prestation's end validity date, check the end timestamp date and show warnings if necessary.
+                        final String refHoroId = prestation.getHorodatageStatusId();
+
+                        // prestation in the SE's registre :
+                        // - if "Non horodaté" -> no message, no effect
+                        // - if "En attente" -> message to warn the user it is "En attente" and ask if reset status to "Non horodaté"
+                        // - if "Horodaté" and "date d'horodatage de fin" not null -> message to warn the user it has already been timestamped for the end date
+                        //   and ask if reset status to "Non horodaté"
+                        if (prestation.getRegistreAttribution() && !HorodatageReference.getRefNonTimeStampedStatus().equals(refHoroId)) {
+                            final StringBuilder message = FXPrestationPane.constructMessage(refHoroId, prestation.getHorodatageEndDate());
+
+                            final Optional optional = PropertiesFileUtilities.showConfirmationDialog(message.toString(), "Modification date de fin", 600, 450, true);
+                            if (optional.isPresent()) {
+                                final Object result = optional.get();
+                                if (ButtonType.YES.equals(result)) {
+                                    prestation.setHorodatageStatusId(HorodatageReference.getRefNonTimeStampedStatus());
+                                } else if (ButtonType.NO.equals(result)) {
+                                    // do nothing
+                                } else if (ButtonType.CANCEL.equals(result)) {
+                                    prestation.setDate_fin((LocalDate) oldValue);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 elementEdited(event);

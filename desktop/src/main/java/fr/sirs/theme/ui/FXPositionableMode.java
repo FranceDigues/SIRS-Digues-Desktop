@@ -31,6 +31,11 @@ import javafx.scene.Node;
  */
 public interface FXPositionableMode {
 
+    String COORDS_TYPE_UNKNOWN = "Coord. d'origine inconnues.";
+    String COORDS_TYPE_COMPUTED = "Coordonnées calculées";
+    String COORDS_TYPE_ENTERED = "Coordonnées saisies";
+    String COORDS_TYPE_CARTO = "Géométrie créée via la carte";
+
     /**
      * ID du mode d'édition. Cette valeur est stoquée dans le champ geometryMode
      * du positionable.
@@ -89,7 +94,7 @@ public interface FXPositionableMode {
      */
     void buildGeometry();
 
-    
+
     /**
      *
      * @param spinnerNumber

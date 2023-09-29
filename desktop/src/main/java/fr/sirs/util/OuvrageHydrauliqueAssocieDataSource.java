@@ -18,6 +18,7 @@
  */
 package fr.sirs.util;
 
+import fr.sirs.CorePlugin;
 import fr.sirs.Injector;
 import static fr.sirs.core.SirsCore.DIGUE_ID_FIELD;
 import fr.sirs.core.component.Previews;
@@ -31,21 +32,28 @@ import fr.sirs.core.model.Organisme;
 import fr.sirs.core.model.OuvrageHydrauliqueAssocie;
 import fr.sirs.core.model.Photo;
 import fr.sirs.core.model.ProprieteObjet;
+import fr.sirs.core.model.RefSecurite;
 import fr.sirs.core.model.ReseauHydrauliqueFerme;
 import fr.sirs.core.model.TronconDigue;
 import static fr.sirs.util.AbstractJDomWriter.NULL_REPLACEMENT;
+import static fr.sirs.util.JRDomWriterDesordreSheet.IMAGE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.RESEAU_FERME_TABLE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.DESORDRE_TABLE_DATA_SOURCE;
+import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.SECURITE_ID_FIELD;
 import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.LENGTH_FIELD;
 import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.MANAGER_FIELD;
 import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.OBSERVATION_TABLE_DATA_SOURCE;
+import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.OBSERVATION_SPEC_TABLE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.OWNER_FIELD;
 import static fr.sirs.util.JRDomWriterOuvrageAssocieSheet.PHOTO_DATA_SOURCE;
+import java.awt.Dimension;
+import java.awt.Image;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
@@ -58,20 +66,27 @@ import org.geotoolkit.display.MeasureUtilities;
  * @author Samuel Andrés (Geomatys)
  */
 public class OuvrageHydrauliqueAssocieDataSource extends ObjectDataSource<OuvrageHydrauliqueAssocie> {
-    
+
+    private static Logger LOGGER = Logger.getLogger(OuvrageHydrauliqueAssocieDataSource.class.getName());
+
     private static final NumberFormat DISTANCE_FORMAT = new DecimalFormat("0.00");
-    
 
-    public OuvrageHydrauliqueAssocieDataSource(Iterable<OuvrageHydrauliqueAssocie> iterable) {
+    private final boolean printLocationInsert;
+
+
+    public OuvrageHydrauliqueAssocieDataSource(Iterable<OuvrageHydrauliqueAssocie> iterable, final boolean printLocationInsert) {
         super(iterable);
+        this.printLocationInsert = printLocationInsert;
     }
 
-    public OuvrageHydrauliqueAssocieDataSource(final Iterable<OuvrageHydrauliqueAssocie> iterable, final Previews previewLabelRepository){
+    public OuvrageHydrauliqueAssocieDataSource(final Iterable<OuvrageHydrauliqueAssocie> iterable, final Previews previewLabelRepository, final boolean printLocationInsert){
         super(iterable, previewLabelRepository);
+        this.printLocationInsert = printLocationInsert;
     }
 
-    public OuvrageHydrauliqueAssocieDataSource(final Iterable<OuvrageHydrauliqueAssocie> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter){
+    public OuvrageHydrauliqueAssocieDataSource(final Iterable<OuvrageHydrauliqueAssocie> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter, final boolean printLocationInsert){
         super(iterable, previewLabelRepository, stringConverter);
+        this.printLocationInsert = printLocationInsert;
     }
 
     @Override
@@ -172,19 +187,19 @@ public class OuvrageHydrauliqueAssocieDataSource extends ObjectDataSource<Ouvrag
             if(currentObject.getPhotos()!=null && !currentObject.getPhotos().isEmpty()){
                 photos.addAll(currentObject.getPhotos());
             }
-            photos.sort(PHOTO_COMPARATOR);
+            photos.sort(SirsComparator.PHOTO_COMPARATOR);
             return new ObjectDataSource<>(photos, previewRepository, stringConverter);
         }
-        else if(OBSERVATION_TABLE_DATA_SOURCE.equals(name)){
+        else if(OBSERVATION_TABLE_DATA_SOURCE.equals(name) || OBSERVATION_SPEC_TABLE_DATA_SOURCE.equals(name)){
             final ObservableList<ObservationOuvrageHydrauliqueAssocie> observations = currentObject.getObservations();
-            observations.sort(OBSERVATION_COMPARATOR);
+            observations.sort(SirsComparator.OBSERVATION_COMPARATOR);
             return new ObjectDataSource<>(observations, previewRepository, stringConverter);
         }
         else if(RESEAU_FERME_TABLE_DATA_SOURCE.equals(name)){
 
             final List<ReseauHydrauliqueFerme> reseauOuvrageList = Injector.getSession().getRepositoryForClass(ReseauHydrauliqueFerme.class).get(currentObject.getReseauHydrauliqueFermeIds());
             
-            reseauOuvrageList.sort(ELEMENT_COMPARATOR);
+            reseauOuvrageList.sort(SirsComparator.ELEMENT_COMPARATOR);
             return new ObjectDataSource<>(reseauOuvrageList, previewRepository, stringConverter);
         }
         else if(DESORDRE_TABLE_DATA_SOURCE.equals(name)){
@@ -199,8 +214,23 @@ public class OuvrageHydrauliqueAssocieDataSource extends ObjectDataSource<Ouvrag
             }
             Collections.sort(desordreRows);
             return new ObjectDataSource<>(desordreRows, previewRepository, stringConverter);
+        } else if (IMAGE_DATA_SOURCE.equals(name)) {
+            if (this.printLocationInsert) {
+                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1080));
+                if (img != null) {
+                    return img;
+                } else {
+                    return noImage();
+                }
+            } else {
+                return null;
+            }
+        } else if(SECURITE_ID_FIELD.equals(name)){
+            if(currentObject != null && currentObject.getSecuriteId() != null){
+                return parsePropertyValue(currentObject.getSecuriteId(), RefSecurite.class, String.class);
+            }
+            return null;
         }
         else return super.getFieldValue(jrf);
     }
-
 }

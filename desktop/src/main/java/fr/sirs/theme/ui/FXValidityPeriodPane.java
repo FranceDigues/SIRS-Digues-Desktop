@@ -27,7 +27,9 @@ import java.util.function.Predicate;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.beans.value.WeakChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
@@ -45,6 +47,9 @@ public class FXValidityPeriodPane extends BorderPane {
     private final SimpleObjectProperty<AvecBornesTemporelles> target = new SimpleObjectProperty<>();
 
     private final SimpleBooleanProperty disableFieldsProperty = new SimpleBooleanProperty(false);
+    // do not use directly. Use endDateWeakListener.
+    private ChangeListener<LocalDate> endDateListener = (obs, oldVal, newVal) -> checkEndDateOk(oldVal, newVal);
+    private WeakChangeListener<LocalDate> endDateWeakListener = new WeakChangeListener<>(endDateListener);
 
     public FXValidityPeriodPane() {
         super();
@@ -74,17 +79,21 @@ public class FXValidityPeriodPane extends BorderPane {
             }
         });
 
-        uiDateFin.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                final LocalDate dateDebut = uiDateDebut.getValue();
-                if (dateDebut != null && dateDebut.isAfter(newVal)) {
-                    new Growl(Growl.Type.WARNING, "Impossible d'avoir une date de fin antérieure à la date de début.").showAndFade();
-                    uiDateFin.setValue(oldVal);
-                }
-            }
-        });
+        uiDateFin.valueProperty().addListener(endDateWeakListener);
         DatePickerConverter.register(uiDateDebut);
         DatePickerConverter.register(uiDateFin);
+    }
+
+    protected boolean checkEndDateOk(LocalDate oldVal, LocalDate newVal) {
+        if (newVal != null) {
+            final LocalDate dateDebut = uiDateDebut.getValue();
+            if (dateDebut != null && dateDebut.isAfter(newVal)) {
+                new Growl(Growl.Type.WARNING, "Impossible d'avoir une date de fin antérieure à la date de début.").showAndFade();
+                uiDateFin.setValue(oldVal);
+                return false;
+            }
+        }
+        return true;
     }
 
     private void targetChanged(ObservableValue<? extends AvecBornesTemporelles> observable, AvecBornesTemporelles oldTarget, AvecBornesTemporelles newTarget) {
@@ -125,5 +134,16 @@ public class FXValidityPeriodPane extends BorderPane {
                 setDisable(true);
             }
         }
+    }
+
+    DatePicker getDateFinPicker() {
+        return uiDateFin;
+    }
+
+    WeakChangeListener<LocalDate> getEndDateListener() {
+        return endDateWeakListener;
+    }
+    public void removeListeners() {
+        uiDateFin.valueProperty().removeListener(endDateWeakListener);
     }
 }

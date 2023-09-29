@@ -28,7 +28,7 @@ function(doc) {
             else if (object.login)
                 label = object.login;
             if (object['@class'])
-                emit(object['@class'], {docId: object._id, docClass: object['@class'], elementId: object._id, elementClass: object['@class'], author: object.author, valid: object.valid, designation: object.designation, libelle: label});
+                emit(object['@class'], {docId: object._id, docClass: object['@class'], elementId: object._id, elementClass: object['@class'], author: object.author, valid: object.valid, designation: object.designation, libelle: label, date_fin: object.date_fin});
         }
     }
 

@@ -1,20 +1,22 @@
 
 package fr.sirs.theme.ui;
 
-import fr.sirs.Session;
-import fr.sirs.SIRS;
 import fr.sirs.Injector;
-import fr.sirs.core.component.*;
+import fr.sirs.SIRS;
+import fr.sirs.Session;
+import fr.sirs.core.component.Previews;
 import fr.sirs.core.model.*;
-
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.event.ActionEvent;
-import javafx.scene.image.ImageView;
-import java.util.Optional;
+import fr.sirs.util.property.SirsPreferences;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextArea;
+import javafx.scene.image.ImageView;
+
+import java.util.Optional;
 
 /**
  *
@@ -25,7 +27,7 @@ public class FXPositionDocumentPane extends AbstractFXElementPane<PositionDocume
 
     protected final Previews previewRepository;
     protected LabelMapper labelMapper;
-    
+
     // Propriétés de Positionable
     @FXML private FXPositionablePane uiPositionable;
 
@@ -43,7 +45,7 @@ public class FXPositionDocumentPane extends AbstractFXElementPane<PositionDocume
     // Propriétés de AbstractPositionDocumentAssociable
 
     /**
-     * Constructor. Initialize part of the UI which will not require update when 
+     * Constructor. Initialize part of the UI which will not require update when
      * element edited change.
      */
     protected FXPositionDocumentPane() {
@@ -63,36 +65,36 @@ public class FXPositionDocumentPane extends AbstractFXElementPane<PositionDocume
         ui_sirsdocument.disableProperty().bind(disableFieldsProperty());
         ui_sirsdocument_link.disableProperty().bind(ui_sirsdocument.getSelectionModel().selectedItemProperty().isNull());
         ui_sirsdocument_link.setGraphic(new ImageView(SIRS.ICON_LINK));
-        ui_sirsdocument_link.setOnAction((ActionEvent e)->Injector.getSession().showEditionTab(ui_sirsdocument.getSelectionModel().getSelectedItem()));       
+        ui_sirsdocument_link.setOnAction((ActionEvent e)->Injector.getSession().showEditionTab(ui_sirsdocument.getSelectionModel().getSelectedItem()));
         ui_linearId.disableProperty().bind(disableFieldsProperty());
-        
+
         /*
         Écouteur permettant de changer le tronçon sur lequel la position de document est située.
-        
+
         ATTENTION : Lorsqu'on clique trop rapidement en dehors de la liste déroulante après avoir changé de tronçon, on
-        rentre à nouveau dans cet écouteur avec newValue=null. Cela provoque entre autres l'impossiblité d'enregistrer 
+        rentre à nouveau dans cet écouteur avec newValue=null. Cela provoque entre autres l'impossiblité d'enregistrer
         l'élément en l'absence de linéaire parent.
         */
         ui_linearId.valueProperty().addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue observable, Object oldValue, Object newValue) {
                 if(newValue!=oldValue && newValue instanceof Preview){
-                    
+
                     // 1- On récupère le tronçon à partir du Preview.
                     final Optional<? extends Element> element = Injector.getSession().getElement(newValue);
-                    
+
                     if(element.isPresent() && element.get() instanceof TronconDigue){
-                    
+
                         final TronconDigue newTroncon = (TronconDigue) element.get();
-                        
+
                         // 2- On change l'identifiant du tronçon associé à l'élément
                         // Cela est nécessaire pour la mise à jour des informations de position
                         elementProperty.get().setLinearId(newTroncon.getId());
-                        
+
                         // 3- Il est impossible de "deviner" la géométrie de l'objet sur un nouveau tronçon quelconque
                         // On affecte donc a priori comme géométrie la géométrie du tronçon entier.
                         elementProperty.get().setGeometry(newTroncon.getGeometry());
-                        
+
                         // 4- Mise à jour des informations de position
                         uiPositionable.updateSRAndPRInfo();
                     }
@@ -101,13 +103,13 @@ public class FXPositionDocumentPane extends AbstractFXElementPane<PositionDocume
         });
         ui_linearId_link.disableProperty().bind(ui_linearId.getSelectionModel().selectedItemProperty().isNull());
         ui_linearId_link.setGraphic(new ImageView(SIRS.ICON_LINK));
-        ui_linearId_link.setOnAction((ActionEvent e)->Injector.getSession().showEditionTab(ui_linearId.getSelectionModel().getSelectedItem()));       
+        ui_linearId_link.setOnAction((ActionEvent e)->Injector.getSession().showEditionTab(ui_linearId.getSelectionModel().getSelectedItem()));
     }
-    
+
     public FXPositionDocumentPane(final PositionDocument positionDocument){
         this();
-        this.elementProperty().set(positionDocument);  
-    }     
+        this.elementProperty().set(positionDocument);
+    }
 
     /**
      * Initialize fields at element setting.
@@ -123,14 +125,14 @@ public class FXPositionDocumentPane extends AbstractFXElementPane<PositionDocume
         // Propriétés de AbstractPositionDocumentAssociable
         }
 
-        final Session session = Injector.getBean(Session.class); 
+        final Session session = Injector.getBean(Session.class);
 
         if (newElement == null) {
 
                 ui_sirsdocument.setItems(null);
                 ui_linearId.setItems(null);
         } else {
-       
+
 
         /*
          * Bind control properties to Element ones.
@@ -139,14 +141,16 @@ public class FXPositionDocumentPane extends AbstractFXElementPane<PositionDocume
         // * commentaire
         ui_commentaire.textProperty().bindBidirectional(newElement.commentaireProperty());
         SIRS.initCombo(ui_sirsdocument, SIRS.observableList(
-            previewRepository.getByClass(SIRSDefaultDocument.class)).sorted(), 
+            previewRepository.getByClass(SIRSDefaultDocument.class)).sorted(),
             newElement.getSirsdocument() == null ? null : previewRepository.get(newElement.getSirsdocument()));
         // Propriétés de AvecGeometrie
         // Propriétés de AbstractPositionDocument
         {
             final Preview linearPreview = newElement.getLinearId() == null ? null : previewRepository.get(newElement.getLinearId());
+            // HACK-REDMINE-4408 : hide archived linear from selection lists
             SIRS.initCombo(ui_linearId, SIRS.observableList(
-                previewRepository.getByClass(linearPreview == null ? TronconDigue.class : linearPreview.getJavaClassOr(TronconDigue.class))).sorted(), linearPreview);
+                previewRepository.getByClass(linearPreview == null ? TronconDigue.class : linearPreview.getJavaClassOr(TronconDigue.class))).sorted(),
+                    linearPreview, SirsPreferences.getHideArchivedProperty(), true);
         }
         // Propriétés de AbstractPositionDocumentAssociable
         }

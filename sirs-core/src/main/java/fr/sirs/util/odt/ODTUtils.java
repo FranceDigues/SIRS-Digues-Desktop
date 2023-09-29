@@ -78,12 +78,11 @@ import javax.measure.IncommensurableException;
 import javax.measure.UnconvertibleException;
 import javax.measure.Unit;
 import javax.measure.UnitConverter;
-import org.apache.pdfbox.exceptions.CryptographyException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.encryption.BadSecurityHandlerException;
-import org.apache.pdfbox.pdmodel.encryption.StandardDecryptionMaterial;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.sis.measure.Units;
 import org.apache.sis.util.ArgumentChecks;
 import org.geotoolkit.data.FeatureIterator;
@@ -157,7 +156,7 @@ public class ODTUtils {
             + " d'une fiche. Vous pouvez compléter ce modèle (Ajout de contenu,"
             + " mise en forme) et déplacer / copier les variables (les textes"
             + " surlignés de gris) où vous voulez dans le document. Elles seront"
-            + " automatiquement remplacés à la génération du rapport.";
+            + " automatiquement remplacées lors de la génération du rapport.";
 
     private static Field USER_FIELD;
     private static Field SIMPLE_FIELD;
@@ -305,7 +304,7 @@ public class ODTUtils {
      * @throws java.lang.ReflectiveOperationException If we fail reading
      * candidate properties.
      */
-    public static void fillTemplate(final TextDocument template, final Feature candidate) throws IntrospectionException, ReflectiveOperationException {
+    public static void fillTemplate(final TextDocument template, final Feature candidate) {
         // We iterate through input properties to extract all mappable attributes.
         final Collection<? extends PropertyType> properties = candidate.getType().getProperties(true);
         VariableField var;
@@ -590,9 +589,8 @@ public class ODTUtils {
     }
 
     /**
-     * Analyze input element tto find contained value.
+     * Analyze input element to find contained value.
      *
-     * @param input
      * @return value hold by given object, or null.
      */
     private static Object getValue(TextUserFieldDeclElement userVariable) {
@@ -787,7 +785,9 @@ public class ODTUtils {
         } else if (candidate instanceof PDDocument) {
             appendPDF(holder, (PDDocument) candidate);
         } else if (candidate instanceof PDPage) {
-            appendPage(holder, (PDPage) candidate);
+            // Migration to PdfBox 2.0.6 does not include PDPage.convertToImage() method anymore. Can only convert PDDocument
+//            appendPage(holder, (PDPage) candidate);
+            throw new UnsupportedOperationException("Object type not supported for insertion in ODT : " + candidate.getClass().getCanonicalName());
         } else if (candidate instanceof RenderedImage) {
             appendImage(holder, (RenderedImage) candidate);
         } else if (candidate instanceof CharSequence) {
@@ -864,24 +864,41 @@ public class ODTUtils {
     public static void appendPDF(final TextDocument target, final PDDocument input) throws IOException {
         ArgumentChecks.ensureNonNull("Output document", target);
         ArgumentChecks.ensureNonNull("Input document", input);
+        PDFRenderer pdfRenderer = null;
         if (input.isEncrypted()) {
             Optional<String> pwd = askPassword(ASK_PASSWORD, input);
             while (pwd.isPresent()) {
                 try {
-                    input.openProtection(new StandardDecryptionMaterial(pwd.get()));
-                    break;
-                } catch (CryptographyException | BadSecurityHandlerException e) {
+                    // TODO find a way to reload the doc with pwd as openProtection()
+                    //  does not exist anymore in PDFBox 2.x
+//                    input.openProtection(new StandardDecryptionMaterial(pwd.get()));
+
+                    // TODO proposed alternative
+//                    final File file = File.createTempFile("filename", ".pdf");
+//                    input.save(file);
+//                    final PDDocument inputWithPwd = PDDocument.load(file, pwd.get());
+//                    pdfRenderer = new PDFRenderer(inputWithPwd);
+//                    input.close();
+//                    break;
+                    throw new IOException("Since the PdfBox migration to version 2.0.6, documents protected by password cannot be opened anymore.");
+                }  catch (InvalidPasswordException e) {
                     pwd = askPassword("Le mot de passe est invalide. Veuillez recommencer.", input);
                 }
+//                catch (CryptographyException | BadSecurityHandlerException e) {
+//                    pwd = askPassword("Le mot de passe est invalide. Veuillez recommencer.", input);
+//                }
+
             }
 
             if (!pwd.isPresent()) {
                 throw new IOException("No password available to decode PDF file.");
             }
         }
-        final List<PDPage> pages = input.getDocumentCatalog().getAllPages();
-        for (final PDPage page : pages) {
-            appendPage(target, page);
+        if (pdfRenderer == null) {
+            pdfRenderer = new PDFRenderer(input);
+        }
+        for (int page = 0; page < input.getNumberOfPages(); ++page) {
+            appendPage(target, pdfRenderer, page);
         }
     }
 
@@ -893,7 +910,7 @@ public class ODTUtils {
      * @return An optional containing user password, or an empty optional if
      * user cancelled the alert.
      */
-    private static Optional<String> askPassword(final String headerText, final PDDocument input) {
+    public static Optional<String> askPassword(final String headerText, final PDDocument input) {
         final String sep = System.lineSeparator();
         final StringBuilder builder = new StringBuilder(headerText).append(sep).append("Informations sur le document : ");
 
@@ -960,12 +977,13 @@ public class ODTUtils {
      * into an image and put it into given document.
      *
      * @param holder Document to append content to.
-     * @param page Page to convert and write into ODT document.
+     * @param pdfRenderer the PDDocument containing the page to convert.
+     * @param page the page number of the document to convert into image.
      * @throws java.io.IOException If we fail reading input page, or writing
      * generated image.
      */
-    public static void appendPage(final TextDocument holder, final PDPage page) throws IOException {
-        final BufferedImage img = page.convertToImage();
+    public static void appendPage(final TextDocument holder, final PDFRenderer pdfRenderer, final int page) throws IOException {
+        final BufferedImage img = pdfRenderer.renderImageWithDPI(page, 200);
         ODTUtils.appendImage(holder, img, true);
     }
 
@@ -1259,10 +1277,10 @@ public class ODTUtils {
      * @throws java.lang.ReflectiveOperationException If an error occurs while
      * accessing an element property.
      */
-    public static void appendTable(final TableContainer target, final Iterator<Element> data, final List<String> propertyNames, 
-            final Map<String, Function<Element, String>> printMapping) 
+    public static void appendTable(final TableContainer target, final Iterator<Element> data, final List<String> propertyNames,
+            final Map<String, Function<Element, String>> printMapping)
             throws IntrospectionException, ReflectiveOperationException {
-        
+
         ArgumentChecks.ensureNonNull("Target document", target);
         if (data == null || !data.hasNext()) {
             return; // No elements, do not create table
@@ -1289,7 +1307,7 @@ public class ODTUtils {
         } else {
             headerStyle = null;
         }
-        
+
         final LabelMapper lMapper_0 = LabelMapper.get(elementClass);
         final Row dataRow_0 = table.getRowByIndex(0);
         Cell currentCell;
@@ -1426,19 +1444,19 @@ public class ODTUtils {
 
     /**
      * Génération d'un rapport.
-     * 
+     *
      * @param reportModel modèle de rapport contenant la description des différentes sections à inclure
      * @param elements éléments candidats à l'inclusion dans le rapport
      * @param output
      * @param title titre du rapport, si le titre est null ou vide, c'est le titre du modèle de rapport qui sera utilisé
-     * @return 
+     * @return
      */
     public static Task generateReport(final ModeleRapport reportModel, final Collection<? extends Element> elements, final Path output, String title) {
-        
+
         /*
         A- détermination d'un titre
         ===========================*/
-        
+
         final String titre;
         if (title == null || title.isEmpty()) {
             titre = reportModel.getLibelle();
@@ -1446,40 +1464,40 @@ public class ODTUtils {
             titre = title;
         }
 
-        
+
         /*
         B- construction et lancement de la tâche de génération
         =====================================================*/
-        
+
         return TaskManager.INSTANCE.submit(new Task() {
             @Override
             protected Object call() throws Exception {
-                
-                
+
+
                 updateTitle("Génération de rapport" + (titre != null ? " (" + titre + ")" : ""));
-                
-                
+
+
                 /*
                 1- récupération des différentes sections du rapport
                 --------------------------------------------------*/
-                
+
                 final ObservableList<AbstractSectionRapport> sections = reportModel.getSections();
-                
-                
+
+
                 /*
                 2- initialisation des paramètres de suivi de la progression de la tâche
                 -----------------------------------------------------------------------*/
                 final long totalWork = elements == null? -1 : elements.size() * sections.size();
                 final AtomicLong currentWork = new AtomicLong(-1);
 
-                
+
                 /*
                 3- création et remplissage du document section par section
                 ---------------------------------------------------------*/
-                
+
                 // on crée le document de rapport
                 try (final TextDocument headerDoc = TextDocument.newTextDocument()) {
-                    
+
                     // a- titre du rapport
                     if (titre != null && !titre.isEmpty()) {
                         final Paragraph paragraph = headerDoc.addParagraph(titre);
@@ -1491,10 +1509,10 @@ public class ODTUtils {
                     AbstractSectionRapport section;
                     long expectedWork;
                     for (int i = 0; i < sections.size(); i++) {
-                        
+
                         // récupération de la i-ème section
                         section = sections.get(i);
-                        
+
                         // mise à jour du message d'information indiquant l'impression de la section en cours
                         String libelle = section.getLibelle();
                         if (libelle == null || libelle.isEmpty()) {
@@ -1508,10 +1526,10 @@ public class ODTUtils {
                             section.print(headerDoc, null);
                         } else {
                             try (final Stream dataStream = elements.stream().peek(input -> updateProgress(currentWork.incrementAndGet(), totalWork))) {
-                                
+
                                 // délégaton de l'impression au type de section
                                 section.print(headerDoc, dataStream);
-                                
+
                                 // In case section printing has not used provided stream, we have to update progress manually.
                                 expectedWork = ((long)i + 1) * elements.size() - 1;
                                 if (currentWork.get() != expectedWork) {

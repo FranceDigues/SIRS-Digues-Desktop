@@ -18,10 +18,35 @@
 			<style backcolor="#D6E3BC"/>
 		</conditionalStyle>
 	</style>
+	<style name="background_white_when_PR">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$P{PRINT_PR}]]></conditionExpression>
+			<style backcolor="#FFFFFF"/>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[!$P{PRINT_PR}]]></conditionExpression>
+			<style backcolor="#D6E3BC"/>
+		</conditionalStyle>
+	</style>
+	<style name="background_green_when_PR">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[!$P{PRINT_PR}]]></conditionExpression>
+			<style backcolor="#FFFFFF"/>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$P{PRINT_PR}]]></conditionExpression>
+			<style backcolor="#D6E3BC"/>
+		</conditionalStyle>
+	</style>
 	<subDataset name="Observation Dataset" uuid="f87f5cd0-3234-40c4-9ea3-250724f36d5e"/>
+        <subDataset name="Observation Specification Dataset" uuid="8e182dec-1fbf-4e55-a942-782b6ecb6176"/>
 	<subDataset name="ReseauFerme Dataset" uuid="df00eaba-db68-4b08-8235-09c8aa0b6e8c"/>
 	<subDataset name="Desordre Dataset" uuid="50a50ee9-90dd-41b1-aabc-cdfdecbccc33"/>
 	<parameter name="PHOTO_SUBREPORT" class="net.sf.jasperreports.engine.JasperReport"/>
+	<parameter name="PRINT_LOCATION_INSERT" class="java.lang.Boolean"/>
+	<parameter name="PRINT_PR" class="java.lang.Boolean"/>
+	<parameter name="PRINT_XY" class="java.lang.Boolean"/>
+	<parameter name="PRINT_BORNE" class="java.lang.Boolean"/>
 	<title>
 		<band/>
 	</title>
@@ -32,20 +57,20 @@
 		<band/>
 	</columnHeader>
 	<detail>
-		<band height="268" splitType="Stretch">
+		<band height="321" splitType="Stretch">
 			<frame>
 				<reportElement mode="Opaque" x="0" y="0" width="555" height="48" uuid="7e90d220-3a9a-4a61-b736-a6cad2b30566"/>
 				<staticText>
 					<reportElement x="0" y="0" width="555" height="22" uuid="89c68cdb-b022-43cc-858f-04690206436b"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font  size="16" isBold="false"/>
+						<font size="16" isBold="false"/>
 					</textElement>
 					<text><![CDATA[Fiche détaillée d'ouvrage hydraulique associé]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="0" y="22" width="555" height="16" uuid="9c71dc15-9929-4e78-bd37-dfb88d7e8c7c"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font  size="12"/>
+						<font size="12"/>
 					</textElement>
 					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{digueId})]]></textFieldExpression>
 				</textField>
@@ -55,7 +80,7 @@
 				<staticText>
 					<reportElement positionType="Float" x="10" y="1" width="545" height="12" uuid="f2e8836c-b61f-4ad0-aac7-590cd453e6e5"/>
 					<textElement verticalAlignment="Middle">
-						<font size="9" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Description générale]]></text>
 				</staticText>
@@ -65,28 +90,28 @@
 				<staticText>
 					<reportElement positionType="Float" x="10" y="0" width="70" height="12" uuid="459226d2-85bf-4a43-ada4-b175ccaa4983"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Désignation]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="80" y="0" width="50" height="12" uuid="10400906-6fe6-4ab8-add5-fef0d9e5a411"/>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{designation}==null ? " - " : $F{designation}]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement positionType="Float" x="130" y="0" width="100" height="12" uuid="2abd0d0e-c148-4174-a7d5-d37e5f896512"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Type d'ouvrage]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="230" y="0" width="300" height="12" uuid="baf87d65-4632-4d22-8377-982bdf6008d1"/>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{typeOuvrageHydroAssocieId})]]></textFieldExpression>
 				</textField>
@@ -96,28 +121,28 @@
 				<staticText>
 					<reportElement positionType="Float" x="130" y="0" width="100" height="12" uuid="9caf9b0d-875c-40bd-bd75-4cd689980517"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Date de début]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="230" y="0" width="100" height="12" uuid="03d7cc2a-93c3-44da-8bda-a6e22c997ff2"/>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{date_debut}==null ? " - " : $F{date_debut}]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement positionType="Float" x="330" y="0" width="100" height="12" uuid="b1da5310-7da5-4a2a-8d9d-3689b5ad86ea"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Date de fin]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="430" y="0" width="100" height="12" uuid="8d9d6fc2-d4e8-497e-a20e-f70310e0b6ba"/>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{date_fin}==null ? " - " : $F{date_fin}]]></textFieldExpression>
 				</textField>
@@ -127,28 +152,28 @@
 				<staticText>
 					<reportElement positionType="Float" x="10" y="0" width="70" height="12" uuid="a9c8b115-9926-4cb9-bf49-5fd53252f997"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Libellé]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="80" y="0" width="150" height="12" uuid="edb278aa-9d56-40fb-a2d1-a6e647a3235a"/>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{libelle})]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement positionType="Float" x="230" y="0" width="105" height="12" uuid="07f91b3c-882f-4f9d-bc50-1c7e23969d43"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Source]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="335" y="0" width="195" height="12" uuid="d9b019ce-21cd-4632-a9dc-bfead597cc51"/>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{sourceId})]]></textFieldExpression>
 				</textField>
@@ -158,330 +183,482 @@
 				<staticText>
 					<reportElement positionType="Float" x="130" y="0" width="100" height="12" uuid="9caf9b0d-875c-40bd-bd75-4cd689980517"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Gestionnaire]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="230" y="0" width="100" height="12" uuid="03d7cc2a-93c3-44da-8bda-a6e22c997ff2"/>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{ouvrage_hydraulique_associe_manager}]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement positionType="Float" x="330" y="0" width="100" height="12" uuid="b1da5310-7da5-4a2a-8d9d-3689b5ad86ea"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Propriétaire]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="430" y="0" width="100" height="12" uuid="8d9d6fc2-d4e8-497e-a20e-f70310e0b6ba"/>
 					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{ouvrage_hydraulique_associe_owner}]]></textFieldExpression>
 				</textField>
 			</frame>
-			<frame>
+                        <frame>
 				<reportElement positionType="Float" mode="Opaque" x="0" y="110" width="555" height="12" backcolor="#FFFFFF" uuid="e423bc72-aff4-4491-b057-3140660fd441"/>
+				<staticText>
+					<reportElement positionType="Float" x="10" y="0" width="140" height="12" uuid="a9c8b115-9926-4cb9-bf49-5fd53252f997"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Dimension verticale/Diamètre]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true">
+					<reportElement positionType="Float" x="150" y="0" width="80" height="12" uuid="edb278aa-9d56-40fb-a2d1-a6e647a3235a"/>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{dimensionVerticale}+" mm"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement positionType="Float" x="230" y="0" width="115" height="12" uuid="07f91b3c-882f-4f9d-bc50-1c7e23969d43"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Dimension horizontale]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true">
+					<reportElement positionType="Float" x="345" y="0" width="185" height="12" uuid="d9b019ce-21cd-4632-a9dc-bfead597cc51"/>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{dimensionHorizontale}+" mm"]]></textFieldExpression>
+				</textField>
+			</frame>
+                        <frame>
+				<reportElement positionType="Float" mode="Opaque" x="0" y="122" width="555" height="12" backcolor="#D6E3BC" uuid="e423bc72-aff4-4491-b057-3140660fd441"/>
 				<staticText>
 					<reportElement positionType="Float" x="10" y="0" width="120" height="12" uuid="d7da9cd0-dc97-4465-ac0f-45871b6a9d3a"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true" isItalic="false"/>
+						<font size="8" isBold="true" isItalic="false"/>
+					</textElement>
+					<text><![CDATA[Sécurité]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true">
+					<reportElement positionType="Float" x="130" y="0" width="400" height="12" uuid="f3bfaffb-0ba0-4cbd-a94e-4cebad331bfd"/>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{securiteId})]]></textFieldExpression>
+				</textField>
+			</frame>
+			<frame>
+				<reportElement positionType="Float" mode="Opaque" x="0" y="134" width="555" height="12" backcolor="#FFFFFF" uuid="e423bc72-aff4-4491-b057-3140660fd441"/>
+				<staticText>
+					<reportElement positionType="Float" x="10" y="0" width="120" height="12" uuid="d7da9cd0-dc97-4465-ac0f-45871b6a9d3a"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="8" isBold="true" isItalic="false"/>
 					</textElement>
 					<text><![CDATA[Source]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="130" y="0" width="400" height="12" uuid="f3bfaffb-0ba0-4cbd-a94e-4cebad331bfd"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle" >
-						<font  size="8"/>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{sourceId})]]></textFieldExpression>
 				</textField>
 			</frame>
 			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="122" width="555" height="12" backcolor="#D6E3BC" uuid="c22aaddd-a331-4518-82ac-464fd37a289c"/>
+				<reportElement positionType="Float" mode="Opaque" x="0" y="146" width="555" height="12" backcolor="#D6E3BC" uuid="c22aaddd-a331-4518-82ac-464fd37a289c"/>
 				<staticText>
 					<reportElement positionType="Float" x="10" y="0" width="120" height="12" uuid="05f85007-63da-4cf2-a91d-370c6f08e7cf"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
+						<font size="8" isBold="true"/>
 					</textElement>
 					<text><![CDATA[Commentaire]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="130" y="0" width="400" height="12" uuid="6d4e5282-40d5-422c-9283-86b8e423382e"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle" >
-						<font  size="8"/>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{commentaire}==null ? " - " : $F{commentaire}]]></textFieldExpression>
 				</textField>
 			</frame>
 			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="158" width="555" height="14" backcolor="#76923C" uuid="62e862ef-7bf7-4e55-82f0-e1ecb659c0f1"/>
+				<reportElement positionType="Float" mode="Opaque" x="0" y="182" width="555" height="14" backcolor="#76923C" uuid="62e862ef-7bf7-4e55-82f0-e1ecb659c0f1"/>
 				<staticText>
 					<reportElement x="10" y="1" width="545" height="12" uuid="cd0f4df6-f9f6-40c0-884e-053ad25fcb32"/>
 					<textElement verticalAlignment="Middle">
-						<font size="9" isBold="true" isItalic="false" isUnderline="false"/>
+						<font size="8" isBold="true" isItalic="false" isUnderline="false"/>
 					</textElement>
 					<text><![CDATA[Localisation]]></text>
 				</staticText>
 			</frame>
 			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="172" width="555" height="12" backcolor="#FFFFFF" uuid="9a5c9dcb-362d-4582-b623-e2dc4851a4d3"/>
-				<staticText>
-					<reportElement positionType="Float" x="10" y="0" width="70" height="12" uuid="47354525-ae0e-4bfa-99b0-a8a5ff298881"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Tronçon]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="80" y="0" width="50" height="12" uuid="8ef77866-e00c-46a6-812d-288968bce4d6"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayDesignation($F{linearId})]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="130" y="0" width="400" height="12" uuid="cf55d95d-d2c2-43a0-bdc2-d088849a8c32"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{linearId})]]></textFieldExpression>
-				</textField>
+				<reportElement positionType="Float" x="0" y="196" width="555" height="120" uuid="d400258e-92c6-4b8b-aa79-a0b049a5b32f">
+					<property name="com.jaspersoft.studio.element.name" value="properties"/>
+				</reportElement>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="0" width="555" height="12" backcolor="#FFFFFF"
+								   uuid="9a5c9dcb-362d-4582-b623-e2dc4851a4d3"/>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="70" height="12"
+									   uuid="47354525-ae0e-4bfa-99b0-a8a5ff298881"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Tronçon]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="80" y="0" width="110" height="12"
+									   uuid="8ef77866-e00c-46a6-812d-288968bce4d6"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayDesignation($F{linearId})]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="190" y="0" width="190" height="12"
+									   uuid="cf55d95d-d2c2-43a0-bdc2-d088849a8c32"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{linearId})]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="12" width="555" height="12" backcolor="#D6E3BC"
+								   uuid="cb3f6e9a-e5eb-4fdf-89c9-f8d4caf5bebf"/>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="120" height="12"
+									   uuid="902a6a79-d700-4b9d-8629-de83910b379d"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Système de repérage]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="130" y="0" width="250" height="12"
+									   uuid="5a5856b2-3396-49af-8403-09282329adf5"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{systemeRepId})]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="24" width="555" height="12"
+								   uuid="835cfbf2-110f-49af-adde-32150a795269"/>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="120" height="12"
+									   uuid="98ea26a9-aa57-4726-8a48-7a77fe338938"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Coordonnées éditées]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="130" y="0" width="204" height="12"
+									   uuid="3f8f9d4a-d6ef-47ce-a5e2-2d0abe8dbe71"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[($F{editedGeoCoordinate}) ? "Coordonnées géographique" : ((!$F{editedGeoCoordinate}) ? "Coordonnées Linéaires" : "-")]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="36" width="555" height="12"
+								   isRemoveLineWhenBlank="true" style="background_green_when_PR"
+								   uuid="eb6e93f0-e640-48be-b20b-2ea7290d6109">
+						<printWhenExpression><![CDATA[$P{PRINT_PR}]]></printWhenExpression>
+					</reportElement>
+					<staticText>
+						<reportElement positionType="Float" x="11" y="0" width="70" height="12"
+									   uuid="df6998e9-1d13-4ad0-badc-cb7a2026a600"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[PR de début]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="80" y="0" width="100" height="12"
+									   uuid="3eace7af-afbf-4fc1-91cf-ae44a3124289"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayPR($F{prDebut})]]></textFieldExpression>
+					</textField>
+					<staticText>
+						<reportElement positionType="Float" x="180" y="0" width="90" height="12"
+									   uuid="0e1215e7-a658-48e4-b0ce-2c4d045c6c73"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[PR de fin]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="270" y="0" width="110" height="12"
+									   uuid="8640e006-c476-4a24-adcf-386c72421d9f"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayPR($F{prFin})]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="48" width="555" height="12"
+								   isRemoveLineWhenBlank="true" style="background_white_when_PR"
+								   uuid="67b2fbed-89e0-4d70-b400-57e0de20b423">
+						<printWhenExpression><![CDATA[$P{PRINT_XY}]]></printWhenExpression>
+					</reportElement>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="70" height="12"
+									   uuid="f9df8c90-3cab-4c1d-a240-4aac3b97d602"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[X début]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="80" y="0" width="100" height="12"
+									   uuid="f15736be-6875-44cd-97d6-5dfc2f5270f0"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[($F{positionDebut}==null || ((com.vividsolutions.jts.geom.Point) $F{positionDebut}).getCoordinate()==null) ? "-" : ((com.vividsolutions.jts.geom.Point) $F{positionDebut}).getCoordinate().x]]></textFieldExpression>
+					</textField>
+					<staticText>
+						<reportElement positionType="Float" x="180" y="0" width="90" height="12"
+									   uuid="ee33b827-aa7c-4eee-90e7-91bb559c6b36"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Y début]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="270" y="0" width="110" height="12"
+									   uuid="f15736be-6875-44cd-97d6-5dfc2f5270f0"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[($F{positionDebut}==null || ((com.vividsolutions.jts.geom.Point) $F{positionDebut}).getCoordinate()==null) ? "-" : ((com.vividsolutions.jts.geom.Point) $F{positionDebut}).getCoordinate().y]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="60" width="555" height="12"
+								   isRemoveLineWhenBlank="true" style="background_green_when_PR"
+								   uuid="76fe1118-6c07-4f81-aa6c-d365abebad59">
+						<printWhenExpression><![CDATA[$P{PRINT_XY}]]></printWhenExpression>
+					</reportElement>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="70" height="12"
+									   uuid="4d154de6-156c-4ad5-bacb-e4203e816aab"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[X fin]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="80" y="0" width="100" height="12"
+									   uuid="3c66c3a1-0077-4434-b690-0ed0104abd7f"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[($F{positionFin}==null || ((com.vividsolutions.jts.geom.Point) $F{positionFin}).getCoordinate()==null) ? "-" : ((com.vividsolutions.jts.geom.Point) $F{positionFin}).getCoordinate().x]]></textFieldExpression>
+					</textField>
+					<staticText>
+						<reportElement positionType="Float" x="180" y="0" width="90" height="12"
+									   uuid="be178574-126c-4f05-b0f2-c4f561aa3265"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Y fin]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="270" y="0" width="110" height="12"
+									   uuid="3c66c3a1-0077-4434-b690-0ed0104abd7f"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[($F{positionFin}==null || ((com.vividsolutions.jts.geom.Point) $F{positionFin}).getCoordinate()==null) ? "-" : ((com.vividsolutions.jts.geom.Point) $F{positionFin}).getCoordinate().y]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="72" width="555" height="12"
+								   isRemoveLineWhenBlank="true" style="background_white_when_PR"
+								   uuid="cb205cc8-4443-44de-8e90-4da41022d5f6">
+						<printWhenExpression><![CDATA[$P{PRINT_BORNE}]]></printWhenExpression>
+					</reportElement>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="70" height="12"
+									   uuid="0696493d-99fc-413a-a5f6-2e67e21ff935"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Borne début]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="80" y="0" width="100" height="12"
+									   uuid="85f7f084-05ec-4e25-ae2e-c76f46689324"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{borneDebutId})]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="180" y="0" width="100" height="12"
+									   uuid="b7fd2eea-1058-4ea7-9d62-66bb7058e328"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayAmontAval($F{borne_debut_aval})]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="280" y="0" width="100" height="12"
+									   uuid="f15736be-6875-44cd-97d6-5dfc2f5270f0"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayDistance($F{borne_debut_distance})]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="84" width="555" height="12"
+								   isRemoveLineWhenBlank="true" style="background_green_when_PR"
+								   uuid="0e1acf57-eccd-4210-8f1d-62cff5a475f1">
+						<printWhenExpression><![CDATA[$P{PRINT_BORNE}]]></printWhenExpression>
+					</reportElement>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="70" height="12"
+									   uuid="d1bc4e45-b009-45da-974f-911164385de5"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Borne fin]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="81" y="0" width="99" height="12"
+									   uuid="53aa79d6-951f-4974-b8ee-a4f0a9f6678e"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{borneFinId})]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="180" y="0" width="100" height="12"
+									   uuid="f36f745d-620a-43af-8536-03eeb78cc14b"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayAmontAval($F{borne_fin_aval})]]></textFieldExpression>
+					</textField>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="280" y="0" width="100" height="12"
+									   uuid="3c66c3a1-0077-4434-b690-0ed0104abd7f"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayDistance($F{borne_fin_distance})]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="96" width="555" height="12" style="background_white_when_PR"
+								   uuid="ca171c63-eadd-44fb-8f83-f1ca1f632c69"/>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="70" height="12"
+									   uuid="872f4f6c-5193-4eba-a821-02275a29a2eb"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Longueur]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="79" y="0" width="301" height="12"
+									   uuid="d762231c-f290-42d4-9232-b98ab6a8336a"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[$F{ouvrage_hydraulique_associe_length}+" m"]]></textFieldExpression>
+					</textField>
+				</frame>
+				<frame>
+					<reportElement positionType="Float" mode="Opaque" x="0" y="108" width="555" height="12"
+								   style="background_green_when_PR" uuid="0e5f620d-ae56-4464-a0d2-b9d3ac85412b"/>
+					<staticText>
+						<reportElement positionType="Float" x="10" y="0" width="50" height="12"
+									   uuid="a9c8b115-9926-4cb9-bf49-5fd53252f997"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Côté]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="60" y="0" width="120" height="12"
+									   uuid="edb278aa-9d56-40fb-a2d1-a6e647a3235a"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{coteId})]]></textFieldExpression>
+					</textField>
+					<staticText>
+						<reportElement positionType="Float" x="180" y="0" width="50" height="12"
+									   uuid="07f91b3c-882f-4f9d-bc50-1c7e23969d43"/>
+						<textElement textAlignment="Left" verticalAlignment="Middle">
+							<font size="8" isBold="true"/>
+						</textElement>
+						<text><![CDATA[Position]]></text>
+					</staticText>
+					<textField isStretchWithOverflow="true">
+						<reportElement positionType="Float" x="230" y="0" width="150" height="12"
+									   uuid="d9b019ce-21cd-4632-a9dc-bfead597cc51"/>
+						<textElement textAlignment="Justified" verticalAlignment="Middle">
+							<font size="8"/>
+						</textElement>
+						<textFieldExpression>
+							<![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{positionId})]]></textFieldExpression>
+					</textField>
+				</frame>
 			</frame>
 			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="184" width="555" height="12" backcolor="#D6E3BC" uuid="cb3f6e9a-e5eb-4fdf-89c9-f8d4caf5bebf"/>
-				<staticText>
-					<reportElement positionType="Float" x="10" y="0" width="120" height="12" uuid="902a6a79-d700-4b9d-8629-de83910b379d"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Système de repérage]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="130" y="0" width="200" height="12" uuid="5a5856b2-3396-49af-8403-09282329adf5"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{systemeRepId})]]></textFieldExpression>
-				</textField>
-                                <staticText>
-					<reportElement positionType="Float" x="330" y="0" width="120" height="12"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Coordonnées éditées]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="430" y="0" width="115" height="12"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[($F{editedGeoCoordinate}) ? "Coordonnées géographique" : ((!$F{editedGeoCoordinate}) ? "Coordonnées Linéaires" : "-")]]></textFieldExpression>
-                                </textField>    
-			</frame>
-			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="196" width="555" height="12" backcolor="#FFFFFF" uuid="eb6e93f0-e640-48be-b20b-2ea7290d6109"/>
-				<staticText>
-					<reportElement positionType="Float" x="130" y="0" width="100" height="12" uuid="df6998e9-1d13-4ad0-badc-cb7a2026a600"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[PR de début]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="230" y="0" width="100" height="12" uuid="3eace7af-afbf-4fc1-91cf-ae44a3124289"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayPR($F{prDebut})]]></textFieldExpression>
-				</textField>
-				<staticText>
-					<reportElement positionType="Float" x="330" y="0" width="100" height="12" uuid="0e1215e7-a658-48e4-b0ce-2c4d045c6c73"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[PR de fin]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="430" y="0" width="100" height="12" uuid="8640e006-c476-4a24-adcf-386c72421d9f"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayPR($F{prFin})]]></textFieldExpression>
-				</textField>
-			</frame>
-			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="208" width="555" height="12" backcolor="#D6E3BC" uuid="67b2fbed-89e0-4d70-b400-57e0de20b423"/>
-				<staticText>
-					<reportElement positionType="Float" x="130" y="0" width="100" height="12" uuid="f9df8c90-3cab-4c1d-a240-4aac3b97d602"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[X début]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="230" y="0" width="100" height="12" uuid="f15736be-6875-44cd-97d6-5dfc2f5270f0"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[($F{positionDebut}==null || ((com.vividsolutions.jts.geom.Point) $F{positionDebut}).getCoordinate()==null) ? "-" : ((com.vividsolutions.jts.geom.Point) $F{positionDebut}).getCoordinate().x]]></textFieldExpression>
-				</textField>
-				<staticText>
-					<reportElement positionType="Float" x="330" y="0" width="100" height="12" uuid="ee33b827-aa7c-4eee-90e7-91bb559c6b36"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Y début]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="430" y="0" width="100" height="12" uuid="f15736be-6875-44cd-97d6-5dfc2f5270f0"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[($F{positionDebut}==null || ((com.vividsolutions.jts.geom.Point) $F{positionDebut}).getCoordinate()==null) ? "-" : ((com.vividsolutions.jts.geom.Point) $F{positionDebut}).getCoordinate().y]]></textFieldExpression>
-				</textField>
-			</frame>
-			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="220" width="555" height="12" backcolor="#FFFFFF" uuid="76fe1118-6c07-4f81-aa6c-d365abebad59"/>
-				<staticText>
-					<reportElement positionType="Float" x="130" y="0" width="100" height="12" uuid="4d154de6-156c-4ad5-bacb-e4203e816aab"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[X fin]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="230" y="0" width="100" height="12" uuid="3c66c3a1-0077-4434-b690-0ed0104abd7f"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[($F{positionFin}==null || ((com.vividsolutions.jts.geom.Point) $F{positionFin}).getCoordinate()==null) ? "-" : ((com.vividsolutions.jts.geom.Point) $F{positionFin}).getCoordinate().x]]></textFieldExpression>
-				</textField>
-				<staticText>
-					<reportElement positionType="Float" x="330" y="0" width="100" height="12" uuid="be178574-126c-4f05-b0f2-c4f561aa3265"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Y fin]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="430" y="0" width="100" height="12" uuid="3c66c3a1-0077-4434-b690-0ed0104abd7f"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[($F{positionFin}==null || ((com.vividsolutions.jts.geom.Point) $F{positionFin}).getCoordinate()==null) ? "-" : ((com.vividsolutions.jts.geom.Point) $F{positionFin}).getCoordinate().y]]></textFieldExpression>
-				</textField>
-			</frame>
-			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="232" width="555" height="12" backcolor="#D6E3BC" uuid="cb205cc8-4443-44de-8e90-4da41022d5f6"/>
-				<staticText>
-					<reportElement positionType="Float" x="10" y="0" width="70" height="12" uuid="0696493d-99fc-413a-a5f6-2e67e21ff935"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Borne début]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="80" y="0" width="70" height="12" uuid="85f7f084-05ec-4e25-ae2e-c76f46689324"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{borneDebutId})]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="150" y="0" width="70" height="12" uuid="b7fd2eea-1058-4ea7-9d62-66bb7058e328"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayAmontAval($F{borne_debut_aval})]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="220" y="0" width="70" height="12" uuid="f15736be-6875-44cd-97d6-5dfc2f5270f0"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayDistance($F{borne_debut_distance})]]></textFieldExpression>
-				</textField>
-                                <staticText>
-					<reportElement positionType="Float" x="290" y="0" width="70" height="12" />
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Longueur]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="360" y="0" width="70" height="12" />
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{ouvrage_hydraulique_associe_length}+" m"]]></textFieldExpression>
-				</textField>
-			</frame>
-			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="244" width="555" height="12" backcolor="#FFFFFF" uuid="0e1acf57-eccd-4210-8f1d-62cff5a475f1"/>
-				<staticText>
-					<reportElement positionType="Float" x="10" y="0" width="70" height="12" uuid="d1bc4e45-b009-45da-974f-911164385de5"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Borne fin]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="80" y="0" width="70" height="12" uuid="53aa79d6-951f-4974-b8ee-a4f0a9f6678e"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{borneFinId})]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="150" y="0" width="70" height="12" uuid="f36f745d-620a-43af-8536-03eeb78cc14b"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayAmontAval($F{borne_fin_aval})]]></textFieldExpression>
-				</textField>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="220" y="0" width="70" height="12" uuid="3c66c3a1-0077-4434-b690-0ed0104abd7f"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayDistance($F{borne_fin_distance})]]></textFieldExpression>
-				</textField>
-			</frame>
-			<frame>
-				<reportElement positionType="Float" mode="Opaque" x="0" y="256" width="555" height="12" backcolor="#D6E3BC" uuid="0e5f620d-ae56-4464-a0d2-b9d3ac85412b"/>
-				<staticText>
-					<reportElement positionType="Float" x="10" y="0" width="70" height="12" uuid="a9c8b115-9926-4cb9-bf49-5fd53252f997"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Côté]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="80" y="0" width="185" height="12" uuid="edb278aa-9d56-40fb-a2d1-a6e647a3235a"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{coteId})]]></textFieldExpression>
-				</textField>
-				<staticText>
-					<reportElement positionType="Float" x="265" y="0" width="70" height="12" uuid="07f91b3c-882f-4f9d-bc50-1c7e23969d43"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Position]]></text>
-				</staticText>
-				<textField isStretchWithOverflow="true">
-					<reportElement positionType="Float" x="335" y="0" width="195" height="12" uuid="d9b019ce-21cd-4632-a9dc-bfead597cc51"/>
-					<textElement textAlignment="Justified" verticalAlignment="Middle">
-						<font  size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayLabel($F{positionId})]]></textFieldExpression>
-				</textField>
+				<reportElement positionType="Float" mode="Opaque" x="380" y="196" width="175" height="120"
+							   isRemoveLineWhenBlank="true" uuid="591a68b9-fa1e-48f7-a50a-a773b516109d">
+					<printWhenExpression><![CDATA[$P{PRINT_LOCATION_INSERT}]]></printWhenExpression>
+				</reportElement>
+                                <box>
+                                    <topPen lineWidth="1.0"/>
+                                    <leftPen lineWidth="1.0"/>
+                                    <bottomPen lineWidth="1.0"/>
+                                    <rightPen lineWidth="1.0"/>
+                                </box>
+				<image>
+					<reportElement x="0" y="0" width="175" height="108" uuid="b253817f-37a0-48de-b394-60be061ac430"/>
+					<imageExpression><![CDATA[$F{IMAGE_DATA_SOURCE}]]></imageExpression>
+				</image>
 			</frame>
 		</band>
 	</detail>
@@ -490,6 +667,7 @@
 	</columnFooter>
 	<pageFooter>
 		<band height="12" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<frame>
 				<reportElement positionType="Float" mode="Opaque" x="0" y="0" width="555" height="12" uuid="d3206e80-0590-474f-8765-7768d57c11e7"/>
 				<box>
@@ -498,28 +676,28 @@
 				<staticText>
 					<reportElement x="0" y="0" width="68" height="12" uuid="7a9a2a25-dcdf-495a-a6b9-86cd79c9ea05"/>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<text><![CDATA[SIRS Digues v2]]></text>
 				</staticText>
 				<textField isStretchWithOverflow="true">
 					<reportElement positionType="Float" x="153" y="0" width="250" height="12" uuid="72c5d883-8679-49c5-80f1-61b3453b6f82"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA["Date : "+java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("EEE dd/MMM/yyyy hh:mm", java.util.Locale.FRANCE))]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement x="466" y="0" width="50" height="12" uuid="fd135700-f76f-4940-8342-3b56ac4bd1dc"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" / "]]></textFieldExpression>
 				</textField>
 				<textField evaluationTime="Report">
 					<reportElement x="515" y="0" width="40" height="12" uuid="f89bacc3-3034-42f7-950b-08461d07d0c1"/>
 					<textElement verticalAlignment="Middle">
-						<font  size="8"/>
+						<font size="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[" "+$V{PAGE_NUMBER}]]></textFieldExpression>
 				</textField>

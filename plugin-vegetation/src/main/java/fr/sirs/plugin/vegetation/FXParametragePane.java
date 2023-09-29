@@ -24,6 +24,7 @@ import fr.sirs.Session;
 import fr.sirs.core.component.AbstractSIRSRepository;
 import fr.sirs.core.component.AbstractZoneVegetationRepository;
 import fr.sirs.core.component.ParcelleVegetationRepository;
+import fr.sirs.core.component.PlanVegetationRepository;
 import fr.sirs.core.model.ParcelleVegetation;
 import fr.sirs.core.model.PlanVegetation;
 import fr.sirs.core.model.ZoneVegetation;
@@ -43,6 +44,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -78,7 +80,7 @@ public class FXParametragePane extends SplitPane {
     @FXML private Button uiDelete;
 
     private final Session session = Injector.getSession();
-    private final AbstractSIRSRepository<PlanVegetation> planRepo = session.getRepositoryForClass(PlanVegetation.class);
+    private final PlanVegetationRepository planRepo = VegetationSession.INSTANCE.getPlanRepository();
     private final ParcelleVegetationRepository parcelleRepo = (ParcelleVegetationRepository) session.getRepositoryForClass(ParcelleVegetation.class);
     private final SirsStringConverter converter = new SirsStringConverter();
     
@@ -93,7 +95,7 @@ public class FXParametragePane extends SplitPane {
         final BorderPane pane = new BorderPane();
         this.getItems().add(pane);
 
-        refreshPlanList();
+        uiPlanList.setItems(FXCollections.observableList(planRepo.getAll()));
         
         uiPlanList.setCellFactory((ListView<PlanVegetation> param)-> new UpdatableListCell());
         
@@ -130,8 +132,9 @@ public class FXParametragePane extends SplitPane {
      * Updates the planification list.
      */
     private void refreshPlanList() {
+        ObservableList<PlanVegetation> items = uiPlanList.getItems();
         uiPlanList.setItems(FXCollections.emptyObservableList()); // Pour obliger la liste à rafraîchir même les éléments qui semblent n'avoir pas "bougé" (de manière à forcer la vérification du plan actif).
-        uiPlanList.setItems(FXCollections.observableList(planRepo.getAll()));
+        uiPlanList.setItems(FXCollections.observableList(items));
     }
 
     /**
@@ -149,8 +152,8 @@ public class FXParametragePane extends SplitPane {
             newPlan.setAnneeFin(LocalDate.now().getYear()+10);
 
             planRepo.add(newPlan);
+            uiPlanList.getItems().add(newPlan);
             refreshPlanList();
-            uiPlanList.getSelectionModel().select(newPlan);
 
             final Growl growlInfo = new Growl(Growl.Type.INFO, "Le plan a été créé.");
             growlInfo.showAndFade();
@@ -183,6 +186,7 @@ public class FXParametragePane extends SplitPane {
                     // Duplication du plan.
                     final PlanVegetation newPlan = toDuplicate.copy();
                     planRepo.add(newPlan);
+                    uiPlanList.getItems().add(newPlan);
 
 
                     // Récupération des parcelles de l'ancien plan.
@@ -305,6 +309,7 @@ public class FXParametragePane extends SplitPane {
 
                     // Suppression du plan
                     planRepo.remove(toDelete);
+                    uiPlanList.getItems().remove(toDelete);
                     refreshPlanList();
 
                     final Growl growlInfo = new Growl(Growl.Type.INFO, "Le plan a été supprimé.");
@@ -327,17 +332,15 @@ public class FXParametragePane extends SplitPane {
         @Override
         protected void updateItem(final PlanVegetation item, boolean empty) {
             super.updateItem(item, empty);
-            
+
             graphicProperty().unbind();
             textProperty().unbind();
             if(item!=null){
                 
                 graphicProperty().bind(new ObjectBinding<Node>(){
-                    
                     {
                         bind(VegetationSession.INSTANCE.planProperty());
                     }
-                    
                     @Override
                     protected Node computeValue() {
                         if(item.equals(VegetationSession.INSTANCE.planProperty().get())){
@@ -345,15 +348,12 @@ public class FXParametragePane extends SplitPane {
                         }
                         else return null;
                     }
-                    
                 });
 
                 textProperty().bind(new ObjectBinding<String>() {
-
                     {
                         bind(item.libelleProperty(), item.designationProperty());
                     }
-
                     @Override
                     protected String computeValue() {
                         return converter.toString(item);
@@ -365,5 +365,4 @@ public class FXParametragePane extends SplitPane {
             }
         }
     }
-
 }

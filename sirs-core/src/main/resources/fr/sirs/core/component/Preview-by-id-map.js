@@ -29,7 +29,7 @@ function(doc) {
                 label = object.libelle;
             else if (object.login)
                 label = object.login;
-            emit(object._id, {docId: object._id, docClass: object['@class'], elementId: object._id, elementClass: object['@class'], author: object.author, valid: object.valid, designation: object.designation, libelle: label});
+            emit(object._id, {docId: object._id, docClass: object['@class'], elementId: object._id, elementClass: object['@class'], author: object.author, valid: object.valid, designation: object.designation, libelle: label, date_fin: object.date_fin});
         }
     }
 

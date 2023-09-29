@@ -44,14 +44,6 @@ final class ResultTaskUtilities {
             nbToSet.setText(nb < 0? "inconnu" : Long.toString(nb));
             sizeToSet.setText(SIRS.toReadableSize(value.getSize()));
             tronconsIds.set(value.getTronconIds());
-//            final AbstractSIRSRepository<TronconDigue> repo = Injector.getSession().getRepositoryForClass(TronconDigue.class);
-//
-//            //Test purpose :
-//            System.out.println("**** tronçons : ******");
-//            for(String id : value.getTronconIds()){
-//                System.out.println(SirsStringConverter.getDesignation(repo.get(id)));
-//            }
-//            System.out.println("**********************");
         });
     }
 }

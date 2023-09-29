@@ -4,6 +4,7 @@ import fr.sirs.SIRS;
 import fr.sirs.Session;
 import fr.sirs.core.component.TronconDigueRepository;
 import fr.sirs.core.model.TronconDigue;
+import fr.sirs.plugins.synchro.ui.database.PhotoDownload;
 import fr.sirs.util.SirsStringConverter;
 import fr.sirs.util.property.DocumentRoots;
 import fr.sirs.util.property.SirsPreferences;
@@ -20,10 +21,13 @@ import java.util.logging.Level;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
@@ -52,6 +56,18 @@ public class PhotoDestination extends StackPane {
 
     @FXML
     private FXTronconPathSelector pathSelector; //Risque de fuite mémoire?;
+
+    @FXML
+    private Button uiImportBtn;
+
+    /**
+     * Property listened from {@link PhotoDownload} to detect the import request
+     */
+    private final BooleanProperty importProperty= new SimpleBooleanProperty(false);
+
+    public BooleanProperty getImportProperty() {
+        return importProperty;
+    }
 
     /**
      * Destination root path, as it should be defined in {@link SirsPreferences.PROPERTIES#DOCUMENT_ROOT}.
@@ -98,7 +114,6 @@ public class PhotoDestination extends StackPane {
 
     public void setPathSelector(){
         pathSelector.setPhotoDestination(this);
-        //TODO adapt destination
     }
 
     public Path getRoot() {
@@ -152,6 +167,11 @@ public class PhotoDestination extends StackPane {
         }
     }
 
+    @FXML
+    void importPhotos(ActionEvent event) {
+        importProperty.set(!importProperty.get());
+    }
+
     /**
      * Compute back destination usable space each time root or subdirectory change.
      * We do it for both elements, in case sub-directory is not on the same filestore.
@@ -190,7 +210,6 @@ public class PhotoDestination extends StackPane {
     }
 
     void updateRelativePaths(final Path oldValue, final Path newValue) {
-//        ArgumentChecks.ensureNonNull("Path", oldValue);
         ArgumentChecks.ensureNonNull("Path", newValue);
         if (oldValue == null) {
             SIRS.LOGGER.log(Level.INFO, "Null oldPath in PhotoDestination#updateRelativePaths; relative path is not updated.");

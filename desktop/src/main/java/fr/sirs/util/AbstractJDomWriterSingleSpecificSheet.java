@@ -481,6 +481,7 @@ public abstract class AbstractJDomWriterSingleSpecificSheet<T extends fr.sirs.co
             for(final JRColumnParameter field : fields){
                 fieldIndex++;
                 final String fieldName = field.getFieldName();
+                final String headerName = field.getHeaderName();
                 final JRColumnParameter.DisplayPolicy displayPolicy = field.getDisplayPolicy();
                 final float coeff;
                 if(coeffSum!=0.f) {
@@ -501,7 +502,7 @@ public abstract class AbstractJDomWriterSingleSpecificSheet<T extends fr.sirs.co
                 final int ajustedColumnWidth = (fillWidth && fieldIndex==fieldNames.size()) ? (UTIL_WIDTH-cumulatedWidth) : Math.round(baseColumnWidth*coeff);
 
                 cumulatedWidth+=ajustedColumnWidth;
-                writeColumn(rb.getString(fieldName), getCDATASupplierFromSetter(settersByFieldName.get(fieldName), displayPolicy),
+                writeColumn(headerName == null ? rb.getString(fieldName) : headerName, getCDATASupplierFromSetter(settersByFieldName.get(fieldName), displayPolicy),
                         table, ajustedColumnWidth, fontSize, TABLE_HEAD_BOLD, field.isBold(), headerHeight, detailCellHeight);
             }
         }

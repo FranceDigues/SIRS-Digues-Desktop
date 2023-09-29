@@ -1,18 +1,18 @@
 /**
  * This file is part of SIRS-Digues 2.
- *
+ * <p>
  * Copyright (C) 2016, FRANCE-DIGUES,
- *
+ * <p>
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- *
+ * <p>
  * SIRS-Digues 2 is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * SIRS-Digues 2. If not, see <http://www.gnu.org/licenses/>
  */
@@ -34,6 +34,7 @@ import java.awt.Desktop;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import fr.sirs.ui.ConfFolderPane;
 
 import org.geotoolkit.gui.javafx.util.TaskManager;
 import java.io.File;
@@ -64,11 +65,16 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.prefs.*;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.image.Image;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
@@ -97,6 +103,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperationFactory;
 import org.opengis.util.FactoryException;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+
+import org.apache.commons.io.FileUtils;
 
 
 public class SirsCore {
@@ -137,20 +145,7 @@ public class SirsCore {
 
     public static final Path CONFIGURATION_PATH;
     static {
-        Path tmpPath = Paths.get(System.getProperty("user.home"), "."+NAME);
-        if (!Files.isDirectory(tmpPath)) {
-            try {
-                Files.createDirectory(tmpPath);
-            } catch (IOException ex) {
-                try {
-                    tmpPath = Files.createTempDirectory(NAME);
-                } catch (IOException ex1) {
-                    ex.addSuppressed(ex1);
-                    throw new ExceptionInInitializerError(ex);
-                }
-            }
-        }
-        CONFIGURATION_PATH = tmpPath;
+        CONFIGURATION_PATH = SirsCore.initConfigurationFolderPath();
     }
 
     public static final Path DATABASE_PATH = CONFIGURATION_PATH.resolve("database");
@@ -168,7 +163,7 @@ public class SirsCore {
     /**
      * Les requêtes préprogrammées de référence sont désormatis enregistrées sur le serveur de France-Digues et sont
      * téléchargées à chaque nouvelle connexion lorsque le réseau est disponible.
-     *
+     * <p>
      * Mais afin que les requêtes préprogrammées soient utilisables même hors-ligne (du moins dans leur dernière version
      * connue), ce n'est pas le fichier distant qui est directement utilisé pour la lecture et l'exécution des
      * requêtes, mais une copie locale mise à jour à chaque nouvelle connexion avec le contenu du fichier distant.
@@ -202,6 +197,11 @@ public class SirsCore {
 
     public static final String BORNE_DEBUT_ID = "borneDebutId";  //Doit correspondre au nom de la Propriété de la classe Positionable
     public static final String BORNE_FIN_ID = "borneFinId";  //Doit correspondre au nom de la Propriété de la classe Positionable
+
+    public static final String DISTANCE_DEBUT_MIN = "distanceDebutMin"; // PositionableVegetation property
+    public static final String DISTANCE_DEBUT_MAX = "distanceDebutMax"; // PositionableVegetation property
+    public static final String DISTANCE_FIN_MIN = "distanceFinMin"; // PositionableVegetation property
+    public static final String DISTANCE_FIN_MAX = "distanceFinMax"; // PositionableVegetation property
 
     public static final String COMMENTAIRE_FIELD = "commentaire";
     public static final String GEOMETRY_FIELD = "geometry";
@@ -241,6 +241,13 @@ public class SirsCore {
 
     /** Libellé de la borne de fin du SR élémentaire. */
     public static final String SR_ELEMENTAIRE_END_BORNE = "Fin du tronçon";
+
+    /** Timestamp specific properties' names **/
+    public static final String TIMESTAMP_START_DATE_START_VALIDITY = "horodatageDateDebutStart";
+    public static final String TIMESTAMP_END_DATE_START_VALIDITY = "horodatageDateDebutEnd";
+    public static final String TIMESTAMP_END_DATE_END_VALIDITY = "horodatageDateFinEnd";
+    public static final String TIMESTAMP_START_DATE = "horodatageStartDate";
+    public static final String TIMESTAMP_END_DATE = "horodatageEndDate";
 
     //--------------------------------------------------------------------------
     // Champs particuliers aux désordres
@@ -291,10 +298,14 @@ public class SirsCore {
 
     protected static final String NTV2_RESOURCE = "/fr/sirs/ntv2/";
 
+    public static final int GEO_CLIENT_TIMEOUT = 60000;
+
+    public static final String REGISTRE_THEME_NAME = "Registre";
+
     /**
-     * User directory root folder.
+     * Configuration directory root folder.
      *
-     * @return {user.home}/.sirs
+     * @return le chemin vers le dossier de configuration .sirs
      */
     public static String getConfigPath(){
         return CONFIGURATION_PATH.toString();
@@ -335,8 +346,9 @@ public class SirsCore {
         Setup.initialize(noJavaPrefs);
 
         final String url = "jdbc:hsqldb:" + SirsCore.EPSG_PATH.resolve("db").toUri();
+        final String decodedUrl = java.net.URLDecoder.decode(url, "UTF-8");
         final JDBCDataSource ds = new JDBCDataSource();
-        ds.setDatabase(url);
+        ds.setDatabase(decodedUrl);
         JNDI.setEPSG(ds);
 
         // On tente d'installer la grille NTV2 pour améliorer la précision du géo-réferencement.
@@ -411,7 +423,7 @@ public class SirsCore {
         ArgumentChecks.ensureNonEmpty("Document relative path", ref.getChemin());
         final Optional<Path> docRoot = DocumentRoots.getRoot(ref);
         if (!docRoot.isPresent()) {
-            throw new IllegalStateException("Auncun dossier racine n'existe ou "
+            throw new IllegalStateException("Aucun dossier racine n'existe ou "
                     + "ne dénote un chemin valide. Vous pouvez vérifier sa valeur "
                     + "depuis les préférences de l'application (Fichier > Preferences).");
         }
@@ -463,30 +475,33 @@ public class SirsCore {
      * @return An expanded envelope. If we cannot analyze CRS or it's unit on
      * horizontal axis, the same envelope is returned.
      */
-    public static Envelope pseudoBuffer(final Envelope input) {
-        double additionalDistance = 0.01;
-        if (input.getCoordinateReferenceSystem() != null) {
-            CoordinateReferenceSystem crs = input.getCoordinateReferenceSystem();
+    public static Envelope pseudoBuffer(final Envelope env) {
+        return pseudoBuffer(env, 1, 0.01);
+    }
+
+    public static Envelope pseudoBuffer(final Envelope env, final double distance, double defaultDistance) {
+        if (env.getCoordinateReferenceSystem() != null) {
+            CoordinateReferenceSystem crs = env.getCoordinateReferenceSystem();
             int firstAxis = CRSUtilities.firstHorizontalAxis(crs);
 
             if (firstAxis >=0) {
                 Unit unit = crs.getCoordinateSystem().getAxis(firstAxis).getUnit();
                 if (unit != null && Units.METRE.isCompatible(unit)) {
-                    additionalDistance = Units.METRE.getConverterTo(unit).convert(1);
+                    defaultDistance = Units.METRE.getConverterTo(unit).convert(distance);
                 }
 
-                final GeneralEnvelope result = new GeneralEnvelope(input);
+                final GeneralEnvelope result = new GeneralEnvelope(env);
                 result.setRange(firstAxis,
-                        result.getLower(firstAxis)-additionalDistance,
-                        result.getUpper(firstAxis)+additionalDistance);
-                final int secondAxis = firstAxis +1;
+                        result.getLower(firstAxis) - defaultDistance,
+                        result.getUpper(firstAxis) + defaultDistance);
+                final int secondAxis = firstAxis + 1;
                 result.setRange(secondAxis,
-                        result.getLower(secondAxis)-additionalDistance,
-                        result.getUpper(secondAxis)+additionalDistance);
+                        result.getLower(secondAxis) - defaultDistance,
+                        result.getUpper(secondAxis) + defaultDistance);
                 return result;
             }
         }
-        return input;
+        return env;
     }
 
     private static final Class[] SUPPORTED_TYPES = new Class[]{
@@ -861,5 +876,75 @@ public class SirsCore {
             }
         } else
             return null;
+    }
+
+    private static Path initConfigurationFolderPath() {
+        //On récupère la préférence utilisateur cencée contenir le chemin vers dossier de configuration
+        Preferences prefs = Preferences.userNodeForPackage(SirsCore.class);
+        String rootPath = prefs.get("CONFIGURATION_FOLDER_PATH", "none");
+
+        //Au premier lancement de l'application, on ouvre une popup afin de renseigner l'emplacement
+        //du dossier de configuration, puis on enregistre son chemin dans le fichier de properties
+        Path confPath = Paths.get("");
+        if (rootPath.equals("none")) {
+            try {
+                final Dialog dialog    = new Dialog();
+                final DialogPane pane  = new DialogPane();
+                final ConfFolderPane ipane = new ConfFolderPane();
+                pane.setContent(ipane);
+                pane.getButtonTypes().addAll(ButtonType.CANCEL, ButtonType.OK);
+                dialog.setDialogPane(pane);
+                dialog.setResizable(true);
+                dialog.setTitle("Emplacement du dossier de configuration");
+
+                final Optional opt = dialog.showAndWait();
+                if(opt.isPresent() && ButtonType.OK.equals(opt.get())){
+                    final String currentPath = ipane.rootFolderField.getText();
+
+                    //Vérifie si le dossier de conf n'existe pas déjà, si oui proposer de le supprimer.
+                    Path potentialConf = Paths.get(currentPath, "."+NAME);
+                    if (Files.isDirectory(potentialConf)) {
+                        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Le dossier de configuration ." + SirsCore.NAME + " existe déjà dans le répertoire indiqué. Souhaitez-vous écraser le dossier existant ?", ButtonType.NO, ButtonType.YES);
+                        alert.setResizable(true);
+                        alert.getDialogPane().setPrefWidth(500);
+                        alert.getDialogPane().setPrefHeight(200);
+                        final Optional<ButtonType> res = alert.showAndWait();
+                        if (res.isPresent() && ButtonType.YES.equals(res.get())) {
+                            try {
+                                FileUtils.deleteDirectory(potentialConf.toFile());
+                            } catch (IOException ex) {
+                                SirsCore.LOGGER.log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+                            }
+                        }
+                    }
+
+                    File f = new File(currentPath);
+                    if (f.isDirectory()) {
+                        rootPath = f.getPath();
+                        prefs.put("CONFIGURATION_FOLDER_PATH", rootPath);
+                    } else {
+                        throw new ExceptionInInitializerError("The location " + currentPath + " is not a folder.");
+                    }
+                    confPath = Paths.get(rootPath, "."+NAME);
+                } else {
+                    SirsCore.LOGGER.log(Level.INFO, "The configuration folder dialog is canceled.");
+                    System.exit(0);
+                }
+            } catch (ExceptionInInitializerError ex) {
+                throw new ExceptionInInitializerError(ex);
+            }
+        } else {
+            confPath = Paths.get(rootPath, "."+NAME);
+        }
+        SirsCore.LOGGER.log(Level.INFO, "The current configuration path is {0}.", rootPath);
+
+        if (!Files.isDirectory(confPath)) {
+            try {
+                Files.createDirectories(confPath);
+            } catch (IOException ex) {
+                throw new ExceptionInInitializerError(ex);
+            }
+        }
+        return confPath;
     }
 }

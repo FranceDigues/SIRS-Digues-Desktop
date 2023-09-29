@@ -2,7 +2,7 @@
  * This file is part of SIRS-Digues 2.
  *
  * Copyright (C) 2016, FRANCE-DIGUES,
- * 
+ *
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
@@ -19,12 +19,12 @@
 package fr.sirs.theme.ui;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import fr.sirs.Injector;
 import fr.sirs.SIRS;
 import fr.sirs.core.model.Positionable;
 import fr.sirs.core.model.PositionableVegetation;
+import fr.sirs.plugin.vegetation.PluginVegetation;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -45,14 +45,14 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  */
 public class FXPositionableExplicitMode extends BorderPane implements FXPositionableMode {
 
-    public static final String MODE = "EXPLICIT";
+    public static final String MODE = PluginVegetation.Mode.EXPLICIT.getValue();
 
     private final CoordinateReferenceSystem baseCrs = Injector.getSession().getProjection();
-    
+
     private final ObjectProperty<Positionable> posProperty = new SimpleObjectProperty<>();
     private final BooleanProperty disableProperty = new SimpleBooleanProperty(true);
 
-    @FXML 
+    @FXML
     private TextArea uiText;
 
     private boolean reseting = false;
@@ -84,14 +84,14 @@ public class FXPositionableExplicitMode extends BorderPane implements FXPosition
         });
 
         uiText.textProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> coordChange() );
-        
+
     }
 
     @Override
     public String getID() {
         return MODE;
     }
-    
+
     @Override
     public String getTitle() {
         return "Géométrie";
@@ -135,7 +135,7 @@ public class FXPositionableExplicitMode extends BorderPane implements FXPosition
 
         final String wkt = uiText.getText();
         final WKTReader reader = new WKTReader();
-        
+
         try {
             final Geometry geom = reader.read(wkt);
             JTS.setCRS(geom, baseCrs);
@@ -157,7 +157,7 @@ public class FXPositionableExplicitMode extends BorderPane implements FXPosition
 
     private void coordChange(){
         if(reseting) return;
-        
+
         reseting = true;
         buildGeometry();
         reseting = false;

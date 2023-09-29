@@ -72,6 +72,9 @@ import org.opengis.util.GenericName;
  */
 public class FXImportCoordinate extends FXAbstractImportCoordinate {
 
+    private static final String ATT_X_KEY = "attX";
+    private static final String ATT_Y_KEY = "attY";
+
     @FXML private ComboBox<PropertyType> uiAttX;
     @FXML private ComboBox<PropertyType> uiAttY;
 
@@ -86,10 +89,26 @@ public class FXImportCoordinate extends FXAbstractImportCoordinate {
         uiAttY.setConverter(stringConverter);
 
         uiPaneImport.disableProperty().bind(selectionProperty.isNull());
+        initFieldValue();
     }
 
     @FXML
     void openFeatureStore(ActionEvent event) {
+        openFeatureStore();
+    }
+
+    private void initFieldValue() {
+        // Init table with the previous file opened
+        // Must be before coordinate initialization because openFeatureStore fill the stringConverter
+        if ((uiPath.getText() != null && !uiPath.getText().isEmpty())) {
+            openFeatureStore();
+        }
+        // Init coordinate value with the previous one saved
+        fillFieldFromComboBox(ATT_X_KEY, uiAttX);
+        fillFieldFromComboBox(ATT_Y_KEY, uiAttY);
+    }
+
+    private void openFeatureStore() {
         final String url = uiPath.getText();
         final File file = new File(uiPath.getText());
 
@@ -132,6 +151,8 @@ public class FXImportCoordinate extends FXAbstractImportCoordinate {
             //liste des propriétés
             final ObservableList<PropertyType> properties = getPropertiesFromFeatures(col);
 
+            stringConverter.registerList(properties);
+
             uiAttX.setItems(properties);
             uiAttY.setItems(properties);
 
@@ -173,11 +194,11 @@ public class FXImportCoordinate extends FXAbstractImportCoordinate {
             alert.showAndWait();
             return;
         }
-
     }
 
     @FXML
     void importStart(ActionEvent event) {
+        saveFieldValue();
         final Point pt = getSelectionPoint();
         if(pt==null) return;
         positionable.setPositionDebut(pt);
@@ -185,6 +206,7 @@ public class FXImportCoordinate extends FXAbstractImportCoordinate {
 
     @FXML
     void importEnd(ActionEvent event) {
+        saveFieldValue();
         final Point pt = getSelectionPoint();
         if(pt==null) return;
         positionable.setPositionFin(pt);
@@ -224,5 +246,12 @@ public class FXImportCoordinate extends FXAbstractImportCoordinate {
         }
 
         return geom;
+    }
+
+    @Override
+    protected void saveFieldValue() {
+        super.saveFieldValue();
+        savePreference(ATT_X_KEY, stringConverter.toString(uiAttX.getSelectionModel().getSelectedItem()));
+        savePreference(ATT_Y_KEY, stringConverter.toString(uiAttY.getSelectionModel().getSelectedItem()));
     }
 }

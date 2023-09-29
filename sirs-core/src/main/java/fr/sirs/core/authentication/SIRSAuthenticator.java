@@ -20,10 +20,12 @@ package fr.sirs.core.authentication;
 
 import fr.sirs.core.SirsCore;
 import fr.sirs.core.authentication.AuthenticationWallet.Entry;
+import java.io.IOException;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +39,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import org.elasticsearch.common.io.Streams;
 
 /**
  * An authenticator which will prompt a JavaFX dialog to query password from user.
@@ -226,5 +229,17 @@ public class SIRSAuthenticator extends Authenticator {
             SirsCore.LOGGER.log(Level.WARNING, "Authentication prompt failed for service : "+ getRequestingSite().toString(), ex);
             return null;
         }
+    }
+
+    /**
+     * Temporary method to retrieve apikey query parameter.
+     * @return apikey
+     * @throws IOException
+     */
+    public static String getThunderForestApiKey() throws IOException {
+        final String apiKeyPath = "/fr/sirs/core/authentication/apikey";
+        List<String> lines = Streams.readAllLines(SIRSAuthenticator.class.getResourceAsStream(apiKeyPath));
+        if (lines.size() != 1) throw new IOException("apiKey file has the wrong format");
+        return PasswordDeserializer.decode(lines.get(0));
     }
 }

@@ -63,6 +63,8 @@ import org.opengis.util.GenericName;
  */
 public class FXImportDZ extends FXAbstractImportPointLeve<PointDZ> {
 
+    private static final String ATT_D_KEY = "attD";
+
     @FXML private ComboBox<PropertyType> uiAttD;
 
     public FXImportDZ(final PojoTable pojoTable) {
@@ -70,16 +72,41 @@ public class FXImportDZ extends FXAbstractImportPointLeve<PointDZ> {
 
         uiAttD.setConverter(stringConverter);
         uiCRS.setDisable(true);
+        this.initFieldValue();
+        this.getScene().getWindow().setOnCloseRequest(ev -> this.saveFieldValue());
+    }
+
+    private void initFieldValue() {
+        // Init table with the previous file opened
+        if ((uiPath.getText() != null && !uiPath.getText().isEmpty())) {
+            // Must be done before fillFieldFromComboBox
+            openFeatureStore();
+        }
+
+        // Must be done after openFeatureStore
+        // Must be done before fillFieldFromComboBox
+        stringConverter.registerList(uiAttD.getItems());
+        stringConverter.registerList(uiAttZ.getItems());
+        stringConverter.registerList(uiAttDesignation.getItems());
+
+        // Init coordinate value with the previous one saved
+        fillFieldFromComboBox(ATT_D_KEY, uiAttD);
+        fillFieldFromComboBox(ATT_Z_KEY, uiAttZ);
+        fillFieldFromComboBox(ATT_DESIGNATION_KEY, uiAttDesignation);
     }
 
     @FXML
     void openFeatureStore(ActionEvent event) {
+        openFeatureStore();
+    }
+
+    private void openFeatureStore() {
         final String url = uiPath.getText();
         final File file = new File(uiPath.getText());
 
         uiPaneConfig.setDisable(true);
 
-        selectionProperty.removeAll(selectionProperty);
+        selectionProperty.clear();
 
         try{
             if(url.toLowerCase().endsWith(".shp")){
@@ -104,7 +131,9 @@ public class FXImportDZ extends FXAbstractImportPointLeve<PointDZ> {
 
             //liste des propriétés
             final ObservableList<PropertyType> properties = getPropertiesFromFeatures(col);
-            
+
+            stringConverter.registerList(properties);
+
             uiAttDesignation.setItems(properties);
             uiAttD.setItems(properties);
             uiAttZ.setItems(properties);
@@ -125,7 +154,7 @@ public class FXImportDZ extends FXAbstractImportPointLeve<PointDZ> {
                 public void propertyChange(PropertyChangeEvent evt) {
                     if(!FeatureMapLayer.SELECTION_FILTER_PROPERTY.equals(evt.getPropertyName())) return;
 
-                    selectionProperty.removeAll(selectionProperty);
+                    selectionProperty.clear();
                     final Id filter = layer.getSelectionFilter();
                     try {
                         final FeatureCollection selection = layer.getCollection().subCollection(QueryBuilder.filtered(typeName, filter));
@@ -146,6 +175,12 @@ public class FXImportDZ extends FXAbstractImportPointLeve<PointDZ> {
             alert.setResizable(true);
             alert.showAndWait();
         }
+    }
+
+    @Override
+    protected void saveFieldValue() {
+        super.saveFieldValue();
+        savePreference(ATT_D_KEY, stringConverter.toString(uiAttD.getSelectionModel().getSelectedItem()));
     }
 
     @Override

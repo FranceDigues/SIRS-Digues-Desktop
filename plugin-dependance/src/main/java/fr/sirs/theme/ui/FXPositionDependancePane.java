@@ -30,11 +30,12 @@ import fr.sirs.core.model.AireStockageDependance;
 import fr.sirs.core.model.AvecGeometrie;
 import fr.sirs.core.model.AvecSettableGeometrie;
 import fr.sirs.core.model.CheminAccesDependance;
-import fr.sirs.core.model.DesordreDependance;
+import fr.sirs.core.model.AbstractAmenagementHydraulique;
 import fr.sirs.map.FXMapTab;
 import fr.sirs.plugin.dependance.map.DependanceEditHandler;
-import fr.sirs.plugin.dependance.map.DesordreEditHandler;
+import fr.sirs.plugin.dependance.map.AbstractAmenagementHydrauliqueEditHandler;
 import fr.sirs.ui.Growl;
+import static fr.sirs.util.SIRSAreaComputer.getGeometryInfo;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -85,6 +86,9 @@ public class FXPositionDependancePane<T extends AvecSettableGeometrie> extends B
     private final BooleanProperty disableFieldsProperty = new SimpleBooleanProperty(true);
 
     @FXML
+    private Label uiGeomInfo;
+
+    @FXML
     private Label uiGeometryPresentLbl;
 
     @FXML
@@ -101,27 +105,32 @@ public class FXPositionDependancePane<T extends AvecSettableGeometrie> extends B
     public FXPositionDependancePane() {
         SIRS.loadFXML(this);
 
-        uiGeometryPresentLbl.setText("Pas de géométrie");
-        uiDrawOnMapBtn.setText("Tracer sur la carte");
-        uiImportGeometryBtn.setText("Importer une géométrie");
-
+        setGeomLabel(false);
         dependance.addListener((observable, oldValue, newValue) -> {
             if (newValue == null) {
-                uiGeometryPresentLbl.setText("Pas de géométrie");
-                uiDrawOnMapBtn.setText("Tracer sur la carte");
-                uiImportGeometryBtn.setText("Importer une géométrie");
+                setGeomLabel(false);
             } else {
-                uiGeometryPresentLbl.setText(newValue.getGeometry() == null ? "Pas de géométrie" : "Géométrie présente");
-                uiDrawOnMapBtn.setText(newValue.getGeometry() == null ? "Tracer sur la carte" : "Modifier le tracé");
-                uiImportGeometryBtn.setText(newValue.getGeometry() == null ? "Importer une géométrie" : "Réimporter une géométrie");
-
+                final Geometry geom = newValue.getGeometry();
+                setGeomLabel(geom != null);
+                uiGeomInfo.setText(getGeometryInfoWrapped(geom));
                 newValue.geometryProperty().addListener((observable1, oldValue1, newValue1) -> {
-                    uiGeometryPresentLbl.setText(newValue1 == null ? "Pas de géométrie" : "Géométrie présente");
-                    uiDrawOnMapBtn.setText(newValue.getGeometry() == null ? "Tracer sur la carte" : "Modifier le tracé");
-                    uiImportGeometryBtn.setText(newValue.getGeometry() == null ? "Importer une géométrie" : "Réimporter une géométrie");
+                    setGeomLabel(newValue1 != null);
+                    uiGeomInfo.setText(getGeometryInfoWrapped((Geometry) newValue1));
                 });
             }
         });
+    }
+
+    private void setGeomLabel(final boolean geom) {
+        if (geom) {
+            uiGeometryPresentLbl.setText("Géométrie présente");
+            uiDrawOnMapBtn.setText("Modifier le tracé");
+            uiImportGeometryBtn.setText("Réimporter une géométrie");
+        } else {
+            uiGeometryPresentLbl.setText("Pas de géométrie");
+            uiDrawOnMapBtn.setText("Tracer sur la carte");
+            uiImportGeometryBtn.setText("Importer une géométrie");
+        }
     }
 
     public AvecGeometrie getDependance() {
@@ -151,8 +160,8 @@ public class FXPositionDependancePane<T extends AvecSettableGeometrie> extends B
         }
         if(dependance.get() instanceof AbstractDependance){
             tab.getMap().getUiMap().setHandler(new DependanceEditHandler((AbstractDependance) dependance.get()));
-        }else if(dependance.get() instanceof DesordreDependance){
-            tab.getMap().getUiMap().setHandler(new DesordreEditHandler((DesordreDependance) dependance.get()));
+        }else if(dependance.get() instanceof AbstractAmenagementHydraulique){
+            tab.getMap().getUiMap().setHandler(new AbstractAmenagementHydrauliqueEditHandler((AbstractAmenagementHydraulique) dependance.get()));
         }
     }
 
@@ -234,5 +243,13 @@ public class FXPositionDependancePane<T extends AvecSettableGeometrie> extends B
 
     public BooleanProperty disableFieldsProperty(){
         return disableFieldsProperty;
+    }
+
+    private String getGeometryInfoWrapped(final Geometry geometry) {
+        try {
+            return getGeometryInfo(geometry);
+        } catch (IllegalArgumentException ex) {
+            return "calcul impossible avec la projection actuelle";
+        }
     }
 }

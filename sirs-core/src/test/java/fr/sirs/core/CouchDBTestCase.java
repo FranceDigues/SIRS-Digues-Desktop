@@ -18,10 +18,12 @@
  */
 package fr.sirs.core;
 
+import static fr.sirs.core.SirsCore.NAME;
 import fr.sirs.core.authentication.SIRSAuthenticator;
 import fr.sirs.core.component.DatabaseRegistry;
 import fr.sirs.core.component.SirsDBInfoRepository;
 import fr.sirs.util.SystemProxySelector;
+import java.io.File;
 import java.io.IOException;
 import java.net.Authenticator;
 import java.net.ProxySelector;
@@ -32,9 +34,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.prefs.Preferences;
+import java.util.prefs.BackingStoreException;
 import javafx.embed.swing.JFXPanel;
 import org.apache.sis.test.TestCase;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import org.apache.commons.io.FileUtils;
 
 import org.ektorp.CouchDbConnector;
 import org.ektorp.DocumentNotFoundException;
@@ -72,7 +79,7 @@ public abstract class CouchDBTestCase extends TestCase {
      */
     @Autowired
     protected SessionCore session;
-
+    
     @BeforeClass
     public static synchronized void initEnvironment() throws Exception {
         // Set http proxy / authentication managers
@@ -95,6 +102,14 @@ public abstract class CouchDBTestCase extends TestCase {
         }
     }
 
+    @BeforeClass
+    public static void initConfigurationPreferences() throws BackingStoreException {
+        Preferences prefs = Preferences.userNodeForPackage(SirsCore.class);
+        Path tmpPath = new File(System.getProperty("java.io.tmpdir")).toPath();
+        prefs.put("CONFIGURATION_FOLDER_PATH", tmpPath.toString());
+        prefs.flush();
+    }
+
     @Before
     public void initTestDatabase() {
         APP_CTX.getAutowireCapableBeanFactory().autowireBean(this);
@@ -113,6 +128,13 @@ public abstract class CouchDBTestCase extends TestCase {
                 SirsCore.LOGGER.log(Level.WARNING, "A database cannot be deleted after tests !", e);
             }
         }
+    }
+
+    @AfterClass
+    public static void clearConfigurationPreferences() throws BackingStoreException {
+        Preferences prefs = Preferences.userNodeForPackage(SirsCore.class);
+        prefs.clear();
+        prefs.flush();
     }
 
     /**

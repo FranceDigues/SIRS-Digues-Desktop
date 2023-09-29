@@ -1,20 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import fr.sirs.theme.ui.*?>
+
+<?import fr.sirs.theme.ui.FXPositionablePane?>
 <?import fr.sirs.util.FXFileTextField?>
-<?import org.geotoolkit.gui.javafx.util.*?>
-<?import jidefx.scene.control.field.*?>
-<?import jfxtras.scene.control.*?>
-<?import javafx.scene.web.*?>
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
-
-
 <fx:root xmlns:fx="http://javafx.com/fxml/1" fx:id="uiBorderPane" type="BorderPane" xmlns="http://javafx.com/javafx/8" >
   <center>
     <TabPane TabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
@@ -25,69 +17,79 @@
             <HBox fx:id="ui_hbox_container" fillHeight="true" >
                 <children>
 
-                  <ScrollPane fx:id="ui_scroll_pane" HBox.hgrow="ALWAYS" >
-                    <content>
-                  <VBox spacing="30.0" BorderPane.alignment="CENTER">
-                    <children>
+                    <ScrollPane fx:id="ui_scroll_pane" HBox.hgrow="ALWAYS">
+                        <content>
+                            <VBox spacing="30.0" BorderPane.alignment="CENTER">
+                                <children>
 
-                        <HBox fx:id="ui_parent_box" spacing="20.0" alignment="CENTER_LEFT" styleClass="gray-light">
-                          <children>
-                            <Label fx:id="ui_parent_label" text="Conteneur" maxHeight="-Infinity" maxWidth="-Infinity"/>
-                            <ComboBox fx:id="ui_parent_choice"/>
-                            <Button fx:id="ui_parent_link"/>
-                          </children>
-                          <padding>
-                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                          </padding>
-                        </HBox>
+                                    <HBox fx:id="ui_parent_box" spacing="20.0" alignment="CENTER_LEFT"
+                                          styleClass="gray-light">
+                                        <children>
+                                            <Label fx:id="ui_parent_label" text="Conteneur" maxHeight="-Infinity"
+                                                   maxWidth="-Infinity"/>
+                                            <ComboBox fx:id="ui_parent_choice"/>
+                                            <Button fx:id="ui_parent_link"/>
+                                        </children>
+                                        <padding>
+                                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+                                        </padding>
+                                    </HBox>
 
-                        <!-- POSITIONEMENT -->
-                        <FXPositionablePane fx:id="uiPositionable" />  
+                                    <!-- POSITIONEMENT -->
+                                    <FXPositionablePane fx:id="uiPositionable"/>
 
-                        <!-- FORM WHICH WILL CONTAIN ALL SIMPLE EDITORS -->
-                        <!-- Photo -->
-                        <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
-                          <columnConstraints>
-                            <ColumnConstraints hgrow="NEVER" />
-                            <ColumnConstraints hgrow="ALWAYS" />
-                          </columnConstraints>
-                          <!--rowConstraints>
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                          </rowConstraints-->
-                          <children>
-                               <!-- EDate -->                 
-                               <Label text="%date" GridPane.rowIndex="0" />
-                               <DatePicker fx:id="ui_date" GridPane.columnIndex="1" GridPane.rowIndex="0"  maxHeight="-Infinity" maxWidth="-Infinity"/>
-                               <!-- EString -->                 
-                               <Label text="%chemin" GridPane.rowIndex="1" />
-                               <FXFileTextField fx:id="ui_chemin" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                               <!-- EString -->                 
-                               <Label text="%libelle" GridPane.rowIndex="2" />
-                               <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="2"  />
-                               <Label text="%orientationPhoto" GridPane.rowIndex="3" />
-                               <ComboBox fx:id="ui_orientationPhoto" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                               <Button fx:id="ui_orientationPhoto_link" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                               <Label text="%coteId" GridPane.rowIndex="4" />
-                               <ComboBox fx:id="ui_coteId" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                               <Button fx:id="ui_coteId_link" GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                               <Label text="%photographeId" GridPane.rowIndex="5" />
-                               <ComboBox fx:id="ui_photographeId" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                               <Button fx:id="ui_photographeId_link" GridPane.columnIndex="2" GridPane.rowIndex="5" />
-                          </children>
-                      <padding>
-                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                      </padding>
-                    </GridPane>
-                    <TextArea fx:id="ui_commentaire" maxHeight="-Infinity"  prefHeight="200.0" />
+                                    <!-- FORM WHICH WILL CONTAIN ALL SIMPLE EDITORS -->
+                                    <!-- Photo -->
+                                    <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+                                        <columnConstraints>
+                                            <ColumnConstraints hgrow="NEVER"/>
+                                            <ColumnConstraints hgrow="ALWAYS"/>
+                                        </columnConstraints>
+                                        <!--rowConstraints>
+                                          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                          <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                        </rowConstraints-->
+                                        <children>
+                                            <!-- EDate -->
+                                            <Label text="%date" GridPane.rowIndex="0"/>
+                                            <DatePicker fx:id="ui_date" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                                        maxHeight="-Infinity" maxWidth="-Infinity"/>
+                                            <!-- EString -->
+                                            <Label text="%chemin" GridPane.rowIndex="1"/>
+                                            <FXFileTextField fx:id="ui_chemin" GridPane.columnIndex="1"
+                                                             GridPane.rowIndex="1"/>
+                                            <!-- EString -->
+                                            <Label text="%libelle" GridPane.rowIndex="2"/>
+                                            <TextField fx:id="ui_libelle" GridPane.columnIndex="1"
+                                                       GridPane.rowIndex="2"/>
+                                            <Label text="%orientationPhoto" GridPane.rowIndex="3"/>
+                                            <ComboBox fx:id="ui_orientationPhoto" GridPane.columnIndex="1"
+                                                      GridPane.rowIndex="3"/>
+                                            <Button fx:id="ui_orientationPhoto_link" GridPane.columnIndex="2"
+                                                    GridPane.rowIndex="3"/>
+                                            <Label text="%coteId" GridPane.rowIndex="4"/>
+                                            <ComboBox fx:id="ui_coteId" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                                            <Button fx:id="ui_coteId_link" GridPane.columnIndex="2"
+                                                    GridPane.rowIndex="4"/>
+                                            <Label text="%photographeId" GridPane.rowIndex="5"/>
+                                            <ComboBox fx:id="ui_photographeId" GridPane.columnIndex="1"
+                                                      GridPane.rowIndex="5"/>
+                                            <Button fx:id="ui_photographeId_link" GridPane.columnIndex="2"
+                                                    GridPane.rowIndex="5"/>
+                                        </children>
+                                        <padding>
+                                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+                                        </padding>
+                                    </GridPane>
+                                    <TextArea fx:id="ui_commentaire" maxHeight="-Infinity" prefHeight="200.0"/>
 
-                    </children>
-                    <padding>
-                      <Insets bottom="10.0" left="50.0" right="50.0" top="30.0" />
-                    </padding>
-                  </VBox>
-                    </content>
-                  </ScrollPane>
+                                </children>
+                                <padding>
+                                    <Insets bottom="10.0" left="50.0" right="50.0" top="30.0"/>
+                                </padding>
+                            </VBox>
+                        </content>
+                    </ScrollPane>
                   <StackPane fx:id="ui_photo_stack">
                       <children>
                           <ImageView fx:id="ui_photo" preserveRatio="true" />
@@ -107,4 +109,3 @@
   </center>
 
 </fx:root>
-

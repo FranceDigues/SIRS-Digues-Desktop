@@ -23,18 +23,19 @@ import fr.sirs.core.component.AbstractSIRSRepository;
 import fr.sirs.core.model.Element;
 import fr.sirs.core.model.Preview;
 import fr.sirs.theme.ui.PojoTableComboBoxChoiceStage;
+import fr.sirs.util.property.SirsPreferences;
 import javafx.beans.binding.ObjectBinding;
 import javafx.collections.ObservableList;
 
 /**
- * 
+ *
  * @author Samuel Andrés (Geomatys) [extraction de la PojoTable]
  */
 public class ChoiceStage extends PojoTableComboBoxChoiceStage<Element, Preview> {
 
     /**
      * Constructeur de ChoiceStage.
-     * 
+     *
      * @param repo : Répositorie de l'élément sélectionné.
      * @param items : Elements sélectionnable.
      * @param defaultSelection : Sélection par defaut
@@ -45,7 +46,7 @@ public class ChoiceStage extends PojoTableComboBoxChoiceStage<Element, Preview> 
         super(okButtonLabel);
         setTitle(windowTitle);
 
-        SIRS.initCombo(comboBox, items, defaultSelection);
+        SIRS.initCombo(comboBox, items, defaultSelection, SirsPreferences.getHideArchivedProperty(), true);
         retrievedElement.bind(new ObjectBinding<Element>() {
 
             {

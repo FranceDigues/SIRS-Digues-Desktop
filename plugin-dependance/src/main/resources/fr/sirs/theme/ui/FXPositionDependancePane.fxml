@@ -9,28 +9,29 @@
     <center>
         <StackPane BorderPane.alignment="CENTER">
             <children>
-            <VBox>
-               <children>
-                  <HBox alignment="CENTER_LEFT" styleClass="pos-top">
-                     <children>
-                                  <Label styleClass="label-header" text="Positionnement" />
-                     </children>
-                     <padding>
-                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                     </padding>
-                  </HBox>
-                          <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="pos-bottom">
-                     <children>
-                        <Label fx:id="uiGeometryPresentLbl" />
-                        <Button fx:id="uiDrawOnMapBtn" mnemonicParsing="false" onAction="#drawOnMap" text="Tracer sur la carte" />
-                        <Button fx:id="uiImportGeometryBtn" mnemonicParsing="false" onAction="#importGeometry" text="Importer une géométrie" />
-                     </children>
-                     <padding>
-                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                     </padding>
-                          </HBox>
-               </children>
-            </VBox>
+                <VBox>
+                    <children>
+                        <HBox alignment="CENTER_LEFT" styleClass="pos-top" spacing="30.0">
+                            <children>
+                                <Label styleClass="label-header" text="Positionnement" />
+                                <Label fx:id="uiGeomInfo" styleClass="label-header" />
+                            </children>
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="pos-bottom">
+                            <children>
+                                <Label fx:id="uiGeometryPresentLbl" />
+                                <Button fx:id="uiDrawOnMapBtn" mnemonicParsing="false" onAction="#drawOnMap" text="Tracer sur la carte" />
+                                <Button fx:id="uiImportGeometryBtn" mnemonicParsing="false" onAction="#importGeometry" text="Importer une géométrie" />
+                            </children>
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+                        </HBox>
+                    </children>
+                </VBox>
             </children>
         </StackPane>
     </center>

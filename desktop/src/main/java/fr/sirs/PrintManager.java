@@ -257,7 +257,15 @@ public class PrintManager {
      * @param printReseauOuvrage
      * @param printVoirie
      */
-    public final void printDesordres(final List<Desordre> desordres, final boolean printPhoto, final boolean printReseauOuvrage, final boolean printVoirie) throws Exception {
+    public final void printDesordres(final List<Desordre> desordres,
+                                     final boolean printPhoto,
+                                     final boolean printReseauOuvrage,
+                                     final boolean printVoirie,
+                                     final boolean printLocationInsert,
+                                     final boolean printPR,
+                                     final boolean printXY,
+                                     final boolean printBorne)
+            throws Exception {
 
         final List<String> avoidDesordreFields = new ArrayList<>();
         avoidDesordreFields.add(GEOMETRY_FIELD);
@@ -289,12 +297,13 @@ public class PrintManager {
         avoidDesordreFields.add(DATE_MAJ_FIELD);
 
         final List<JRColumnParameter> observationFields = new ArrayList<>();
-        observationFields.add(new JRColumnParameter("date", 1.2f, true));
-        observationFields.add(new JRColumnParameter("observateurId", .8f));
-        observationFields.add(new JRColumnParameter("nombreDesordres",.9f));
+        observationFields.add(new JRColumnParameter("date", .9f, true));
+        observationFields.add(new JRColumnParameter("observateurId", .9f));
+        observationFields.add(new JRColumnParameter("nombreDesordres",.7f));
         observationFields.add(new JRColumnParameter("urgenceId", .9f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
-        observationFields.add(new JRColumnParameter("evolution", 2.f));
-        observationFields.add(new JRColumnParameter("suite", 2f));
+        observationFields.add(new JRColumnParameter("evolution", 1.8f));
+        observationFields.add(new JRColumnParameter("suiteApporterId", 1.2f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationFields.add(new JRColumnParameter("suite", 2.2f));
 
         final List<JRColumnParameter> prestationFields = new ArrayList<>();
         prestationFields.add(new JRColumnParameter("designation", .7f, true));
@@ -318,7 +327,7 @@ public class PrintManager {
                 reseauFields,
                 Injector.getSession().getPreviews(),
                 new SirsStringConverter(),
-                desordres, printPhoto, printReseauOuvrage, printVoirie);
+                desordres, printPhoto, printReseauOuvrage, printVoirie, printLocationInsert, printPR, printXY, printBorne);
         SIRS.openFile(fileToPrint);
     }
 
@@ -329,7 +338,15 @@ public class PrintManager {
      * @param printPhoto
      * @param printReseauOuvrage
      */
-    public final void printReseaux(final List<ReseauHydrauliqueFerme> reseauxFermes, final boolean printPhoto, final boolean printReseauOuvrage) throws Exception {
+    public final void printReseaux(final List<ReseauHydrauliqueFerme> reseauxFermes,
+                                   final boolean printPhoto,
+                                   final boolean printReseauOuvrage,
+                                   final boolean printLocationInsert,
+                                   final boolean printPR,
+                                   final boolean printXY,
+                                   final boolean printBorne,
+                                   boolean printObservationsSpec)
+            throws Exception {
 
         final List<String> avoidReseauFields = new ArrayList<>();
         avoidReseauFields.add(GEOMETRY_FIELD);
@@ -363,8 +380,21 @@ public class PrintManager {
         final List<JRColumnParameter> observationFields = new ArrayList<>();
         observationFields.add(new JRColumnParameter("date", 1.1f, true));
         observationFields.add(new JRColumnParameter("observateurId", .8f));
+        observationFields.add(new JRColumnParameter("urgenceId", .9f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
         observationFields.add(new JRColumnParameter("evolution", 2.f));
-        observationFields.add(new JRColumnParameter("suite", 2.5f));
+        observationFields.add(new JRColumnParameter("suiteApporterId", 1.2f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationFields.add(new JRColumnParameter("suite", 2.f));
+
+        final List<JRColumnParameter> observationSpecFields = new ArrayList<>();
+        observationSpecFields.add(new JRColumnParameter("date", 1.2f, true));
+        observationSpecFields.add(new JRColumnParameter("etatOuvrageId", 1.1f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationSpecFields.add(new JRColumnParameter("etatOuvrageCom", 1.6f, "Commentaire"));
+        observationSpecFields.add(new JRColumnParameter("etatAccessoireId", 1.1f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationSpecFields.add(new JRColumnParameter("etatAccessoireCom", 1.6f, "Commentaire"));
+        observationSpecFields.add(new JRColumnParameter("etatGenieCivilId", 1.1f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationSpecFields.add(new JRColumnParameter("etatGenieCivilCom", 1.6f, "Commentaire"));
+        observationSpecFields.add(new JRColumnParameter("manoeuvreOuvrageId", 1.1f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationSpecFields.add(new JRColumnParameter("manoeuvreOuvrageCom", 1.6f, "Commentaire"));
 
         final List<JRColumnParameter> reseauFields = new ArrayList<>();
         reseauFields.add(new JRColumnParameter("designation"));
@@ -372,7 +402,7 @@ public class PrintManager {
         reseauFields.add(new JRColumnParameter("date_debut"));
         reseauFields.add(new JRColumnParameter("date_fin"));
         reseauFields.add(new JRColumnParameter("commentaire", 2.f));
-        
+
         final List<JRColumnParameter> desordreFields = new ArrayList<>();
         desordreFields.add(new JRColumnParameter("observationDate", true));
         desordreFields.add(new JRColumnParameter("observationDesignation", .7f));
@@ -383,11 +413,12 @@ public class PrintManager {
 
         final File fileToPrint = PrinterUtilities.printReseauFerme(avoidReseauFields,
                 observationFields,
+                observationSpecFields,
                 reseauFields,
                 desordreFields,
                 Injector.getSession().getPreviews(),
                 new SirsStringConverter(),
-                reseauxFermes, printPhoto, printReseauOuvrage);
+                reseauxFermes, printPhoto, printReseauOuvrage, printLocationInsert, printPR, printXY, printBorne, printObservationsSpec);
         SIRS.openFile(fileToPrint);
     }
 
@@ -398,7 +429,15 @@ public class PrintManager {
      * @param printPhoto
      * @param printReseauxFermes
      */
-    public final void printOuvragesAssocies(final List<OuvrageHydrauliqueAssocie> ouvrages, final boolean printPhoto, final boolean printReseauxFermes) throws Exception {
+    public final void printOuvragesAssocies(final List<OuvrageHydrauliqueAssocie> ouvrages,
+                                            final boolean printPhoto,
+                                            final boolean printReseauxFermes,
+                                            final boolean printLocationInsert,
+                                            final boolean printPR,
+                                            final boolean printXY,
+                                            final boolean printBorne,
+                                            boolean printObservationsSpec)
+           throws Exception {
 
         final List<String> avoidReseauFields = new ArrayList<>();
         avoidReseauFields.add(GEOMETRY_FIELD);
@@ -432,8 +471,21 @@ public class PrintManager {
         final List<JRColumnParameter> observationFields = new ArrayList<>();
         observationFields.add(new JRColumnParameter("date", 1.1f, true));
         observationFields.add(new JRColumnParameter("observateurId", .8f));
+        observationFields.add(new JRColumnParameter("urgenceId", .9f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
         observationFields.add(new JRColumnParameter("evolution", 2.f));
-        observationFields.add(new JRColumnParameter("suite", 2.5f));
+        observationFields.add(new JRColumnParameter("suiteApporterId", 1.2f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationFields.add(new JRColumnParameter("suite", 2.f));
+
+        final List<JRColumnParameter> observationSpecFields = new ArrayList<>();
+        observationSpecFields.add(new JRColumnParameter("date", 1.2f, true));
+        observationSpecFields.add(new JRColumnParameter("etatOuvrageId", 1.1f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationSpecFields.add(new JRColumnParameter("etatOuvrageCom", 1.6f, "Commentaire"));
+        observationSpecFields.add(new JRColumnParameter("etatAccessoireId", 1.1f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationSpecFields.add(new JRColumnParameter("etatAccessoireCom", 1.6f, "Commentaire"));
+        observationSpecFields.add(new JRColumnParameter("etatGenieCivilId", 1.1f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationSpecFields.add(new JRColumnParameter("etatGenieCivilCom", 1.6f, "Commentaire"));
+        observationSpecFields.add(new JRColumnParameter("manoeuvreOuvrageId", 1.1f, JRColumnParameter.DisplayPolicy.REFERENCE_LABEL_AND_CODE));
+        observationSpecFields.add(new JRColumnParameter("manoeuvreOuvrageCom", 1.6f, "Commentaire"));
 
         final List<JRColumnParameter> reseauFields = new ArrayList<>();
         reseauFields.add(new JRColumnParameter("typeConduiteFermeeId", 2.3f, true));
@@ -442,7 +494,7 @@ public class PrintManager {
         reseauFields.add(new JRColumnParameter("date_debut"));
         reseauFields.add(new JRColumnParameter("date_fin"));
         reseauFields.add(new JRColumnParameter("commentaire", 2.6f));
-        
+
         final List<JRColumnParameter> desordreFields = new ArrayList<>();
         desordreFields.add(new JRColumnParameter("observationDate", true));
         desordreFields.add(new JRColumnParameter("observationDesignation", .7f));
@@ -453,13 +505,12 @@ public class PrintManager {
 
         final File fileToPrint = PrinterUtilities.printOuvrageAssocie(avoidReseauFields,
                 observationFields,
+                observationSpecFields,
                 reseauFields,
                 desordreFields,
                 Injector.getSession().getPreviews(),
                 new SirsStringConverter(),
-                ouvrages, printPhoto, printReseauxFermes);
+                ouvrages, printPhoto, printReseauxFermes, printLocationInsert, printPR, printXY, printBorne, printObservationsSpec);
         SIRS.openFile(fileToPrint);
     }
-    
-    
 }

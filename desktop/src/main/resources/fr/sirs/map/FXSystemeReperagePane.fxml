@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import org.geotoolkit.gui.javafx.util.*?>
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import java.lang.*?>
 <?import javafx.scene.layout.*?>
+<?import org.geotoolkit.gui.javafx.util.FXTableView?>
 
 <fx:root maxWidth="800.0" minHeight="480.0" minWidth="380.0" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
    <center>
@@ -71,14 +70,16 @@
                         </FXTableView>
                      </content>
                   </ScrollPane>
-                  <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Saisir de nouvelles bornes" wrapText="true" GridPane.rowIndex="3" />
-                  <ToggleButton fx:id="uiCreateObjet" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Saisir" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                  <Button fx:id="uiProject" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Projeter" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                  <Label text="Projeter les bornes sélectionnées sur le tronçon" wrapText="true" GridPane.rowIndex="5" />
                   <Label text="Ajouter des bornes existantes" GridPane.rowIndex="2" />
                   <Button fx:id="uiAddObjet" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Ajouter" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  <Label text="Supprimer des bornes" GridPane.rowIndex="4" />
-                  <Button mnemonicParsing="false" onAction="#deleteObjets" text="Supprimer" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                   <Label maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" text="Saisir de nouvelles bornes" wrapText="true" GridPane.rowIndex="3" />
+                   <ToggleButton fx:id="uiCreateObjet" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Saisir" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                   <Label text="Renommer une borne" GridPane.rowIndex="4" />
+                   <Button fx:id="uiRename" mnemonicParsing="false" maxWidth="1.7976931348623157E308" onAction="#renameBorne" text="Renommer" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <Label text="Supprimer des bornes" GridPane.rowIndex="5" />
+                  <Button mnemonicParsing="false" onAction="#deleteObjets" text="Supprimer" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                   <Label text="Projeter les bornes sélectionnées sur le tronçon" wrapText="true" GridPane.rowIndex="6" />
+                   <Button fx:id="uiProject" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Projeter" GridPane.columnIndex="1" GridPane.rowIndex="6" />
                </children>
             </GridPane>
          </children>

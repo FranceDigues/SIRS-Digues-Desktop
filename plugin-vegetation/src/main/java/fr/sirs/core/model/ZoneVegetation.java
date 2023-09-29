@@ -32,9 +32,26 @@ import javafx.beans.value.ObservableValue;
 import org.apache.sis.measure.Units;
 
 public abstract class ZoneVegetation  extends PositionableVegetation
-    implements Element , AvecBornesTemporelles, AvecForeignParent ,  AvecGeometrie {
+    implements Element , AvecBornesTemporelles, AvecForeignParent ,  AvecGeometrie, AvecCommentaire {
 
     private static final SirsStringConverter converter = new SirsStringConverter();
+    /**
+     * JavaFX property for commentaire.
+     */
+    private final StringProperty  commentaire = new SimpleStringProperty();
+    /**
+     * @return JavaFX observable property for commentaire.
+     */
+    public StringProperty commentaireProperty() {
+        return commentaire;
+    }
+    public String getCommentaire(){
+        return this.commentaire.get();
+    }
+
+    public void setCommentaire(String commentaire){
+        this.commentaire.set(commentaire);
+    }
 
     @Override
     @Internal
@@ -105,6 +122,16 @@ public abstract class ZoneVegetation  extends PositionableVegetation
     public ObjectProperty<LocalDate> date_finProperty() {
        return date_fin;
     }
+    /**
+     * JavaFX property for cartoEdited.
+     */
+    private final BooleanProperty  cartoEdited = new SimpleBooleanProperty();
+    /**
+     * @return JavaFX observable property for cartoEdited.
+     */
+    public BooleanProperty cartoEditedProperty() {
+        return cartoEdited;
+    }
 
     public final ObjectProperty<TraitementZoneVegetation>  traitement = new SimpleObjectProperty<>();
 
@@ -159,6 +186,13 @@ public abstract class ZoneVegetation  extends PositionableVegetation
     @JsonDeserialize(using=LocalDateDeserializer.class)
     public void setDate_fin(LocalDate date_fin){
         this.date_fin.set(date_fin);
+    }
+    public boolean getCartoEdited(){
+        return this.cartoEdited.get();
+    }
+
+    public void setCartoEdited(boolean cartoEdited){
+        this.cartoEdited.set(cartoEdited);
     }
 
     @Internal
@@ -270,6 +304,12 @@ public abstract class ZoneVegetation  extends PositionableVegetation
         builder.append(", ");
         builder.append("date_fin: ");
         builder.append(getDate_fin());
+        builder.append(", ");
+        builder.append("commentaire: ");
+        builder.append(getCommentaire());
+        builder.append(", ");
+        builder.append("cartoEdited: ");
+        builder.append(getCartoEdited());
         return builder.toString();
     }
 
@@ -313,6 +353,8 @@ public abstract class ZoneVegetation  extends PositionableVegetation
             if ((this.getParcelleId()==null ^ other.getParcelleId()==null) || ( (this.getParcelleId()!=null && other.getParcelleId()!=null) && !this.getParcelleId().equals(other.getParcelleId()))) return false;
             if ((this.getTypePositionId()==null ^ other.getTypePositionId()==null) || ( (this.getTypePositionId()!=null && other.getTypePositionId()!=null) && !this.getTypePositionId().equals(other.getTypePositionId()))) return false;
             if ((this.getTypeCoteId()==null ^ other.getTypeCoteId()==null) || ( (this.getTypeCoteId()!=null && other.getTypeCoteId()!=null) && !this.getTypeCoteId().equals(other.getTypeCoteId()))) return false;
+            if (this.getCartoEdited() != other.getCartoEdited()) return false;
+            if (this.getCommentaire() != other.getCommentaire()) return false;
             return true;
         }
         return false;

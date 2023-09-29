@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import fr.sirs.theme.ui.*?>
+<?import fr.sirs.util.FXFreeTab?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<fx:root fx:id="uiBorderPane" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+  <center>
+    <TabPane TabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+      <tabs>
+
+<!-- ATTRIBUTE TAB-->
+        <Tab text="Informations">
+          <ScrollPane>
+            <content>
+          <VBox spacing="30.0" BorderPane.alignment="CENTER">
+            <children>
+
+  <FXValidityPeriodPane fx:id="uiValidityPeriod"/>
+            <HBox fx:id="ui_parent_box" spacing="20.0" alignment="CENTER_LEFT" styleClass="gray-light">
+              <children>
+                <Label fx:id="linearId" text="%linearId" maxHeight="-Infinity" maxWidth="-Infinity"/>
+                <ComboBox fx:id="ui_linearId"/>
+                <Button fx:id="ui_linearId_link"/>
+              </children>
+              <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+              </padding>
+            </HBox>
+
+<!-- POSITIONEMENT -->
+    <FXPositionablePane fx:id="uiPositionable" />
+
+<!-- FORM WHICH WILL CONTAIN ALL SIMPLE EDITORS -->
+
+
+            <!-- Prestation -->
+            <GridPane fx:id="ui_gridpane" hgap="10.0" styleClass="gray-light" vgap="10.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="NEVER" />
+                <ColumnConstraints hgrow="ALWAYS" />
+              </columnConstraints>
+              <children>
+                   <!-- EString -->
+                   <Label text="%libelle" GridPane.rowIndex="0" />
+                   <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
+                   <!-- EFloat -->
+                   <Label text="%coutMetre" GridPane.rowIndex="1" />
+                   <Spinner fx:id="ui_coutMetre" GridPane.columnIndex="1" GridPane.rowIndex="1"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                   <!-- EFloat -->
+                   <Label text="%coutGlobal" GridPane.rowIndex="2" />
+                   <Spinner fx:id="ui_coutGlobal" GridPane.columnIndex="1" GridPane.rowIndex="2"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                   <!-- EBoolean -->
+                   <Label text="%realisationInterne" GridPane.rowIndex="3" />
+                   <CheckBox fx:id="ui_realisationInterne" GridPane.columnIndex="1" GridPane.rowIndex="3"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                   <Label text="%coteId" GridPane.rowIndex="4" />
+                   <ComboBox fx:id="ui_coteId" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                   <Button fx:id="ui_coteId_link" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+                   <Label text="%positionId" GridPane.rowIndex="5" />
+                   <ComboBox fx:id="ui_positionId" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                   <Button fx:id="ui_positionId_link" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+                   <Label text="%sourceId" GridPane.rowIndex="6" />
+                   <ComboBox fx:id="ui_sourceId" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                   <Button fx:id="ui_sourceId_link" GridPane.columnIndex="2" GridPane.rowIndex="6" />
+                   <Label text="%typePrestationId" GridPane.rowIndex="7" />
+                   <ComboBox fx:id="ui_typePrestationId" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                   <Button fx:id="ui_typePrestationId_link" GridPane.columnIndex="2" GridPane.rowIndex="7" />
+                   <Label text="%marcheId" GridPane.rowIndex="8" />
+                   <ComboBox fx:id="ui_marcheId" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+                   <Button fx:id="ui_marcheId_link" GridPane.columnIndex="2" GridPane.rowIndex="8" />
+                </children>
+              <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+              </padding>
+            </GridPane>
+              <!-- Horodatage -->
+              <GridPane fx:id="ui_horodatagePane" hgap="10.0" styleClass="gray-light" vgap="10.0">
+              <columnConstraints>
+                  <ColumnConstraints hgrow="NEVER" />
+                  <ColumnConstraints hgrow="ALWAYS" />
+              </columnConstraints>
+              <children>
+                  <Label text="%registreAttribution" GridPane.rowIndex="0" />
+                  <CheckBox fx:id="ui_registreAttribution" GridPane.columnIndex="1" GridPane.rowIndex="0"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                  <Label text="%horodatageStatusId" GridPane.rowIndex="1" />
+                  <ComboBox fx:id="ui_horodatageStatusId" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Button fx:id="ui_horodatageStatusId_link" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+
+                  <Separator prefWidth="200.0" GridPane.columnSpan="3" GridPane.rowIndex="2" GridPane.valignment="TOP"/>
+                  <!-- EString -->
+                  <Label text="%horodatageStartDate" GridPane.rowIndex="3" />
+                  <DatePicker fx:id="ui_horodatageStartDate" GridPane.columnIndex="1" GridPane.rowIndex="3"  />
+                  <Label text="%syntheseTablePathStart" GridPane.rowIndex="4" />
+                  <Label fx:id="ui_errorMessageStart" text="" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+
+                  <Separator prefWidth="200.0" GridPane.columnSpan="3" GridPane.rowIndex="6" GridPane.valignment="TOP"/>
+                  <Label text="%horodatageEndDate" GridPane.rowIndex="7" />
+                  <DatePicker fx:id="ui_horodatageEndDate" GridPane.columnIndex="1" GridPane.rowIndex="7"  />
+                  <Label text="%syntheseTablePathEnd" GridPane.rowIndex="8" />
+                  <Label fx:id="ui_errorMessageEnd" text="" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+
+                  <!-- Auto generated but do not want to show them -->
+                  <TextField fx:id="ui_syntheseTablePathStart" GridPane.columnIndex="1" GridPane.rowIndex="10"  />
+                  <TextField fx:id="ui_syntheseTablePathEnd" GridPane.columnIndex="1" GridPane.rowIndex="11"  />
+                  <DatePicker fx:id="ui_horodatageDateDebutStart" GridPane.columnIndex="1" GridPane.rowIndex="12"  />
+                  <DatePicker fx:id="ui_horodatageDateDebutEnd" GridPane.columnIndex="1" GridPane.rowIndex="13"  />
+                  <DatePicker fx:id="ui_horodatageDateFinEnd" GridPane.columnIndex="1" GridPane.rowIndex="14"  />
+              </children>
+                  <padding>
+                      <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                  </padding>
+              </GridPane>
+            <TextArea fx:id="ui_commentaire" maxHeight="-Infinity"  prefHeight="200.0" />
+
+            </children>
+            <padding>
+              <Insets bottom="10.0" left="50.0" right="50.0" top="30.0" />
+            </padding>
+          </VBox>
+            </content>
+          </ScrollPane>
+        </Tab>
+
+<!-- REFERENCE TABS -->
+        <FXFreeTab fx:id="ui_desordreIds" text="%desordreIds"/>
+        <FXFreeTab fx:id="ui_evenementHydrauliqueIds" text="%evenementHydrauliqueIds"/>
+        <FXFreeTab fx:id="ui_intervenantsIds" text="%intervenantsIds"/>
+        <FXFreeTab fx:id="ui_rapportEtudeIds" text="%rapportEtudeIds"/>
+        <FXFreeTab fx:id="ui_documentGrandeEchelleIds" text="%documentGrandeEchelleIds"/>
+        <FXFreeTab fx:id="ui_observations" text="%observations"/>
+
+        <Tab text="Ouvrages et réseaux associés">
+            <TabPane TabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+              <tabs>
+                <FXFreeTab fx:id="ui_stationPompageIds" text="%stationPompageIds"/>
+                <FXFreeTab fx:id="ui_reseauHydrauliqueFermeIds" text="%reseauHydrauliqueFermeIds"/>
+                <FXFreeTab fx:id="ui_ouvrageHydrauliqueAssocieIds" text="%ouvrageHydrauliqueAssocieIds"/>
+                <FXFreeTab fx:id="ui_reseauTelecomEnergieIds" text="%reseauTelecomEnergieIds"/>
+                <FXFreeTab fx:id="ui_ouvrageTelecomEnergieIds" text="%ouvrageTelecomEnergieIds"/>
+                <FXFreeTab fx:id="ui_reseauHydrauliqueCielOuvertIds" text="%reseauHydrauliqueCielOuvertIds"/>
+                <FXFreeTab fx:id="ui_ouvrageParticulierIds" text="%ouvrageParticulierIds"/>
+                <FXFreeTab fx:id="ui_echelleLimnimetriqueIds" text="%echelleLimnimetriqueIds"/>
+              </tabs>
+            </TabPane>
+        </Tab>
+
+        <Tab text="Voiries associés">
+            <TabPane TabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+              <tabs>
+                <FXFreeTab fx:id="ui_voieAccesIds" text="%voieAccesIds"/>
+                <FXFreeTab fx:id="ui_ouvrageFranchissementIds" text="%ouvrageFranchissementIds"/>
+                <FXFreeTab fx:id="ui_ouvertureBatardableIds" text="%ouvertureBatardableIds"/>
+                <FXFreeTab fx:id="ui_voieDigueIds" text="%voieDigueIds"/>
+                <FXFreeTab fx:id="ui_ouvrageVoirieIds" text="%ouvrageVoirieIds"/>
+              </tabs>
+            </TabPane>
+        </Tab>
+
+        <FXFreeTab fx:id="ui_globalPrestationIds" text="%globalPrestationIds"/>
+        <FXFreeTab fx:id="ui_photos" text="%photos"/>
+
+      </tabs>
+    </TabPane>
+  </center>
+
+</fx:root>
+

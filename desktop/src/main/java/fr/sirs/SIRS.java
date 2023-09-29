@@ -26,7 +26,7 @@ import fr.sirs.core.Repository;
 import fr.sirs.core.SirsCore;
 import fr.sirs.core.SirsCoreRuntimeException;
 import fr.sirs.core.component.AbstractSIRSRepository;
-import fr.sirs.core.model.Element;
+import fr.sirs.core.model.*;
 import fr.sirs.theme.ui.AbstractFXElementPane;
 import fr.sirs.theme.ui.FXElementContainerPane;
 import fr.sirs.theme.ui.columns.TableColumnsPreferences;
@@ -34,23 +34,6 @@ import fr.sirs.util.FXPreferenceEditor;
 import fr.sirs.util.ReferenceTableCell;
 import fr.sirs.util.SirsStringConverter;
 import fr.sirs.util.property.Reference;
-import java.awt.Color;
-import java.awt.Desktop;
-import java.io.File;
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.function.Predicate;
-import java.util.logging.Level;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.value.ObservableValue;
@@ -82,6 +65,22 @@ import org.geotoolkit.geometry.jts.JTS;
 import org.geotoolkit.gui.javafx.util.ComboBoxCompletion;
 import org.geotoolkit.gui.javafx.util.TaskManager;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InvalidClassException;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.text.NumberFormat;
+import java.util.List;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * Constants used for project.
@@ -131,6 +130,7 @@ public final class SIRS extends SirsCore {
     public static final Image ICON_COMPASS_WHITE = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_COMPASS, 22, Color.WHITE),null);
     public static final Image ICON_EDIT_BLACK = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_FILE_O, 16, Color.BLACK),null);
     public static final Image ICON_EDITION = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_EDIT_ALIAS, 16, Color.BLACK),null);
+    public static final Image ICON_EDITION_WHITE = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_EDIT_ALIAS, 22, Color.WHITE),null);
     public static final Image ICON_PRINT_BLACK = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_PRINT, 16, Color.BLACK),null);
     public static final Image ICON_ROTATE_LEFT_ALIAS = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_ROTATE_LEFT_ALIAS, 16, Color.BLACK),null);
     public static final Image ICON_IMPORT_WHITE  = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_DOWNLOAD,22,Color.WHITE),null);
@@ -149,6 +149,7 @@ public final class SIRS extends SirsCore {
     public static final Image ICON_LINK = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_EXTERNAL_LINK, 16, Color.BLACK),null);
     public static final Image ICON_WARNING = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_EXCLAMATION_TRIANGLE, 16, Color.BLACK),null);
     public static final Image ICON_REFRESH_WHITE = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_REFRESH,22,Color.WHITE),null);
+    public static final Image ICON_MAGNET_WHITE = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_MAGNET,22,Color.WHITE),null);
 
     public static final String CSS_PATH = "/fr/sirs/theme.css";
     public static final String CSS_PATH_CALENDAR = "/fr/sirs/calendar.css";
@@ -336,18 +337,72 @@ public final class SIRS extends SirsCore {
      * @param comboBox The combo box to set value on.
      * @param items The items we want into the ComboBox.
      * @param current the element to select by default.
+     * @param hideArchived determine whether the combo shall include or not the archived element from the items list
+     */
+    public static void initCombo(final ComboBox comboBox, final ObservableList items, final Object current, final boolean hideArchived, final boolean useCurrent) {
+        initCombo(comboBox, items, current, new SirsStringConverter(), hideArchived, useCurrent);
+    }
+
+    /**
+     * initialize ComboBox items using input list. We also activate completion.
+     * @param comboBox The combo box to set value on.
+     * @param items The items we want into the ComboBox.
+     * @param current the element to select by default.
      * @param converter the StringConverter to use to identify the items.
      */
     public static void initCombo(final ComboBox comboBox, final ObservableList items, final Object current, final StringConverter converter) {
+        initCombo(comboBox, items, current, converter, false, true);
+    }
+
+    /**
+     * initialize ComboBox items using input list. We also activate completion.
+     * @param comboBox The combo box to set value on.
+     * @param items The items we want into the ComboBox.
+     * @param current the element to select by default.
+     * @param converter the StringConverter to use to identify the items.
+     * @param hideArchived determine whether the combo shall include or not the archived element from the items list
+     */
+    public static void initCombo(final ComboBox comboBox, final ObservableList items, final Object current, final StringConverter converter, final boolean hideArchived, final boolean useCurrent) {
         ArgumentChecks.ensureNonNull("items", items);
         comboBox.setConverter(converter);
-        if (items instanceof SortedList) {
-            comboBox.setItems(items);
+        ObservableList finalItems = null;
+        if (hideArchived && items != null && !items.isEmpty()) {
+            Object item = items.get(0);
+
+            if (item instanceof AvecFinTemporelle) {
+                // List of classes that are not TronconDigue children and are impacted by the "hide archived element" option in the SIRS app.
+                List<String> classesToFilterArchived = Arrays.asList("fr.sirs.core.model.TronconLit",
+                        "fr.sirs.core.model.AireStockageDependance", "fr.sirs.core.model.AmenagementHydraulique", "fr.sirs.core.model.AutreDependance",
+                        "fr.sirs.core.model.CheminAccesDependance", "fr.sirs.core.model.OuvrageVoirieDependance");
+
+                final Class clazz;
+                final String className;
+                if (item instanceof Preview) {
+                    Preview prev = (Preview) item;
+                    clazz = prev.getJavaClassOr(null);
+                    className = prev.getElementClass();
+                } else {
+                    clazz = item.getClass();
+                    className = clazz.getCanonicalName();
+                }
+
+                if ((clazz != null) && (TronconDigue.class.isAssignableFrom(clazz)) || (classesToFilterArchived.contains(className))) {
+                    List<? extends AvecFinTemporelle> list = items;
+                    finalItems = SIRS.observableList(list.stream().filter(new AvecFinTemporelle.IsNotArchivedPredicate()).collect(Collectors.toList()));
+                }
+            }
+        }
+        if (finalItems == null) finalItems = items;
+        if (finalItems instanceof SortedList) {
+            comboBox.setItems(finalItems);
         } else {
-            comboBox.setItems(items.sorted((o1, o2) -> converter.toString(o1).compareTo(converter.toString(o2))));
+            comboBox.setItems(finalItems.sorted(Comparator.comparing(converter::toString)));
         }
         comboBox.setEditable(true);
-        comboBox.getSelectionModel().select(current);
+        if (useCurrent)
+            comboBox.getSelectionModel().select(current);
+        else
+            comboBox.getSelectionModel().select(finalItems == null ? null : finalItems.get(0));
         ComboBoxCompletion.autocomplete(comboBox);
     }
 

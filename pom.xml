@@ -25,10 +25,10 @@
   <properties>
     <!-- Define parent projects versions -->
     <slf4j.version>1.7.7</slf4j.version>
-    <sis.version>0.8-jdk7-M1</sis.version>
-    <geotoolkit.version>4.0.5</geotoolkit.version>
-    <geotoolkit.esri.version>2.0.0-MC0004</geotoolkit.esri.version>
-    <geotoolkit.h2.version>2.0.0-MC0004</geotoolkit.h2.version>
+    <sis.version>0.8-jdk7-M2</sis.version>
+    <geotoolkit.version>4.0.9</geotoolkit.version>
+    <geotoolkit.esri.version>2.0.0-MC0005</geotoolkit.esri.version>
+    <geotoolkit.h2.version>2.0.0-MC0005</geotoolkit.h2.version>
     <jai.version>1.1.4</jai.version>
     <jai-io.version>1.1.1</jai-io.version>
     <project.encoding>UTF-8</project.encoding>
@@ -98,7 +98,7 @@
       <dependency>
         <groupId>org.apache.pdfbox</groupId>
         <artifactId>pdfbox</artifactId>
-        <version>1.8.9</version>
+        <version>2.0.6</version>
       </dependency>
       <!-- Force newer version of controlsfx to avoid jre version checking error -->
       <dependency>
@@ -132,6 +132,14 @@
       <id>geomatys.private</id>
       <url>https://nexus.geomatys.com/repository/maven-private</url>
     </repository>
+    <!-- this repository is retrieved transitively with the wrong protocol,
+    as maven does not follow redirection we declare it here-->
+    <repository>
+      <id>jaspersoft</id>
+      <name>jaspersoft repository</name>
+      <url>https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts</url>
+    </repository>
+
   </repositories>
 
   <pluginRepositories>

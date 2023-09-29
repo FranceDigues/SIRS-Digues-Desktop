@@ -40,4 +40,11 @@ public class PasswordSerializer extends JsonSerializer<String> {
         }
     }
 
+    public static String encode(final String toEncode) {
+        try {
+            return Base64.getEncoder().withoutPadding().encodeToString(SerialParameters.getEncoder().doFinal(toEncode.getBytes()));
+        } catch (Exception ex) {
+            throw new RuntimeException("Cannot encode string.", ex);
+        }
+    }
 }

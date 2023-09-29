@@ -29,7 +29,6 @@ public class PhotoImport extends ScrollPane {
     public PhotoImport(final Session session, final AsyncPool executor) {
         SIRS.loadFXML(this);
 
-//        super(10);
         this.setFitToWidth(true);
 
         final PhotoDestination photoDestination = new PhotoDestination(session);
@@ -57,7 +56,7 @@ public class PhotoImport extends ScrollPane {
 
         }, photoDestination.getDestination(), prefixBuilder);
 
-        final PhotoDownload downloadPane = new PhotoDownload(executor, session, destBuilder);
+        final PhotoDownload downloadPane = new PhotoDownload(executor, session, destBuilder, photoDestination.getImportProperty());
 
         downloadPane.getTronconIds().addListener((o, old, tronconsIds) -> photoDestination.update(tronconsIds));
 

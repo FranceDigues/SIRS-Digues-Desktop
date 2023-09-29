@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.19.1.final using JasperReports Library version 6.0.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="HorodatageCoverPage_A4" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="5475a4a3-904b-4ee3-b1d8-d81506f65277">
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<parameter name="title" class="java.lang.String"/>
+	<parameter name="systemeEndiguement" class="java.lang.String"/>
+	<parameter name="dateDebutPicker" class="java.time.LocalDate"/>
+	<parameter name="dateFinPicker" class="java.time.LocalDate"/>
+	<parameter name="structure" class="java.lang.String"/>
+	<parameter name="logoPath" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<variable name="dateDebutFormatPicker" class="java.lang.String">
+		<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayFormattedDate($P{dateDebutPicker})]]></variableExpression>
+	</variable>
+	<variable name="dateFinFormatPicker" class="java.lang.String">
+		<variableExpression><![CDATA[fr.sirs.util.JRXMLUtil.displayFormattedDate($P{dateFinPicker})]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="98" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="145" splitType="Stretch">
+			<textField>
+				<reportElement x="25" y="0" width="504" height="145" uuid="afe83dcc-3628-4b19-9b13-cb42e460cfe5"/>
+				<box>
+					<pen lineWidth="0.75"/>
+					<topPen lineWidth="0.75" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.75" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.75" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.75" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="16" isBold="true"/>
+					<paragraph lineSpacing="Double" lineSpacingSize="2.0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{title} + "\n" + $P{systemeEndiguement}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="470" splitType="Stretch">
+			<textField>
+				<reportElement x="2" y="69" width="550" height="50" uuid="9fcf24bd-2118-403e-b8f8-1eecf203d7c7">
+					<printWhenExpression><![CDATA[$P{structure} != null]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{structure}]]></textFieldExpression>
+			</textField>
+			<image>
+				<reportElement x="182" y="170" width="190" height="190" uuid="eda533e7-0d2f-4df0-8ef1-b3cce6a63936">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<printWhenExpression><![CDATA[$P{logoPath} != null]]></printWhenExpression>
+				</reportElement>
+				<imageExpression><![CDATA[$P{logoPath}]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement x="77" y="22" width="400" height="30" uuid="d66e34c7-f0c4-4354-9de6-31d2aabfb0b6"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Période "+$V{dateDebutFormatPicker}+" - "+$V{dateFinFormatPicker}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="57" splitType="Stretch">
+			<textField>
+				<reportElement x="350" y="27" width="210" height="30" uuid="dc5cdaf4-4a93-4ddd-86d2-84e563e99883"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["Date édition du rapport : " + fr.sirs.util.JRXMLUtil.displayCurrentDate()]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

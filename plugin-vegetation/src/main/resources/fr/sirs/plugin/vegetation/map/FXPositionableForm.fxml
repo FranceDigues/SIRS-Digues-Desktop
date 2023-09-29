@@ -1,41 +1,140 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?>
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
    <top>
-      <GridPane hgap="10.0" BorderPane.alignment="CENTER">
-        <columnConstraints>
-          <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
-          <ColumnConstraints hgrow="ALWAYS" minWidth="5.0" prefWidth="5.0" />
-            <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
-            <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
-        </columnConstraints>
-        <rowConstraints>
-          <RowConstraints maxHeight="-Infinity" minHeight="40.0" valignment="TOP" vgrow="NEVER" />
-            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
-            <RowConstraints maxHeight="-Infinity" minHeight="24.0" vgrow="NEVER" />
-            <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
-        </rowConstraints>
-         <children>
-            <Button fx:id="uiDelete" mnemonicParsing="false" onAction="#delete" styleClass="btn-single" text="Supprimer" />
-            <Button fx:id="uiGoto" mnemonicParsing="false" onAction="#gotoForm" styleClass="btn-single" text="Fiche complète" GridPane.columnIndex="2" />
-            <Button fx:id="uiSave" mnemonicParsing="false" onAction="#save" styleClass="btn-single" text="Sauvegarder" textAlignment="CENTER" wrapText="true" GridPane.columnIndex="3" />
-            <Label styleClass="label-text" text="Tronçon" GridPane.rowIndex="2" />
-            <Label styleClass="label-text" text="Désignation" GridPane.rowIndex="1" />
-            <Label fx:id="uiTroncon" minWidth="100.0" styleClass="label-text" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
-            <TextField fx:id="uiDesignation" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1" />
-            <Label fx:id="uiTypeLabel" styleClass="label-text" text="Type de végétation" GridPane.rowIndex="3" />
-            <ComboBox fx:id="uiType" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
-         </children>
-         <padding>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </padding>
-      </GridPane>
+       <VBox spacing="5.0" VBox.vgrow="ALWAYS">
+           <children>
+              <GridPane hgap="10.0" vgap="3.0" BorderPane.alignment="CENTER">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="120" />
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="5.0" prefWidth="5.0" />
+                    <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+                    <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints maxHeight="-Infinity" minHeight="40.0" valignment="TOP" vgrow="NEVER" />
+                    <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                    <RowConstraints maxHeight="-Infinity" minHeight="24.0" vgrow="NEVER" />
+                    <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                </rowConstraints>
+                 <children>
+                     <Button fx:id="uiDelete" mnemonicParsing="false" onAction="#delete" styleClass="btn-single" text="Supprimer" />
+                     <Button fx:id="uiGoto" mnemonicParsing="false" onAction="#gotoForm" styleClass="btn-single" text="Fiche complète" GridPane.columnIndex="2" />
+                     <Button fx:id="uiSave" mnemonicParsing="false" onAction="#save" styleClass="btn-single" text="Sauvegarder" textAlignment="CENTER" wrapText="true" GridPane.columnIndex="3" />
+                     <Label styleClass="label-text" text="Désignation" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                     <TextField fx:id="uiDesignation" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1" />
+                     <Label styleClass="label-text" text="Tronçon" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                     <Label fx:id="uiTroncon" minWidth="100.0" styleClass="label-text" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
+                     <Label fx:id="uiTypeLabel" styleClass="label-text" text="Type de végétation" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                     <ComboBox fx:id="uiType" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+                 </children>
+                 <padding>
+                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                 </padding>
+              </GridPane>
+               <GridPane fx:id="grid_pane_attributs" hgap="10.0" vgap="3.0" BorderPane.alignment="CENTER_LEFT">
+                   <columnConstraints>
+                       <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="120" />
+                       <ColumnConstraints hgrow="ALWAYS" maxWidth="-Infinity" minWidth="120" />
+                   </columnConstraints>
+                   <rowConstraints>
+                       <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                   </rowConstraints>
+                   <children>
+                       <GridPane hgap="10.0" vgap="3.0" BorderPane.alignment="CENTER_LEFT" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                           <columnConstraints>
+                               <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="120" />
+                               <ColumnConstraints hgrow="ALWAYS" minWidth="5.0" prefWidth="5.0" />
+                               <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+                               <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+                           </columnConstraints>
+                           <rowConstraints>
+                               <RowConstraints maxHeight="-Infinity" minHeight="29.0" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                           </rowConstraints>
+                           <children>
+                               <Label fx:id="LabelContactEau" styleClass="label-text" text="Contact Eau " GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                               <CheckBox fx:id="checkContactEau" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="0" />
+                               <Label fx:id="ui_positionLabel" styleClass="label-text" text="Position" GridPane.rowIndex="1" />
+                               <ComboBox fx:id="ui_positionId" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1" />
+                               <Label fx:id="ui_typeCoteLabel" styleClass="label-text" text="Choix côté" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                               <ComboBox fx:id="ui_typeCoteId" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
+                               <Label fx:id="ui_typeArbreLabel" styleClass="label-text" text="Type" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                               <ComboBox fx:id="ui_typeArbreId" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+                           </children>
+                           <padding>
+                               <Insets bottom="10.0" left="10.0" right="10.0" top="0" />
+                           </padding>
+                       </GridPane>
+                       <GridPane fx:id="grid_pane_dens_haut_diam" hgap="10.0" vgap="3.0" BorderPane.alignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                           <columnConstraints>
+                               <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="120" />
+                               <ColumnConstraints hgrow="ALWAYS" minWidth="5.0" prefWidth="5.0" />
+                               <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+                               <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+                           </columnConstraints>
+                           <rowConstraints>
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                               <RowConstraints maxHeight="-Infinity" minHeight="-Infinity" vgrow="NEVER" />
+                           </rowConstraints>
+                           <children>
+                               <Label fx:id="ui_densiteLabel" styleClass="label-text" text="Densité (nb tiges/ha)" GridPane.rowIndex="0" />
+                               <Spinner fx:id="ui_densite" maxHeight="-Infinity" maxWidth="-Infinity" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="0" />
+                               <Label fx:id="ui_densiteIdLabel" styleClass="label-text" text="Densité" GridPane.rowIndex="1" />
+                               <ComboBox fx:id="ui_densiteId" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="1" />
+                               <Label fx:id="ui_hauteurLabel" styleClass="label-text" text="Hauteur (m)" GridPane.rowIndex="2" />
+                               <Spinner fx:id="ui_hauteur" maxHeight="-Infinity" maxWidth="-Infinity" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
+                               <Label fx:id="ui_hauteurIdLabel" styleClass="label-text" text="Hauteur" GridPane.rowIndex="3" />
+                               <ComboBox fx:id="ui_hauteurId" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+                               <Label fx:id="ui_diametreLabel" styleClass="label-text" text="Diametre (cm)" GridPane.rowIndex="4" />
+                               <Spinner fx:id="ui_diametre" maxHeight="-Infinity" maxWidth="-Infinity" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="4" />
+                               <Label fx:id="ui_diametreIdLabel" styleClass="label-text" text="Diametre" GridPane.rowIndex="5" />
+                               <ComboBox fx:id="ui_diametreId" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="5" />
+                               <Label fx:id="ui_etatSaniIdLabel" styleClass="label-text" text="Etat sanitaire" GridPane.rowIndex="6" />
+                               <ComboBox fx:id="ui_etatSanitaireId" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="6" />
+                               <Label fx:id="ui_especeArbreIdLabel" styleClass="label-text" text="Espèce" GridPane.rowIndex="7" />
+                               <ComboBox fx:id="ui_especeArbreId" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="7" />
+                           </children>
+                           <padding>
+                               <Insets bottom="10.0" left="10.0" right="10.0" top="0" />
+                           </padding>
+                       </GridPane>
+                   </children>
+               </GridPane>
+               <GridPane fx:id="grid_pane_commentaire" hgap="10.0" vgap="3.0" BorderPane.alignment="CENTER">
+                   <columnConstraints>
+                       <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="120" />
+                       <ColumnConstraints hgrow="ALWAYS" minWidth="5.0" prefWidth="5.0" />
+                       <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+                       <ColumnConstraints hgrow="NEVER" maxWidth="-Infinity" minWidth="-Infinity" />
+                   </columnConstraints>
+                   <rowConstraints>
+                       <RowConstraints maxHeight="100" minHeight="-Infinity" vgrow="NEVER" />
+                   </rowConstraints>
+                   <children>
+                       <Label fx:id="ui_commentaireLabel" styleClass="label-text" text="Commentaire" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                       <TextArea fx:id="ui_commentaire" maxHeight="-Infinity" prefHeight="200.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="0">
+                           <padding>
+                               <Insets bottom="10.0" left="10.0" right="10.0" top="0" />
+                           </padding>
+                       </TextArea>
+                   </children>
+                   <padding>
+                       <Insets bottom="10.0" left="10.0" right="10.0" top="0" />
+                   </padding>
+               </GridPane>
+           </children>
+       </VBox>
    </top>
 </fx:root>

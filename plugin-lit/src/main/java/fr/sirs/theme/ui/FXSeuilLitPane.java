@@ -23,54 +23,20 @@ import fr.sirs.SIRS;
 import fr.sirs.Session;
 import fr.sirs.core.component.AbstractSIRSRepository;
 import fr.sirs.core.component.Previews;
-import fr.sirs.core.model.CoucheSeuilLit;
-import fr.sirs.core.model.DesordreLit;
-import fr.sirs.core.model.Digue;
-import fr.sirs.core.model.EchelleLimnimetrique;
-import fr.sirs.core.model.Element;
-import fr.sirs.core.model.GestionObjet;
-import fr.sirs.core.model.InspectionSeuilLit;
-import fr.sirs.core.model.LabelMapper;
-import fr.sirs.core.model.OuvrageFranchissement;
-import fr.sirs.core.model.OuvrageHydrauliqueAssocie;
-import fr.sirs.core.model.OuvrageParticulier;
-import fr.sirs.core.model.OuvrageTelecomEnergie;
-import fr.sirs.core.model.OuvrageVoirie;
-import fr.sirs.core.model.Photo;
-import fr.sirs.core.model.PlanSeuilLit;
-import fr.sirs.core.model.Preview;
-import fr.sirs.core.model.ProprieteObjet;
-import fr.sirs.core.model.RefFonctionSeuilLit;
-import fr.sirs.core.model.RefGeometrieCreteSeuilLit;
-import fr.sirs.core.model.RefMateriau;
-import fr.sirs.core.model.RefPositionAxeSeuilLit;
-import fr.sirs.core.model.RefProfilCoursierSeuilLit;
-import fr.sirs.core.model.ReseauHydrauliqueCielOuvert;
-import fr.sirs.core.model.ReseauHydrauliqueFerme;
-import fr.sirs.core.model.ReseauTelecomEnergie;
-import fr.sirs.core.model.SeuilLit;
-import fr.sirs.core.model.StationPompage;
-import fr.sirs.core.model.TronconDigue;
-import fr.sirs.core.model.VoieAcces;
-import fr.sirs.core.model.VoieDigue;
+import fr.sirs.core.model.*;
 import fr.sirs.util.StreamingIterable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
+import fr.sirs.util.property.SirsPreferences;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import org.geotoolkit.util.collection.CloseableIterator;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 
 /**
  *
@@ -459,15 +425,16 @@ public class FXSeuilLitPane  extends AbstractFXElementPane<SeuilLit> {
         couchesTable.setTableItems(()-> (ObservableList) newElement.getCouches());
         // * commentaire
         ui_commentaire.textProperty().bindBidirectional(newElement.commentaireProperty());
-        
+
         final Preview linearPreview = newElement.getLinearId() == null ? null : previewRepository.get(newElement.getLinearId());
+        // HACK-REDMINE-4408 : hide archived linear from selection lists
         SIRS.initCombo(ui_linearId, SIRS.observableList(
             previewRepository.getByClass(linearPreview == null ? TronconDigue.class : linearPreview.getJavaClassOr(TronconDigue.class))).sorted(),
-            linearPreview);
+            linearPreview, SirsPreferences.getHideArchivedProperty(), true);
 //        SIRS.initCombo(ui_linearId, SIRS.observableList(
 //            previewRepository.getByClass(TronconDigue.class)).sorted(),
 //            newElement.getLinearId() == null? null : previewRepository.get(newElement.getLinearId()));
-        
+
         // Propriétés de ObjetPhotographiable
         photosTable.setParentElement(newElement);
         photosTable.setTableItems(()-> (ObservableList) newElement.getPhotos());

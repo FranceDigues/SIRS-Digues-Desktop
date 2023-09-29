@@ -22,6 +22,7 @@ import fr.sirs.CorePlugin;
 import fr.sirs.Injector;
 import fr.sirs.SIRS;
 import fr.sirs.Session;
+import fr.sirs.core.authentication.SIRSAuthenticator;
 import fr.sirs.core.component.Previews;
 import fr.sirs.core.model.ParcelleVegetation;
 import fr.sirs.core.model.PlanVegetation;
@@ -38,6 +39,7 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.NumberFormat;
@@ -95,6 +97,7 @@ import org.geotoolkit.map.MapBuilder;
 import org.geotoolkit.map.MapContext;
 import org.geotoolkit.map.MapLayer;
 import org.geotoolkit.osmtms.OSMTileMapClient;
+import org.geotoolkit.security.ApiSecurity;
 import org.geotoolkit.storage.coverage.CoverageReference;
 import org.geotoolkit.storage.coverage.CoverageStore;
 import org.geotoolkit.style.DefaultDescription;
@@ -458,25 +461,21 @@ public class FXImpression extends GridPane{
 
     }
 
-    private static MapLayer createOSMLayer() throws MalformedURLException, DataStoreException{
+    private static MapLayer createOSMLayer() throws MalformedURLException, DataStoreException, IOException {
 //        final CoverageStore store = new OSMTileMapClient(new URL("http://tile.openstreetmap.org"), null, 18, true);
 //        final CoverageStore store = new OSMTileMapClient(new URL("http://c.tile.stamen.com/terrain"), null, 18, true);
-        final CoverageStore store = new OSMTileMapClient(new URL("http://c.tile.stamen.com/toner"), null, 18, true);
+//        final CoverageStore store = new OSMTileMapClient(new URL("http://c.tile.stamen.com/toner"), null, 18, true);
+        final CoverageStore store = new OSMTileMapClient(new URL("https://tile.thunderforest.com/cycle"), new ApiSecurity(SIRSAuthenticator.getThunderForestApiKey()), 18, true);
         for (GenericName n : store.getNames()) {
             final CoverageReference cr = store.getCoverageReference(n);
             final CoverageMapLayer cml = MapBuilder.createCoverageLayer(cr);
-            cml.setName("Stamen");
+            cml.setName("Thunderforest");
             cml.setDescription(new DefaultDescription(
-                    new SimpleInternationalString("Stamen"),
-                    new SimpleInternationalString("Stamen")));
-//            cml.setName("Open Street Map");
-//            cml.setDescription(new DefaultDescription(
-//                    new SimpleInternationalString("Open Street Map"),
-//                    new SimpleInternationalString("Open Street Map")));
+                    new SimpleInternationalString("Thunderforest"),
+                    new SimpleInternationalString("Thunderforest")));
             cml.setOpacity(0.4);
             return cml;
         }
         return null;
     }
-
 }

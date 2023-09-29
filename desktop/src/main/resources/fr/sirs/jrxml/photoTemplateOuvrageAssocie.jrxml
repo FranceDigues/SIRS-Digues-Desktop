@@ -24,7 +24,7 @@
 				<staticText>
 					<reportElement x="10" y="1" width="545" height="12" uuid="09d19c03-ec69-4ad7-bdd8-dbb4315e574e"/>
 					<textElement verticalAlignment="Middle">
-						<font size="9" isBold="true" isItalic="false" isUnderline="false"/>
+						<font size="8" isBold="true" isItalic="false" isUnderline="false"/>
 					</textElement>
 					<text><![CDATA[Photos]]></text>
 				</staticText>

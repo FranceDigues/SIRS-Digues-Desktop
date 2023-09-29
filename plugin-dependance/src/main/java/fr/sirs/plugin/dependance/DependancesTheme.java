@@ -20,6 +20,7 @@ package fr.sirs.plugin.dependance;
 
 import fr.sirs.Injector;
 import fr.sirs.core.model.AireStockageDependance;
+import fr.sirs.core.model.AmenagementHydraulique;
 import fr.sirs.core.model.AutreDependance;
 import fr.sirs.core.model.CheminAccesDependance;
 import fr.sirs.core.model.Element;
@@ -70,6 +71,10 @@ public final class DependancesTheme extends AbstractPluginsButtonTheme {
         accessPathTab.setContent(createTablePane(CheminAccesDependance.class, "Liste des chemins d'accès"));
         accessPathTab.setClosable(false);
 
+        final Tab arrangementsTab = new Tab("Aménagements hydrauliques");
+        arrangementsTab.setContent(createTablePane(AmenagementHydraulique.class, "Liste des aménagements hydrauliques"));
+        arrangementsTab.setClosable(false);
+
         final Tab othersTab = new Tab("Autres");
         othersTab.setContent(createTablePane(AutreDependance.class, "Liste des dépendances d'autres types"));
         othersTab.setClosable(false);
@@ -77,6 +82,7 @@ public final class DependancesTheme extends AbstractPluginsButtonTheme {
         tabPane.getTabs().add(ouvragesTab);
         tabPane.getTabs().add(areaTab);
         tabPane.getTabs().add(accessPathTab);
+        tabPane.getTabs().add(arrangementsTab);
         tabPane.getTabs().add(othersTab);
         return new BorderPane(tabPane);
     }

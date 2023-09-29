@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<fx:root maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" type="GridPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+  <columnConstraints>
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" minWidth="10.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="-Infinity" minWidth="-Infinity" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="1.7976931348623157E308" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" vgrow="SOMETIMES" />
+    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS" />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints />
+  </rowConstraints>
+   <children>
+      <TreeTableView fx:id="tree" prefHeight="200.0" prefWidth="200.0" GridPane.rowIndex="2" GridPane.rowSpan="10">
+        <columns>
+          <TreeTableColumn fx:id="ui_name" maxWidth="1.7976931348623157E308" minWidth="200.0" prefWidth="-1.0" text="Nom" />
+          <TreeTableColumn fx:id="ui_modifDate" maxWidth="1.7976931348623157E308" minWidth="100.0" prefWidth="-1.0" text="Date de modification" />
+            <TreeTableColumn fx:id="ui_timestampDate" maxWidth="1.7976931348623157E308" minWidth="100.0" prefWidth="-1.0" text="Date d'horodatage" />
+            <TreeTableColumn fx:id="ui_size" maxWidth="1.7976931348623157E308" minWidth="70.0" prefWidth="-1.0" text="Taille" />
+            <TreeTableColumn fx:id="ui_open" maxWidth="70.0" minWidth="50.0" prefWidth="-1.0" text="Ouvrir" />
+        </columns>
+         <columnResizePolicy>
+            <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+         </columnResizePolicy>
+      </TreeTableView>
+      <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" styleClass="pojotable-header" text="Liste des dossiers et fichiers" GridPane.rowIndex="1">
+         <padding>
+            <Insets bottom="10.0" top="10.0" />
+         </padding></Label>
+      <VBox maxWidth="1.7976931348623157E308" styleClass="buttonbarleftvert" GridPane.columnIndex="1" GridPane.rowIndex="4">
+         <children>
+            <Button fx:id="addFolderButton" mnemonicParsing="false" onAction="#showAddFolderDialog" />
+            <Button fx:id="importDocButton" mnemonicParsing="false" onAction="#createAndShowImportDialog" />
+            <Button fx:id="addExtractionButton" mnemonicParsing="false" onAction="#openExtractionTab" />
+            <Button fx:id="deleteDocButton" mnemonicParsing="false" onAction="#showRemoveDialog" />
+            <Pane prefHeight="20.0" prefWidth="20.0" />
+            <Button fx:id="setFolderButton" mnemonicParsing="false" onAction="#setMainFolder" />
+            <Pane prefHeight="20.0" prefWidth="20.0" />
+            <Button fx:id="hideFileButton" mnemonicParsing="false" onAction="#hideFiles" />
+            <Button fx:id="hideShowButton" mnemonicParsing="false" onAction="#hideShowFiles" />
+         </children>
+      </VBox>
+   </children>
+   <padding>
+      <Insets left="10.0" right="10.0" />
+   </padding>
+</fx:root>

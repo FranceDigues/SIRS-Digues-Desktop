@@ -18,6 +18,7 @@
  */
 package fr.sirs.util;
 
+import fr.sirs.CorePlugin;
 import fr.sirs.Injector;
 import fr.sirs.SIRS;
 import fr.sirs.core.SirsCoreRuntimeException;
@@ -37,13 +38,8 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -57,10 +53,14 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 import org.geotoolkit.data.FeatureCollection;
+import org.geotoolkit.data.query.Query;
 import org.geotoolkit.display2d.service.OutputDef;
 import org.geotoolkit.feature.type.FeatureType;
+import org.geotoolkit.map.FeatureMapLayer;
+import org.geotoolkit.map.MapLayer;
 import org.geotoolkit.report.CollectionDataSource;
 import org.geotoolkit.report.JasperReportService;
+import org.geotoolkit.style.MutableStyle;
 import org.xml.sax.SAXException;
 
 /**
@@ -73,13 +73,22 @@ import org.xml.sax.SAXException;
  * <p>These are tools for printing functionnalities.</p>
  * @author Samuel Andrés (Geomatys)
  */
-public class PrinterUtilities {
+public final class PrinterUtilities {
 
     private static final String JRXML_EXTENSION = ".jrxml";
     private static final String PDF_EXTENSION = ".pdf";
     private static final String LOGO_PATH = "/fr/sirs/images/icon-sirs.png";
     private static final String ORDERED_SEPARATOR = ") ";
-
+    // how much the symbols should be modified by when printing the locationInsert
+    public static AtomicBoolean canPrint = new AtomicBoolean(true);
+    private static final double MULTIPLIER = 3;
+    // to store the styles to be restored prior printing
+    private static Map<MapLayer, MutableStyle> backUpStyles;
+    // to store the selectionStyle to be restored after printing
+    private static MutableStyle backupSelectStyle;
+    // to store layers' queries before changing its filter to hide the archived elements
+    private static Map<FeatureMapLayer, Query> backupQueries;
+    private static  boolean wasVisible;
     private static final List<String> FALSE_GETTERS = new ArrayList<>();
     static{
         FALSE_GETTERS.add("getClass");
@@ -90,18 +99,31 @@ public class PrinterUtilities {
         FALSE_GETTERS.add("getDocumentId");
     }
 
+    private static final String PRINT_PR = "PRINT_PR";
+    private static final String PRINT_XY = "PRINT_XY";
+    private static final String PRINT_BORNE = "PRINT_BORNE";
+    private static final String PRINT_LOCATION_INSERT = "PRINT_LOCATION_INSERT";
+
     ////////////////////////////////////////////////////////////////////////////
     // FICHES DÉTAILLÉES D'OUVRAGE HYDRAULIQUE ASSOCIE
     ////////////////////////////////////////////////////////////////////////////
 
     public static File printOuvrageAssocie(final List<String> avoidReseauFields,
-            final List<JRColumnParameter> observationFields,
-            final List<JRColumnParameter> reseauFields,
-            final List<JRColumnParameter> desordreFields,
-            final Previews previewLabelRepository,
-            final SirsStringConverter stringConverter,
-            final List<OuvrageHydrauliqueAssocie> ouvrages,
-            final boolean printPhoto, final boolean printReseauFerme) throws IOException, ParserConfigurationException, SAXException, TransformerException, JRException {
+                                           final List<JRColumnParameter> observationFields,
+                                           final List<JRColumnParameter> observationSpecFields,
+                                           final List<JRColumnParameter> reseauFields,
+                                           final List<JRColumnParameter> desordreFields,
+                                           final Previews previewLabelRepository,
+                                           final SirsStringConverter stringConverter,
+                                           final List<OuvrageHydrauliqueAssocie> ouvrages,
+                                           final boolean printPhoto,
+                                           final boolean printReseauFerme,
+                                           final boolean printLocationInsert,
+                                           final boolean printPR,
+                                           final boolean printXY,
+                                           final boolean printBorne,
+                                           final boolean printObservationsSpec
+    ) throws IOException, ParserConfigurationException, SAXException, TransformerException, JRException {
 
         // Creates the Jasper Reports specific template from the generic template.
         final File templateFile = File.createTempFile(ReseauHydrauliqueFerme.class.getName(), JRXML_EXTENSION);
@@ -111,7 +133,7 @@ public class PrinterUtilities {
         try(final InputStream metaTemplateStream = PrinterUtilities.class.getResourceAsStream("/fr/sirs/jrxml/metaTemplateOuvrageAssocie.jrxml")) {
 
             final JRDomWriterOuvrageAssocieSheet templateWriter = new JRDomWriterOuvrageAssocieSheet(metaTemplateStream,
-                    avoidReseauFields, observationFields, reseauFields, desordreFields, printPhoto, printReseauFerme);
+                    avoidReseauFields, observationFields, observationSpecFields, reseauFields, desordreFields, printPhoto, printReseauFerme, printObservationsSpec);
             templateWriter.setOutput(templateFile);
             templateWriter.write();
 
@@ -123,10 +145,9 @@ public class PrinterUtilities {
                     parameters.put(PHOTOS_SUBREPORT, net.sf.jasperreports.engine.JasperCompileManager.compileReport(photoTemplateStream));
                 }
             }
-
+            addDefaultParameters(parameters, printPR, printXY, printBorne, printLocationInsert);
             ouvrages.sort(OBJET_LINEAR_COMPARATOR.thenComparing(new PRComparator()));
-            final JRDataSource source = new OuvrageHydrauliqueAssocieDataSource(ouvrages, previewLabelRepository, stringConverter);
-            print = JasperFillManager.fillReport(jasperReport, parameters, source);
+            print = createJasperPrint(jasperReport, ouvrages, previewLabelRepository, stringConverter, printLocationInsert, parameters);
         }
 
         // Generate the report -------------------------------------------------
@@ -144,13 +165,21 @@ public class PrinterUtilities {
     ////////////////////////////////////////////////////////////////////////////
 
     public static File printReseauFerme(final List<String> avoidReseauFields,
-            final List<JRColumnParameter> observationFields,
-            final List<JRColumnParameter> reseauFields,
-            final List<JRColumnParameter> desordreFields,
-            final Previews previewLabelRepository,
-            final SirsStringConverter stringConverter,
-            final List<ReseauHydrauliqueFerme> reseaux,
-            final boolean printPhoto, final boolean printReseauOuvrage) throws IOException, ParserConfigurationException, SAXException, TransformerException, JRException {
+                                        final List<JRColumnParameter> observationFields,
+                                        final List<JRColumnParameter> observationSpecFields,
+                                        final List<JRColumnParameter> reseauFields,
+                                        final List<JRColumnParameter> desordreFields,
+                                        final Previews previewLabelRepository,
+                                        final SirsStringConverter stringConverter,
+                                        final List<ReseauHydrauliqueFerme> reseaux,
+                                        final boolean printPhoto,
+                                        final boolean printReseauOuvrage,
+                                        final boolean printLocationInsert,
+                                        final boolean printPR,
+                                        final boolean printXY,
+                                        final boolean printBorne,
+                                        final boolean printObservationsSpec
+    ) throws IOException, ParserConfigurationException, SAXException, TransformerException, JRException {
 
         // Creates the Jasper Reports specific template from the generic template.
         final File templateFile = File.createTempFile(ReseauHydrauliqueFerme.class.getName(), JRXML_EXTENSION);
@@ -160,8 +189,8 @@ public class PrinterUtilities {
         try(final InputStream metaTemplateStream = PrinterUtilities.class.getResourceAsStream("/fr/sirs/jrxml/metaTemplateReseauFerme.jrxml")){
 
             final JRDomWriterReseauFermeSheet templateWriter = new JRDomWriterReseauFermeSheet(metaTemplateStream,
-                    avoidReseauFields, observationFields, reseauFields, desordreFields, printPhoto, printReseauOuvrage);
-            
+                    avoidReseauFields, observationFields, observationSpecFields, reseauFields, desordreFields, printPhoto, printReseauOuvrage, printObservationsSpec);
+
             templateWriter.setOutput(templateFile);
             templateWriter.write();
 
@@ -173,10 +202,9 @@ public class PrinterUtilities {
                     parameters.put(PHOTOS_SUBREPORT, net.sf.jasperreports.engine.JasperCompileManager.compileReport(photoTemplateStream));
                 }
             }
-
+            addDefaultParameters(parameters, printPR, printXY, printBorne, printLocationInsert);
             reseaux.sort(OBJET_LINEAR_COMPARATOR.thenComparing(new PRComparator()));
-            final JRDataSource source = new ReseauHydrauliqueFermeDataSource(reseaux, previewLabelRepository, stringConverter);
-            print = JasperFillManager.fillReport(jasperReport, parameters, source);
+            print = createJasperPrint(jasperReport, reseaux, previewLabelRepository, stringConverter, printLocationInsert, parameters);
         }
 
         // Generate the report -------------------------------------------------
@@ -200,7 +228,14 @@ public class PrinterUtilities {
             final Previews previewLabelRepository,
             final SirsStringConverter stringConverter,
             final List<Desordre> desordres,
-            final boolean printPhoto, final boolean printReseauOuvrage, final boolean printVoirie)
+            final boolean printPhoto,
+            final boolean printReseauOuvrage,
+            final boolean printVoirie,
+            final boolean printLocationInsert,
+            final boolean printPR,
+            final boolean printXY,
+            final boolean printBorne
+    )
         throws ParserConfigurationException, SAXException, JRException, TransformerException, IOException {
 
         // Creates the Jasper Reports specific template from the generic template.
@@ -208,7 +243,7 @@ public class PrinterUtilities {
         templateFile.deleteOnExit();
 
         final JasperPrint print;
-        try(final InputStream metaTemplateStream = PrinterUtilities.class.getResourceAsStream("/fr/sirs/jrxml/metaTemplateDesordre.jrxml")) {
+        try (final InputStream metaTemplateStream = PrinterUtilities.class.getResourceAsStream("/fr/sirs/jrxml/metaTemplateDesordre.jrxml")) {
             final JRDomWriterDesordreSheet templateWriter = new JRDomWriterDesordreSheet(metaTemplateStream, avoidDesordreFields,
                     observationFields, prestationFields, reseauFields, printPhoto, printReseauOuvrage, printVoirie);
             templateWriter.setOutput(templateFile);
@@ -222,10 +257,9 @@ public class PrinterUtilities {
                     parameters.put(PHOTOS_SUBREPORT, JasperCompileManager.compileReport(photoTemplateStream));
                 }
             }
-
+            addDefaultParameters(parameters, printPR, printXY, printBorne, printLocationInsert);
             desordres.sort(OBJET_LINEAR_COMPARATOR.thenComparing(new PRComparator()));
-            final JRDataSource source = new DesordreDataSource(desordres, previewLabelRepository, stringConverter);
-            print = JasperFillManager.fillReport(jasperReport, parameters, source);
+            print = createJasperPrint(jasperReport, desordres, previewLabelRepository, stringConverter, printLocationInsert, parameters);
         }
 
         // Generate the report -------------------------------------------------
@@ -235,8 +269,78 @@ public class PrinterUtilities {
             final OutputDef output = new OutputDef(JasperReportService.MIME_PDF, outStream);
             JasperReportService.generate(print, output);
         }
-
         return fout;
+    }
+
+    // TODO make this class generic
+    private static JasperPrint createJasperPrint(JasperReport jasperReport,
+                                                             final List<? extends Element> elementsToPrint,
+                                                             final Previews previewLabelRepository,
+                                                             final SirsStringConverter stringConverter,
+                                                             final boolean printLocationInsert,
+                                                 final Map<String, Object> parameters)
+            throws JRException {
+        final JasperPrint print;
+        if (printLocationInsert) {
+            // increase the style and selectionStyle Symbolizers size
+            modifyMapPriorPrinting(elementsToPrint);
+        }
+
+        final JRDataSource source;
+        if (elementsToPrint.get(0) instanceof Desordre)
+            source = new DesordreDataSource((List<Desordre>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert);
+        else if (elementsToPrint.get(0) instanceof ReseauHydrauliqueFerme)
+            source = new ReseauHydrauliqueFermeDataSource((List<ReseauHydrauliqueFerme>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert);
+        else if (elementsToPrint.get(0) instanceof OuvrageHydrauliqueAssocie)
+            source = new OuvrageHydrauliqueAssocieDataSource((List<OuvrageHydrauliqueAssocie>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert);
+        else
+            throw new RuntimeException("Can't print the type of Elements selected : "+elementsToPrint.get(0).getClass().getSimpleName());
+        print = JasperFillManager.fillReport(jasperReport, parameters, source);
+
+        if (printLocationInsert) {
+            // restore the previous styles and selectedStyle
+            restoreMap(elementsToPrint.get(0));
+        }
+        return print;
+    }
+
+    private static void modifyMapPriorPrinting(List<? extends Element> elements) {
+        wasVisible = CorePlugin.getMapLayerForElement(elements.get(0)).isVisible();
+        if (!elements.isEmpty() && !wasVisible) CorePlugin.modifyLayerVisibilityForElement(elements.get(0), true);
+        // increase the size of PointSymbolizers, LineSymbolizers and TextSymbolizers for the styles of visible layers
+        backUpStyles = LocationInsertUtilities.modifyContextSymbolsSizeAndGetBackUpStyles(MULTIPLIER);
+        // increase the size of PointSymbolizers, LineSymbolizers and TextSymbolizers for the selectionStyle of Desordre
+        backupSelectStyle = LocationInsertUtilities.modifySelectionSymbolSize(MULTIPLIER, elements.get(0));
+        // Hide archived Elements from all visible layers
+        // elementsToShow is the list of the printed elements : Desordre, OuvrageHydrauliqueAssocie or ReseauHydrauliqueFerme - all extends Objet
+        // casted to Objet to get their TronconDigue from the linearId attribut
+        if (!(elements.get(0) instanceof Objet)) {
+            SIRS.LOGGER.log(Level.WARNING, "Trying to print elements that are not Objet");
+            throw new RuntimeException("Trying to print elements that are not Objet");
+        }
+        backupQueries = LocationInsertUtilities.hideArchivedElements((List<Objet>) elements);
+    }
+
+    // public method to be accessed from FXDisorderPrintPane, FXReseauFermePrintPane, FXOuvrageAssociePrintPane
+    public static void restoreMap(Element e) {
+        // hide the layer back if it was hidden before
+        if (!wasVisible) CorePlugin.modifyLayerVisibilityForElement(e, false);
+        // restore layers style
+        LocationInsertUtilities.changeBackLayersSymbolSize(backUpStyles);
+        // restore selectionStyle of the element layer
+        LocationInsertUtilities.changeBackSelectionSymbolSize(e, backupSelectStyle);
+        // Restore hidden archived Elements from all visible layers
+        LocationInsertUtilities.showBackArchivedElements(backupQueries);
+        backUpStyles = null;
+        backupSelectStyle = null;
+        backupQueries = null;
+    }
+
+    public static void addDefaultParameters(Map<String, Object> parameters, boolean printPR, boolean printXY, boolean printBorne, boolean printLocationInsert){
+        parameters.put(PRINT_PR, printPR);
+        parameters.put(PRINT_XY, printXY);
+        parameters.put(PRINT_BORNE, printBorne);
+        parameters.put(PRINT_LOCATION_INSERT, printLocationInsert);
     }
 
     ////////////////////////////////////////////////////////////////////////////

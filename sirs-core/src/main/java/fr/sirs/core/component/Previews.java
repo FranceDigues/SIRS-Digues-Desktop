@@ -86,8 +86,8 @@ public class Previews extends CouchDbRepositorySupport<Preview> implements Docum
      */
     private final Cache<String, ObservableList<Preview>> byClassCache = new Cache<>(20, 0, CacheRules.cacheElementsOfType(Preview.class));
 
-    public static final String BY_ID = "previews";
-    public static final String BY_CLASS = "designation";
+    public static final String BY_ID = "previewsWithDate";
+    public static final String BY_CLASS = "designationWithDate";
     public static final String VALIDATION = "validation";
 
     @Autowired
@@ -178,7 +178,7 @@ public class Previews extends CouchDbRepositorySupport<Preview> implements Docum
 
         } else {
             // No cache for now. When a "concatenated observable list" implementation will be available, we'll be able to use it.
-            return db.queryView(createQuery(BY_CLASS).includeDocs(false).keys(canonicalClassNames), Preview.class);
+                return db.queryView(createQuery(BY_CLASS).includeDocs(false).keys(canonicalClassNames), Preview.class);
         }
     }
 
@@ -282,7 +282,7 @@ public class Previews extends CouchDbRepositorySupport<Preview> implements Docum
                 tmpPreviews.add(createPreview(e));
             }
 
-            Platform.runLater(() -> previews.addAll(tmpPreviews));
+                Platform.runLater(() -> previews.addAll(tmpPreviews));
         }
     }
 
@@ -306,23 +306,23 @@ public class Previews extends CouchDbRepositorySupport<Preview> implements Docum
             }
 
             Platform.runLater(() -> {
-                ListIterator<Preview> it = previews.listIterator();
-                Preview p;
-                Element doc, child;
-                while (it.hasNext()) {
-                    p = it.next();
-                    // Do not remove preview if no document matches it. it's the job of #documentDeleted.
-                    if (p.getDocId() != null) {
-                        doc = documents.get(p.getDocId());
-                        if (doc != null) {
-                            child = doc.getChildById(p.getElementId());
-                            if (child == null) { // Child should have been deleted from document. Preview is no longer needed.
-                                it.remove();
-                            } else {
-                                it.set(createPreview(child)); // Update preview.
-                            }
-                        }
+        ListIterator<Preview> it = previews.listIterator();
+        Preview p;
+        Element doc, child;
+        while (it.hasNext()) {
+            p = it.next();
+            // Do not remove preview if no document matches it. it's the job of #documentDeleted.
+            if (p.getDocId() != null) {
+                doc = documents.get(p.getDocId());
+                if (doc != null) {
+                    child = doc.getChildById(p.getElementId());
+                    if (child == null) { // Child should have been deleted from document. Preview is no longer needed.
+                        it.remove();
+                    } else {
+                        it.set(createPreview(child)); // Update preview.
                     }
+                }
+            }
                 }
             });
         }
@@ -378,5 +378,9 @@ public class Previews extends CouchDbRepositorySupport<Preview> implements Docum
     @Override
     public void add(Preview entity) {
         throw new UnsupportedOperationException("Read-only repository. We only work on views here.");
+    }
+
+    public void clearCache() {
+        byClassCache.clear();
     }
 }

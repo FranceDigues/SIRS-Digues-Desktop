@@ -1,18 +1,18 @@
 /**
  * This file is part of SIRS-Digues 2.
- *
+ * <p>
  * Copyright (C) 2016, FRANCE-DIGUES,
- *
+ * <p>
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- *
+ * <p>
  * SIRS-Digues 2 is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * SIRS-Digues 2. If not, see <http://www.gnu.org/licenses/>
  */
@@ -91,16 +91,16 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
     @FXML
     protected Spinner<Double> uiDistanceEnd;
 
-    //Indicatif de la coordonnée saisie/calculée.    
+    //Indicatif de la coordonnée saisie/calculée.
     @FXML
     protected Label uiLinearCoordLabel;
-    
+
     private boolean reseting = false;
 
     public void setReseting(boolean reseting) {
         this.reseting = reseting;
     }
-    
+
     public FXPositionableAbstractLinearMode() {
         SIRS.loadFXML(this, Positionable.class);
 
@@ -151,72 +151,83 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
         valueFactory.setConverter(conv);
         uiDistanceEnd.setValueFactory(valueFactory);
 
-        final ChangeListener<Geometry> geomListener = new ChangeListener<Geometry>() {
-            @Override
-            public void changed(ObservableValue<? extends Geometry> observable, Geometry oldValue, Geometry newValue) {
-                if (reseting) {
-                    return;
-                }
-                if (newValue == null) {
-                    throw new IllegalArgumentException("New geometry is null");
-                }
-                updateFields();
+        final ChangeListener<Geometry> geomListener = (observable, oldValue, newValue) -> {
+            if (reseting) {
+                return;
             }
+            if (newValue == null) {
+                throw new IllegalArgumentException("New geometry is null");
+            }
+            updateFields();
         };
 
         //Listener permettant d'indiquer si les coordonnées sont calculées ou éditées
         final ChangeListener<Boolean> updateEditedGeoCoordinatesDisplay = (ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
             setCoordinatesLabel(oldValue, newValue);
         };
-        
-        posProperty.addListener(new ChangeListener<Positionable>() {
-            @Override
-            public void changed(ObservableValue<? extends Positionable> observable, Positionable oldValue, Positionable newValue) {
-                if (oldValue != null) {
-                    oldValue.geometryProperty().removeListener(geomListener);
-                    oldValue.editedGeoCoordinateProperty().removeListener(updateEditedGeoCoordinatesDisplay);
-                }
-                if (newValue != null) {
-                    newValue.geometryProperty().addListener(geomListener);
-                    newValue.editedGeoCoordinateProperty().addListener(updateEditedGeoCoordinatesDisplay);
-                    setCoordinatesLabel(null, posProperty.get().getEditedGeoCoordinate());
-                    updateFields();
-                }
+        // Listener pour les changements sur les paramètres de début et de fin, dans le cadre de l'import de bornes par exemple ou de changement dans la pojoTable.
+        final ChangeListener pointListener = (obs, oldVal, newVal) -> updateFields();
+
+        posProperty.addListener((observable, oldValue, newValue) -> {
+            if (oldValue != null) {
+                oldValue.geometryProperty().removeListener(geomListener);
+                oldValue.editedGeoCoordinateProperty().removeListener(updateEditedGeoCoordinatesDisplay);
+                oldValue.borneFinIdProperty().removeListener(pointListener);
+                oldValue.borneDebutIdProperty().removeListener(pointListener);
+                oldValue.borne_debut_avalProperty().removeListener(pointListener);
+                oldValue.borne_debut_distanceProperty().removeListener(pointListener);
+                oldValue.borne_fin_avalProperty().removeListener(pointListener);
+                oldValue.borne_fin_distanceProperty().removeListener(pointListener);
+            }
+            if (newValue != null) {
+                newValue.geometryProperty().addListener(geomListener);
+                newValue.editedGeoCoordinateProperty().addListener(updateEditedGeoCoordinatesDisplay);
+                setCoordinatesLabel(null, posProperty.get().getEditedGeoCoordinate());
+                // Listeners to update values in the pane when they are updated via the pojoTable.
+                newValue.borneFinIdProperty().addListener(pointListener);
+                newValue.borneDebutIdProperty().addListener(pointListener);
+                newValue.borne_debut_avalProperty().addListener(pointListener);
+                newValue.borne_debut_distanceProperty().addListener(pointListener);
+                newValue.borne_fin_avalProperty().addListener(pointListener);
+                newValue.borne_fin_distanceProperty().addListener(pointListener);
+                updateFields();
             }
         });
 
         uiSRs.getSelectionModel().selectedItemProperty().addListener(this::srsChange);
 
-        final ChangeListener chgListener = (ObservableValue observable, Object oldValue, Object newValue) -> coordChange();
+        final ChangeListener chgListener = (ObservableValue observable, Object oldValue, Object newValue) -> coordChange(false);
+        final ChangeListener borneChgListener = (ObservableValue observable, Object oldValue, Object newValue) -> coordChange(true);
         groupStart.selectedToggleProperty().addListener(chgListener);
         groupEnd.selectedToggleProperty().addListener(chgListener);
-        uiBorneStart.valueProperty().addListener(chgListener);
-        uiBorneEnd.valueProperty().addListener(chgListener);
+        uiBorneStart.valueProperty().addListener(borneChgListener);
+        uiBorneEnd.valueProperty().addListener(borneChgListener);
         uiDistanceStart.valueProperty().addListener(chgListener);
         uiDistanceEnd.valueProperty().addListener(chgListener);
     }
-    
+
     /**
      * Méthode permettant de mettre à jour le label (FXML) indiquant si les
      * coordonnées du mode ont été calculées ou éditées.
      *
      * @param oldEditedGeoCoordinate ancienne valeur de la propriété
-     * editedGeoCoordinate du positionable courant. Null si ont l'ignore.
+     * editedGeoCoordinate du positionable courant. Null si on l'ignore.
      * @param newEditedGeoCoordinate nouvelle valeur.
      */
-    final protected void setCoordinatesLabel(Boolean oldEditedGeoCoordinate, Boolean newEditedGeoCoordinate){
-       if (newEditedGeoCoordinate == null) {
-                uiLinearCoordLabel.setText("Le mode d'obtention du type de coordonnées n'est pas renseigné.");
-                return;
-            } else if ((oldEditedGeoCoordinate!=null) && (oldEditedGeoCoordinate.equals(newEditedGeoCoordinate))) {
-                return;
-            }
-
+    protected void setCoordinatesLabel(Boolean oldEditedGeoCoordinate, Boolean newEditedGeoCoordinate){
+        if (newEditedGeoCoordinate == null) {
+            uiLinearCoordLabel.setText(COORDS_TYPE_UNKNOWN);
+            return;
+        } else if (newEditedGeoCoordinate.equals(oldEditedGeoCoordinate)) {
+            return;
+        }
+        if (uiLinearCoordLabel != null) { //Occurred for vegetation
             if (newEditedGeoCoordinate) {
-                uiLinearCoordLabel.setText("Coordonnées calculées");
+                uiLinearCoordLabel.setText(COORDS_TYPE_COMPUTED);
             } else {
-                uiLinearCoordLabel.setText("Coordonnées saisies");
+                uiLinearCoordLabel.setText(COORDS_TYPE_ENTERED);
             }
+        }
     }
 
     @Override
@@ -245,6 +256,17 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
      */
     @Override
     public void updateFields() {
+        updateFields(false);
+    }
+
+    /**
+     * Le paramètre isBorne est nécéssaire pour empécher l'écrasement de la
+     * liste calculée par l'autocomplétion, qui est déclenché juste avant la
+     * mise à jour des champs. isBorne a pour valeur vrai uniquement pour les
+     * listeners des champs borneDebut et borneFin.
+     * @param isBorne
+     */
+    private void updateFields(final boolean isBorne) {
         reseting = true;
         try {
             final Positionable pos = posProperty.get();
@@ -265,10 +287,10 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
             uiSRs.setValue(defaultSR);
 
             /*
-        Init list of bornes and SRs : must be done all the time to allow the user
-        to change/choose the positionable SR and bornes among list elements.
+            Init list of bornes and SRs : must be done all the time to allow the user
+            to change/choose the positionable SR and bornes among list elements.
              */
-            final Map<String, BorneDigue> borneMap = initSRBorneLists(t, defaultSR);
+            final Map<String, BorneDigue> borneMap = initSRBorneLists(t, defaultSR, isBorne);
 
             if ((mode == null || getID().equals(mode)) && sameSR) {
                 //on assigne les valeurs sans changement
@@ -283,33 +305,12 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
                 uiBorneStart.valueProperty().set(borneMap.get(pos.borneDebutIdProperty().get()));
                 uiBorneEnd.valueProperty().set(borneMap.get(pos.borneFinIdProperty().get()));
 
-            } else {
-                try {
+            } else if (pos.getGeometry() != null && pos.getBorneDebutId() != null) {
                     //on calcule les valeurs en fonction des points de debut et fin
                     final TronconUtils.PosInfo ps = new TronconUtils.PosInfo(pos, t);
-                    final TronconUtils.PosSR rp = ps.getForSR(defaultSR);
-
-                    uiAvalStart.setSelected(!rp.startAval);
-                    uiAmontStart.setSelected(rp.startAval);
-                    uiDistanceStart.getValueFactory().setValue(rp.distanceStartBorne);
-                    uiBorneStart.getSelectionModel().select(rp.borneDigueStart);
-
-                    uiAvalEnd.setSelected(!rp.endAval);
-                    uiAmontEnd.setSelected(rp.endAval);
-                    uiDistanceEnd.getValueFactory().setValue(rp.distanceEndBorne);
-                    uiBorneEnd.getSelectionModel().select(rp.borneDigueEnd);
-                } catch (Exception e) {
-                    //pas de geometrie
-                    uiAvalStart.setSelected(true);
-                    uiAmontStart.setSelected(false);
-                    uiDistanceStart.getValueFactory().setValue(0.0);
-                    uiBorneStart.getSelectionModel().clearSelection();
-
-                    uiAvalEnd.setSelected(true);
-                    uiAmontEnd.setSelected(false);
-                    uiDistanceEnd.getValueFactory().setValue(0.0);
-                    uiBorneEnd.getSelectionModel().clearSelection();
-                }
+                    updateFromPosSRInfo(defaultSR, ps);
+            } else {
+                updateWithDefaultValues();
             }
 
         } finally {
@@ -326,7 +327,7 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
      * @param defaultSR
      * @return
      */
-    protected Map<String, BorneDigue> initSRBorneLists(final TronconDigue t, final SystemeReperage defaultSR) {
+    protected Map<String, BorneDigue> initSRBorneLists(final TronconDigue t, final SystemeReperage defaultSR, final boolean isBorne) {
         final List<SystemeReperage> srs = ((SystemeReperageRepository) Injector.getSession().getRepositoryForClass(SystemeReperage.class)).getByLinear(t);
         uiSRs.setItems(SIRS.observableList(srs));
         uiSRs.getSelectionModel().select(defaultSR);
@@ -341,10 +342,11 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
             }
             bornes.addAll(borneMap.values());
         }
-
-        bornes = bornes.sorted(new BorneComparator());
-        uiBorneStart.setItems(bornes);
-        uiBorneEnd.setItems(bornes);
+        if (!isBorne) {
+            bornes = bornes.sorted(new BorneComparator());
+            uiBorneStart.setItems(bornes);
+            uiBorneEnd.setItems(bornes);
+        }
         return borneMap;
     }
 
@@ -362,6 +364,13 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
             return;
         }
 
+        setValuesFromUi(positionable);
+
+        //on recalcule la geométrie et les coordonnées Géo du positionable.
+        ConvertPositionableCoordinates.computePositionableGeometryAndCoord(positionable);
+    }
+
+    public void setValuesFromUi(final Positionable positionable) {
         final SystemeReperage sr = uiSRs.getValue();
         final BorneDigue startBorne = uiBorneStart.getValue();
         final BorneDigue endBorne = uiBorneEnd.getValue();
@@ -372,21 +381,24 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
         positionable.setBorne_fin_aval(uiAmontEnd.isSelected());
         positionable.setBorne_debut_distance(uiDistanceStart.getValue());
         positionable.setBorne_fin_distance(uiDistanceEnd.getValue());
-
-        //on recalcule la geométrie et les coordonnées Géo du positionable.
-        ConvertPositionableCoordinates.computePositionableGeometryAndCoord(positionable);
     }
 
-    protected void coordChange() {
-        if (reseting) {return;}
+    protected void coordChange(final boolean isBorne) {
+        if (reseting) return;
         reseting = true;
         try {
             buildGeometry();
             posProperty.get().setEditedGeoCoordinate(Boolean.FALSE);
-        }catch(Exception e){
+        } catch (Exception e) {
             SIRS.LOGGER.log(Level.WARNING, "Echec de la construction de la géométrie lors du changement de coordonnées.", e);
-        }finally {
-            updateFields();
+        } finally {
+            // Disjonction nécéssaire pour éviter l'écrasement de la liste
+            // calculée par l'autocomplétion des champs borneDebut et borneFin.
+            if (isBorne) {
+                updateFields(true);
+            } else {
+                updateFields();
+            }
             reseting = false;
         }
     }
@@ -417,34 +429,42 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
             try {
                 //on calcule les valeurs en fonction des points de debut et fin
                 final TronconUtils.PosInfo ps = new TronconUtils.PosInfo(positionableProperty().get());
-                final TronconUtils.PosSR rp = ps.getForSR(newSR);
-
-                uiAvalStart.setSelected(!rp.startAval);
-                uiAmontStart.setSelected(rp.startAval);
-                uiDistanceStart.getValueFactory().setValue(rp.distanceStartBorne);
-                uiBorneStart.getSelectionModel().select(rp.borneDigueStart);
-
-                uiAvalEnd.setSelected(!rp.endAval);
-                uiAmontEnd.setSelected(rp.endAval);
-                uiDistanceEnd.getValueFactory().setValue(rp.distanceEndBorne);
-                uiBorneEnd.getSelectionModel().select(rp.borneDigueEnd);
+                updateFromPosSRInfo(newSR, ps);
             } catch (Exception e) {
                 //pas de geometrie
-                uiAvalStart.setSelected(true);
-                uiAmontStart.setSelected(false);
-                uiDistanceStart.getValueFactory().setValue(0.0);
-                uiBorneStart.getSelectionModel().clearSelection();
-
-                uiAvalEnd.setSelected(true);
-                uiAmontEnd.setSelected(false);
-                uiDistanceEnd.getValueFactory().setValue(0.0);
-                uiBorneEnd.getSelectionModel().clearSelection();
+                updateWithDefaultValues();
             }
 
             buildGeometry();
         } finally {
             reseting = false;
         }
+    }
+
+    private void updateWithDefaultValues() {
+        uiAvalStart.setSelected(true);
+        uiAmontStart.setSelected(false);
+        uiDistanceStart.getValueFactory().setValue(0.0);
+        uiBorneStart.getSelectionModel().clearSelection();
+
+        uiAvalEnd.setSelected(true);
+        uiAmontEnd.setSelected(false);
+        uiDistanceEnd.getValueFactory().setValue(0.0);
+        uiBorneEnd.getSelectionModel().clearSelection();
+    }
+
+    void updateFromPosSRInfo(SystemeReperage newSR, TronconUtils.PosInfo ps) {
+        final TronconUtils.PosSR rp = ps.getForSR(newSR);
+
+        uiAvalStart.setSelected(!rp.startAval);
+        uiAmontStart.setSelected(rp.startAval);
+        uiDistanceStart.getValueFactory().setValue(rp.distanceStartBorne);
+        uiBorneStart.getSelectionModel().select(rp.borneDigueStart);
+
+        uiAvalEnd.setSelected(!rp.endAval);
+        uiAmontEnd.setSelected(rp.endAval);
+        uiDistanceEnd.getValueFactory().setValue(rp.distanceEndBorne);
+        uiBorneEnd.getSelectionModel().select(rp.borneDigueEnd);
     }
 
     /**

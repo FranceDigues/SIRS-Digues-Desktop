@@ -20,45 +20,24 @@ package fr.sirs.ui;
 
 import fr.sirs.util.property.SirsPreferences;
 import javafx.beans.DefaultProperty;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.layout.BorderPane;
-import javafx.util.StringConverter;
 
 /**
  *
  * @author Alexis Manin (Geomatys)
  */
 @DefaultProperty("stringValue")
-public class IncrementCheckBox extends BorderPane {
+public class IncrementCheckBox extends AbstractCheckBox {
 
-    protected final StringProperty stringValue = new SimpleStringProperty(this, "stringValue");
-    protected static final String DESCRIPTION = "Attention, l'auto-increment présente les limitations suivantes : " + System.lineSeparator()
+   protected static final String DESCRIPTION = "Attention, l'auto-increment présente les limitations suivantes : " + System.lineSeparator()
             + "\t- Les valeurs incrémentées peuvent présenter des doublons, du fait du format distribué de la base de données," + System.lineSeparator()
             + "\t- Le calcul des valeurs incrémentales implique un surcoût non-négligeable de calcul, pouvant ralentir l'application," + System.lineSeparator()
             + "\t- La détermination des valeurs possible ne se basera que sur les désignations au format numérique." + System.lineSeparator();
 
-    final CheckBox checkBox;
 
     public IncrementCheckBox() {
-        checkBox = new CheckBox();
-        setCenter(checkBox);
-
-        Bindings.bindBidirectional(stringValue, checkBox.selectedProperty(), new StringConverter<Boolean>() {
-            @Override
-            public String toString(Boolean object) {
-                return object == null? null : object.toString();
-            }
-
-            @Override
-            public Boolean fromString(String string) {
-                return string == null? null : Boolean.valueOf(string);
-            }
-        });
+        super();
 
         checkBox.selectedProperty().setValue(
                 Boolean.valueOf(SirsPreferences.INSTANCE.getPropertySafe(SirsPreferences.PROPERTIES.DESIGNATION_AUTO_INCREMENT))
@@ -71,9 +50,5 @@ public class IncrementCheckBox extends BorderPane {
                 alert.showAndWait();
             }
         });
-    }
-
-    public StringProperty stringValueProperty() {
-        return stringValue;
     }
 }

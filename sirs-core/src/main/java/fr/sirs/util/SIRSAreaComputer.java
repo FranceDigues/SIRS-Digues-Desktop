@@ -4,9 +4,13 @@ package fr.sirs.util;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
+import fr.sirs.core.InjectorCore;
+import fr.sirs.core.SessionCore;
 import fr.sirs.core.SirsCore;
+import java.text.NumberFormat;
 import java.util.logging.Level;
 import javax.measure.Unit;
+import org.apache.sis.measure.Units;
 import org.geotoolkit.display.MeasureUtilities;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -48,5 +52,29 @@ public final class SIRSAreaComputer {
 
         return area;
 
+    }
+
+    /**
+     * Returns a label specifying the geometry area if the geometry is a Polygon
+     * or MultiPolygon, or the geometry length otherwise.
+     *
+     * @param geometry
+     */
+    public static String getGeometryInfo(final Geometry geometry) {
+        if (geometry != null) {
+            final CoordinateReferenceSystem projection = ((SessionCore) InjectorCore.getBean(SessionCore.class)).getProjection();
+
+            if (geometry instanceof Polygon || geometry instanceof MultiPolygon) {
+                final String surface = NumberFormat.getNumberInstance().format(
+                        SIRSAreaComputer.calculateArea(geometry, projection, Units.SQUARE_METRE)) + " m²";
+                return "Surface : " + surface;
+            } else {
+                final String longueur = NumberFormat.getNumberInstance().format(
+                        MeasureUtilities.calculateLenght(geometry, projection, Units.METRE)) + " m";
+                return "Longueur : " + longueur;
+            }
+        } else {
+            return "";
+        }
     }
 }

@@ -31,8 +31,8 @@ import fr.sirs.core.model.TronconDigue;
 import fr.sirs.core.model.report.ModeleRapport;
 import fr.sirs.plugin.document.FileTreeItem;
 import fr.sirs.plugin.document.ODTUtils;
-import static fr.sirs.plugin.document.PropertiesFileUtilities.*;
-import static fr.sirs.plugin.document.ui.DocumentsPane.ROOT_FOLDER;
+import static fr.sirs.plugin.document.DocumentPropertiesFileUtilities.*;
+import static fr.sirs.plugin.document.ui.DocumentsPane.*;
 import fr.sirs.ui.report.FXModeleRapportsPane;
 import fr.sirs.util.DatePickerConverter;
 import fr.sirs.util.SirsStringConverter;
@@ -211,10 +211,10 @@ public class DynamicDocumentsPane extends BorderPane {
         }
 
         final boolean onlySE = uiOnlySEBox.isSelected();
-        final File seDir = getOrCreateSE(rootDir, getSelectedSE());
+        final File seDir = getOrCreateSE(rootDir, getSelectedSE(), LIBELLE, true, DOCUMENT_FOLDER);
         final Task generator;
         if (onlySE) {
-            final Path outputDoc = seDir.toPath().resolve(DocumentsPane.DOCUMENT_FOLDER).resolve(docName);
+            final Path outputDoc = seDir.toPath().resolve(DOCUMENT_FOLDER).resolve(docName);
             generator = ODTUtils.generateDoc(modele, getTronconList(), outputDoc.toFile(), root.getLibelle(), dateRange);
         } else {
             generator = ODTUtils.generateDocsForDigues(docName, onlySE, modele, getTronconList(), seDir, root.getLibelle(), dateRange);
@@ -222,7 +222,7 @@ public class DynamicDocumentsPane extends BorderPane {
 
         generator.setOnSucceeded(evt -> Platform.runLater(() -> root.update(false)));
         disableProperty().bind(generator.runningProperty());
-        LoadingPane.showDialog(generator);
+        DocumentLoadingPane.showDialog(generator);
     }
 
 

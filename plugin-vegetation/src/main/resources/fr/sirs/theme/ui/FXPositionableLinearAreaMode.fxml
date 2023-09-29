@@ -4,12 +4,13 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
 
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
    <center>
        <VBox>
            <children>
-               
+
       <GridPane hgap="10.0" styleClass="pos-bottom" vgap="10.0" BorderPane.alignment="CENTER">
         <columnConstraints>
             <ColumnConstraints hgrow="NEVER" />
@@ -33,6 +34,11 @@
                   <ComboBox fx:id="uiSRs" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" HBox.hgrow="NEVER" />
                </children>
             </HBox>
+             <Label fx:id="uiLinearCoordLabel" text="" textAlignment="CENTER" GridPane.columnIndex="5" GridPane.rowIndex="0">
+                 <font>
+                     <Font name="System Bold" size="13.0" />
+                 </font>
+             </Label>
             <Label text="Borne" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
             <Label text="Amont/Aval" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
             <Label text="Distance (m)" GridPane.columnIndex="5" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
@@ -62,16 +68,16 @@
                </children>
             </HBox>
             <Spinner fx:id="uiDistanceEnd" GridPane.columnIndex="5" GridPane.rowIndex="3" />
-            
-            
+
+
          </children>
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
       </GridPane>
-      
-      
-      
+
+
+
       <GridPane hgap="10.0" styleClass="pos-bottom" vgap="10.0" BorderPane.alignment="CENTER">
         <columnConstraints>
             <ColumnConstraints hgrow="NEVER" />
@@ -88,7 +94,7 @@
             <RowConstraints minHeight="-Infinity" vgrow="NEVER" />
         </rowConstraints>
          <children>
-            
+
             <Label text="Eloignement des points par rapport à l'axe du tronçon (m)" GridPane.columnSpan="2147483647" GridPane.rowIndex="0" />
             <Label fx:id="lblStartNear" text="Début, point proche" GridPane.rowIndex="1" />
             <Spinner fx:id="uiStartNear" layoutX="302.0" layoutY="118.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" />
@@ -103,11 +109,11 @@
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
       </GridPane>
-      
-      
-      
-      
-      
+
+
+
+
+
            </children>
        </VBox>
    </center>

@@ -28,10 +28,12 @@ import fr.sirs.core.SirsCore;
 import static fr.sirs.core.SirsCore.MODEL_PACKAGE;
 import fr.sirs.core.TronconUtils;
 import fr.sirs.core.component.DatabaseRegistry;
+import fr.sirs.core.component.Previews;
 import fr.sirs.core.component.TronconDigueRepository;
 import fr.sirs.core.model.AbstractPositionDocument;
 import fr.sirs.core.model.AbstractPositionDocumentAssociable;
 import fr.sirs.core.model.ArticleJournal;
+import fr.sirs.core.model.AvecGeometrie;
 import fr.sirs.core.model.BorneDigue;
 import fr.sirs.core.model.Crete;
 import fr.sirs.core.model.Desordre;
@@ -56,6 +58,7 @@ import fr.sirs.core.model.OuvrageParticulier;
 import fr.sirs.core.model.OuvrageRevanche;
 import fr.sirs.core.model.OuvrageTelecomEnergie;
 import fr.sirs.core.model.OuvrageVoirie;
+import fr.sirs.core.model.Photo;
 import fr.sirs.core.model.PiedDigue;
 import fr.sirs.core.model.PositionDocument;
 import fr.sirs.core.model.PositionProfilTravers;
@@ -80,7 +83,10 @@ import fr.sirs.core.model.TronconDigue;
 import fr.sirs.core.model.VoieAcces;
 import fr.sirs.core.model.VoieDigue;
 import fr.sirs.digue.DiguesTab;
+import fr.sirs.map.FXMapPane;
+import fr.sirs.map.FXMapTab;
 import fr.sirs.migration.HtmlRemoval;
+import fr.sirs.migration.RemoveOldDependanceConf;
 import fr.sirs.migration.upgrade.v2and23.UpgradeLink1NtoNN;
 import fr.sirs.migration.upgrade.v2and23.UpgradePrestationsCoordinates;
 import fr.sirs.migration.upgrade.v2and23.Upgrades1NtoNNSupported;
@@ -93,6 +99,9 @@ import fr.sirs.theme.Theme;
 import fr.sirs.theme.TronconTheme;
 import fr.sirs.util.FXFreeTab;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.RenderingHints;
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
@@ -101,6 +110,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -113,10 +123,12 @@ import javafx.event.ActionEvent;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
+import javax.swing.SwingConstants;
 import org.apache.sis.measure.Units;
 import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.CommonCRS;
 import org.apache.sis.storage.DataStoreException;
+import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.ArraysExt;
 import org.ektorp.CouchDbConnector;
 import org.geotoolkit.cql.CQLException;
@@ -126,20 +138,32 @@ import org.geotoolkit.data.bean.BeanFeature;
 import org.geotoolkit.data.bean.BeanFeatureSupplier;
 import org.geotoolkit.data.bean.BeanStore;
 import org.geotoolkit.data.query.QueryBuilder;
+import org.geotoolkit.display.PortrayalException;
 import org.geotoolkit.display2d.GO2Utilities;
+import org.geotoolkit.display2d.canvas.J2DCanvas;
+import org.geotoolkit.display2d.container.ContextContainer2D;
 import org.geotoolkit.display2d.ext.graduation.GraduationSymbolizer;
+import org.geotoolkit.display2d.ext.northarrow.GraphicNorthArrowJ2D;
+import org.geotoolkit.display2d.ext.scalebar.GraphicScaleBarJ2D;
+import org.geotoolkit.display2d.service.CanvasDef;
+import org.geotoolkit.display2d.service.DefaultPortrayalService;
+import org.geotoolkit.display2d.service.PortrayalExtension;
+import org.geotoolkit.display2d.service.SceneDef;
+import org.geotoolkit.display2d.service.ViewDef;
+import org.geotoolkit.factory.Hints;
+import org.geotoolkit.feature.type.FeatureType;
+import org.geotoolkit.feature.type.GeometryDescriptor;
 import org.geotoolkit.filter.DefaultLiteral;
+import org.geotoolkit.filter.identity.DefaultFeatureId;
 import org.geotoolkit.geometry.jts.JTS;
+import org.geotoolkit.geometry.jts.JTSEnvelope2D;
+import org.geotoolkit.gui.javafx.render2d.FXMap;
 import org.geotoolkit.map.FeatureMapLayer;
 import org.geotoolkit.map.MapBuilder;
+import org.geotoolkit.map.MapContext;
 import org.geotoolkit.map.MapItem;
 import org.geotoolkit.map.MapLayer;
-import org.geotoolkit.style.MutableFeatureTypeStyle;
-import org.geotoolkit.style.MutableRule;
-import org.geotoolkit.style.MutableStyle;
-import org.geotoolkit.style.MutableStyleFactory;
-import org.geotoolkit.style.RandomStyleBuilder;
-import org.geotoolkit.style.StyleConstants;
+import org.geotoolkit.style.*;
 import static org.geotoolkit.style.StyleConstants.DEFAULT_ANCHOR_POINT;
 import static org.geotoolkit.style.StyleConstants.DEFAULT_DESCRIPTION;
 import static org.geotoolkit.style.StyleConstants.DEFAULT_DISPLACEMENT;
@@ -152,21 +176,16 @@ import static org.geotoolkit.style.StyleConstants.STROKE_CAP_BUTT;
 import static org.geotoolkit.style.StyleConstants.STROKE_CAP_ROUND;
 import static org.geotoolkit.style.StyleConstants.STROKE_CAP_SQUARE;
 import static org.geotoolkit.style.StyleConstants.STROKE_JOIN_BEVEL;
+import org.geotoolkit.util.NamesExt;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.FilterVisitor;
+import org.opengis.filter.Id;
 import org.opengis.filter.expression.Expression;
+import org.opengis.geometry.Envelope;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
-import org.opengis.style.Fill;
-import org.opengis.style.Graphic;
-import org.opengis.style.GraphicStroke;
-import org.opengis.style.GraphicalSymbol;
-import org.opengis.style.LineSymbolizer;
-import org.opengis.style.Mark;
-import org.opengis.style.PointSymbolizer;
-import org.opengis.style.Stroke;
-import org.opengis.style.TextSymbolizer;
+import org.opengis.style.*;
 import org.opengis.util.FactoryException;
 import org.opengis.util.GenericName;
 
@@ -178,6 +197,7 @@ public class CorePlugin extends Plugin {
 
     public static final String TRONCON_LAYER_NAME = "Tronçons";
     public static final String BORNE_LAYER_NAME = "Bornes";
+    public static final String PHOTO_TRONCON_LAYER_NAME = "Photos des tronçons";
     private static final FilterFactory2 FF = GO2Utilities.FILTER_FACTORY;
     private static final MutableStyleFactory SF = GO2Utilities.STYLE_FACTORY;
 
@@ -375,6 +395,10 @@ public class CorePlugin extends Plugin {
             }
             final BeanStore tronconStore = new BeanStore(tronconFeatureSupplier);
             sirsGroup.items().addAll(buildLayers(tronconStore,TRONCON_LAYER_NAME,createTronconStyle(),createTronconSelectionStyle(false),true));
+
+            // Special request to add a layer for the photos of the 'troncon'
+            final BeanStore photoTronconStore = new BeanStore(photoTronconSupplier());
+            sirsGroup.items().addAll(buildLayers(photoTronconStore, PHOTO_TRONCON_LAYER_NAME, createPhotoTronconStyle(), createDefaultSelectionStyle(),true));
 
             //bornes
             final BeanStore borneStore = new BeanStore(suppliers.get(BorneDigue.class));
@@ -803,6 +827,34 @@ public class CorePlugin extends Plugin {
         return super.getThemes();
     }
 
+    private static MutableStyle createPhotoTronconStyle() throws URISyntaxException {
+        //the visual element
+        final Expression size = GO2Utilities.FILTER_FACTORY.literal(16);
+
+        final List<GraphicalSymbol> symbols = new ArrayList<>();
+        final Stroke stroke = null;
+        final Fill fill = SF.fill(Color.BLACK);
+        final Mark mark = SF.mark(StyleConstants.MARK_TRIANGLE, fill, stroke);
+        symbols.add(mark);
+        final Graphic graphic = SF.graphic(symbols, LITERAL_ONE_FLOAT,
+                size, LITERAL_ONE_FLOAT, DEFAULT_ANCHOR_POINT, DEFAULT_DISPLACEMENT);
+
+        final PointSymbolizer pointSymbolizer = SF.pointSymbolizer("symbol",(String) null,DEFAULT_DESCRIPTION,Units.POINT,graphic);
+
+        final MutableRule ruleSmallObjects = SF.rule(pointSymbolizer);
+        ruleSmallObjects.setFilter(
+                FF.lessOrEqual(
+                        FF.function("length", FF.property("geometry")),
+                        FF.literal(SirsCore.LINE_MIN_LENGTH)
+                )
+        );
+
+        final MutableFeatureTypeStyle fts = SF.featureTypeStyle();
+        fts.rules().add(ruleSmallObjects);
+        final MutableStyle style = SF.style();
+        style.featureTypeStyles().add(fts);
+        return style;
+    }
 
 
     private static MutableStyle createBorneStyle() throws URISyntaxException{
@@ -843,7 +895,6 @@ public class CorePlugin extends Plugin {
 
     private static MutableStyle createBorneSelectionStyle(){
         final Expression size = GO2Utilities.FILTER_FACTORY.literal(10);
-
         final List<GraphicalSymbol> symbols = new ArrayList<>();
         final Stroke stroke = SF.stroke(Color.BLACK, 1);
         final Fill fill = SF.fill(Color.GREEN);
@@ -851,18 +902,14 @@ public class CorePlugin extends Plugin {
         symbols.add(mark);
         final Graphic graphic = SF.graphic(symbols, LITERAL_ONE_FLOAT,
                 size, LITERAL_ONE_FLOAT, DEFAULT_ANCHOR_POINT, DEFAULT_DISPLACEMENT);
-
         final PointSymbolizer pointSymbolizer = SF.pointSymbolizer("symbol",(String)null,DEFAULT_DESCRIPTION,Units.POINT,graphic);
-
         final TextSymbolizer ts = SF.textSymbolizer(
                 SF.fill(Color.BLACK), SF.font(13),
                 SF.halo(Color.GREEN, 2),
                 FF.property("libelle"),
                 SF.pointPlacement(SF.anchorPoint(0, 0.25), SF.displacement(5, 0), FF.literal(0)), null);
-
         final MutableRule ruleClose = SF.rule(pointSymbolizer, ts);
         ruleClose.setMaxScaleDenominator(50000);
-
         final MutableFeatureTypeStyle fts = SF.featureTypeStyle();
         fts.rules().add(ruleClose);
         final MutableStyle style = SF.style();
@@ -875,48 +922,26 @@ public class CorePlugin extends Plugin {
     }
 
     public static MutableStyle createDefaultSelectionStyle(final boolean withRealPosition){
-        // Stroke to use for lines and point perimeter
-        final Stroke stroke = SF.stroke(SF.literal(Color.GREEN),LITERAL_ONE_FLOAT,FF.literal(13),
-                STROKE_JOIN_BEVEL, STROKE_CAP_BUTT, null,LITERAL_ZERO_FLOAT);
-        final LineSymbolizer line1 = SF.lineSymbolizer("symbol",
-                (String)null,DEFAULT_DESCRIPTION,Units.POINT,stroke,LITERAL_ONE_FLOAT);
+        final MutableFeatureTypeStyle fts = SF.featureTypeStyle();
+        final MutableStyle style = SF.style();
+        final MutableRule longRule = createSelectionLongRule();
+        final MutableRule smallObjectRule = createSelectionSmallObjectRule();
 
-        // Definition of point symbolizer
-        final Expression size = GO2Utilities.FILTER_FACTORY.literal(24);
-        final List<GraphicalSymbol> symbols = new ArrayList<>();
-        final Fill fill = SF.fill(new Color(0, 0, 0, 0));
-        final Mark mark = SF.mark(StyleConstants.MARK_CIRCLE, fill, stroke);
-        symbols.add(mark);
-        final Graphic graphic = SF.graphic(symbols, LITERAL_ONE_FLOAT,
-                size, LITERAL_ONE_FLOAT, DEFAULT_ANCHOR_POINT, DEFAULT_DISPLACEMENT);
-
-        final PointSymbolizer pointSymbolizer = SF.pointSymbolizer("symbol",(String)null,DEFAULT_DESCRIPTION,Units.POINT,graphic);
-
-        final MutableRule ruleLongObjects = SF.rule(line1);
-        ruleLongObjects.setFilter(
+        if(withRealPosition) addRealPositionStyles(fts,  Color.GREEN);
+        longRule.setFilter(
                 FF.greater(
                         FF.function("length", FF.property("geometry")),
                         FF.literal(2.0)
                 )
         );
-
-        final MutableRule ruleSmallObjects = SF.rule(pointSymbolizer);
-        ruleSmallObjects.setFilter(
-                FF.less(
+        smallObjectRule.setFilter(
+                FF.lessOrEqual(
                         FF.function("length", FF.property("geometry")),
                         FF.literal(2.0)
                 )
         );
-
-        final MutableFeatureTypeStyle fts = SF.featureTypeStyle();
-        if(withRealPosition) {
-
-            addRealPositionStyles(fts,  Color.GREEN);
-        }
-        fts.rules().add(ruleLongObjects);
-        fts.rules().add(ruleSmallObjects);
-
-        final MutableStyle style = SF.style();
+        fts.rules().add(longRule);
+        fts.rules().add(smallObjectRule);
         style.featureTypeStyles().add(fts);
         return style;
     }
@@ -943,58 +968,104 @@ public class CorePlugin extends Plugin {
     }
 
     public static MutableStyle createDefaultStyle(final Color color, final String geometryName, final boolean withRealPosition) {
+        final MutableFeatureTypeStyle fts = SF.featureTypeStyle();
+        final MutableStyle style = SF.style();
+        final MutableRule longRule = createDefaultLongRule(color, geometryName);
+        final MutableRule smallObjectRule = createDefaultSmallObjectRule(color, geometryName);
 
-        final Stroke line1Stroke = SF.stroke(SF.literal(color),LITERAL_ONE_FLOAT,GO2Utilities.FILTER_FACTORY.literal(8),
-                STROKE_JOIN_BEVEL, STROKE_CAP_ROUND, null,LITERAL_ZERO_FLOAT);
-        final LineSymbolizer line1 = SF.lineSymbolizer("symbol",
-                geometryName,DEFAULT_DESCRIPTION,Units.POINT,line1Stroke,LITERAL_ZERO_FLOAT);
-
-        final Stroke line2Stroke = SF.stroke(SF.literal(Color.BLACK),LITERAL_ONE_FLOAT,GO2Utilities.FILTER_FACTORY.literal(1),
-                STROKE_JOIN_BEVEL, STROKE_CAP_ROUND, null,LITERAL_ZERO_FLOAT);
-        final LineSymbolizer line2 = SF.lineSymbolizer("symbol",
-                geometryName,DEFAULT_DESCRIPTION,Units.POINT,line2Stroke,LITERAL_ZERO_FLOAT);
-
-        //the visual element
-        final Expression size = GO2Utilities.FILTER_FACTORY.literal(16);
-
-        final List<GraphicalSymbol> symbols = new ArrayList<>();
-        final Stroke stroke = null;
-        final Fill fill = SF.fill(color);
-        final Mark mark = SF.mark(StyleConstants.MARK_TRIANGLE, fill, stroke);
-        symbols.add(mark);
-        final Graphic graphic = SF.graphic(symbols, LITERAL_ONE_FLOAT,
-                size, LITERAL_ONE_FLOAT, DEFAULT_ANCHOR_POINT, DEFAULT_DISPLACEMENT);
-
-        final PointSymbolizer pointSymbolizer = SF.pointSymbolizer("symbol",geometryName,DEFAULT_DESCRIPTION,Units.POINT,graphic);
-
-        final MutableRule ruleLongObjects = SF.rule(line1,line2);
-        ruleLongObjects.setFilter(
+        // test et préparation pour SYM-1776
+        if(withRealPosition) addRealPositionStyles(fts, color);
+        longRule.setFilter(
                 FF.greater(
                         FF.function("length", FF.property("geometry")),
                         FF.literal(SirsCore.LINE_MIN_LENGTH)
                 )
         );
-
-        final MutableRule ruleSmallObjects = SF.rule(pointSymbolizer);
-        ruleSmallObjects.setFilter(
+        smallObjectRule.setFilter(
                 FF.lessOrEqual(
                         FF.function("length", FF.property("geometry")),
                         FF.literal(SirsCore.LINE_MIN_LENGTH)
                 )
         );
-
-        final MutableFeatureTypeStyle fts = SF.featureTypeStyle();
-//        // test et préparation pour SYM-1776
-        if(withRealPosition) {
-            addRealPositionStyles(fts, color);
-        }
-
-        fts.rules().add(ruleLongObjects);
-        fts.rules().add(ruleSmallObjects);
-
-        final MutableStyle style = SF.style();
+        fts.rules().add(longRule);
+        fts.rules().add(smallObjectRule);
         style.featureTypeStyles().add(fts);
         return style;
+    }
+
+    public static MutableRule createDefaultSmallObjectRule(final Color color, final String geometryName) {
+        final Expression size = GO2Utilities.FILTER_FACTORY.literal(16);
+        final List<GraphicalSymbol> symbols = new ArrayList<>();
+        final Fill fill = SF.fill(color);
+        final Mark mark = SF.mark(StyleConstants.MARK_TRIANGLE, fill, null);
+        symbols.add(mark);
+        final Graphic graphic = SF.graphic(symbols, LITERAL_ONE_FLOAT,
+                size, LITERAL_ONE_FLOAT, DEFAULT_ANCHOR_POINT, DEFAULT_DISPLACEMENT);
+        final PointSymbolizer pointSymbolizer = SF.pointSymbolizer("symbol", geometryName, DEFAULT_DESCRIPTION,Units.POINT,graphic);
+        final MutableRule ruleSmallObjects = SF.rule(pointSymbolizer);
+
+        return ruleSmallObjects;
+    }
+
+    public static MutableRule createSelectionSmallObjectRule() {
+        final Stroke stroke = SF.stroke(SF.literal(Color.GREEN), LITERAL_ONE_FLOAT, FF.literal(13),
+                STROKE_JOIN_BEVEL, STROKE_CAP_BUTT, null, LITERAL_ZERO_FLOAT);
+        final Expression size = GO2Utilities.FILTER_FACTORY.literal(24);
+        final List<GraphicalSymbol> symbols = new ArrayList<>();
+        final Fill fill = SF.fill(new Color(0, 0, 0, 0));
+        final Mark mark = SF.mark(StyleConstants.MARK_CIRCLE, fill, stroke);
+        symbols.add(mark);
+        final Graphic graphic = SF.graphic(symbols, LITERAL_ONE_FLOAT,
+                size, LITERAL_ONE_FLOAT, DEFAULT_ANCHOR_POINT, DEFAULT_DISPLACEMENT);
+        final PointSymbolizer pointSymbolizer = SF.pointSymbolizer("symbol",(String)null,DEFAULT_DESCRIPTION,Units.POINT,graphic);
+        final MutableRule ruleSmallObject = SF.rule(pointSymbolizer);
+
+        return ruleSmallObject;
+    }
+
+    public static MutableRule createDefaultLongRule(final Color color, final String geometryName) {
+        final Stroke line1Stroke = SF.stroke(SF.literal(color), LITERAL_ONE_FLOAT, GO2Utilities.FILTER_FACTORY.literal(8),
+                STROKE_JOIN_BEVEL, STROKE_CAP_ROUND, null, LITERAL_ZERO_FLOAT);
+        final LineSymbolizer line1 = SF.lineSymbolizer("symbol",
+                geometryName, DEFAULT_DESCRIPTION, Units.POINT, line1Stroke, LITERAL_ZERO_FLOAT);
+
+        final Stroke line2Stroke = SF.stroke(SF.literal(Color.BLACK), LITERAL_ONE_FLOAT, GO2Utilities.FILTER_FACTORY.literal(1),
+                STROKE_JOIN_BEVEL, STROKE_CAP_ROUND, null, LITERAL_ZERO_FLOAT);
+        final LineSymbolizer line2 = SF.lineSymbolizer("symbol",
+                geometryName, DEFAULT_DESCRIPTION, Units.POINT, line2Stroke, LITERAL_ZERO_FLOAT);
+
+        final MutableRule ruleLongObjects = SF.rule(line1, line2);
+
+        return ruleLongObjects;
+    }
+
+    public static MutableRule createSelectionLongRule() {
+        final Stroke stroke = SF.stroke(SF.literal(Color.GREEN), LITERAL_ONE_FLOAT, FF.literal(13),
+                STROKE_JOIN_BEVEL, STROKE_CAP_BUTT, null, LITERAL_ZERO_FLOAT);
+        final LineSymbolizer line = SF.lineSymbolizer("symbol",
+                (String) null, DEFAULT_DESCRIPTION, Units.POINT, stroke, LITERAL_ONE_FLOAT);
+        final MutableRule ruleLongObject = SF.rule(line);
+
+        return ruleLongObject;
+    }
+
+    public static MutableRule createDefaultPlanRule(final Color color, final String geometryName) {
+        final Stroke stroke = SF.stroke(Color.BLACK, 1);
+        final Fill fill = SF.fill(color);
+        final PolygonSymbolizer polygonSymbolizer = SF.polygonSymbolizer(stroke, fill, geometryName);
+        final MutableRule rulePlanObjects = SF.rule(polygonSymbolizer);
+
+        return rulePlanObjects;
+    }
+
+    public static MutableRule createSelectionPlanRule() {
+        final Stroke stroke = SF.stroke(SF.literal(Color.GREEN), LITERAL_ONE_FLOAT, FF.literal(13),
+                STROKE_JOIN_BEVEL, STROKE_CAP_BUTT, null, LITERAL_ZERO_FLOAT);
+        final Fill fill = SF.fill(Color.GREEN);
+        final PolygonSymbolizer polygonSymbolizer = SF.polygonSymbolizer(stroke, fill, null);
+        final MutableRule rulePlanObjects = SF.rule(polygonSymbolizer);
+
+        return rulePlanObjects;
     }
 
     /**
@@ -1008,7 +1079,6 @@ public class CorePlugin extends Plugin {
      */
     private static void addRealPositionStyles(final MutableFeatureTypeStyle fts, final Color color) {
         try {
-
             final MutableRule shortRule = createExactShortRule(SirsCore.POSITION_DEBUT_FIELD, color, StyleConstants.MARK_TRIANGLE);
             final MutableRule longRule  = createExactLongRule(SirsCore.POSITION_DEBUT_FIELD, SirsCore.POSITION_FIN_FIELD, color, StyleConstants.MARK_TRIANGLE);
 
@@ -1025,23 +1095,20 @@ public class CorePlugin extends Plugin {
                             FF.literal(SirsCore.LINE_MIN_LENGTH)
                     )
             );
-
             fts.rules().add(shortRule);
             fts.rules().add(longRule);
-
         } catch (Exception e) {
             SirsCore.LOGGER.log(Level.WARNING, NAME, e);
         }
     }
 
-    private static PointSymbolizer createExactPointSymbolizer(final String pointName, final String geometryProperty, final Color color, final Expression wellKnownName){
+    private static PointSymbolizer createExactPointSymbolizer(final String pointName, final String geometryProperty, final Color color, final Expression wellKnownName) {
         return SF.pointSymbolizer(pointName, geometryProperty, DEFAULT_DESCRIPTION, Units.POINT,
                         SF.graphic(Arrays.asList(SF.mark(wellKnownName, SF.fill(Color.WHITE), SF.stroke(color, 2))),
                                 LITERAL_ONE_FLOAT, GO2Utilities.FILTER_FACTORY.literal(20), LITERAL_ONE_FLOAT, DEFAULT_ANCHOR_POINT, DEFAULT_DISPLACEMENT));
     }
 
-    public static MutableRule createExactLongRule(final String geometryStartProperty, final String geometryEndProperty, final Color color, final Expression wellKnownName){
-
+    public static MutableRule createExactLongRule(final String geometryStartProperty, final String geometryEndProperty, final Color color, final Expression wellKnownName) {
         final Stroke realLineStroke = SF.stroke(SF.literal(color), LITERAL_ONE_FLOAT, GO2Utilities.FILTER_FACTORY.literal(5),
                 STROKE_JOIN_BEVEL, STROKE_CAP_ROUND, new float[]{15.f, 15.f}, LITERAL_ZERO_FLOAT);
 
@@ -1060,8 +1127,7 @@ public class CorePlugin extends Plugin {
         );
     }
 
-    public static MutableRule createExactShortRule(final String geometryStartProperty, final Color color, final Expression wellKnownName){
-
+    public static MutableRule createExactShortRule(final String geometryStartProperty, final Color color, final Expression wellKnownName) {
         return SF.rule(
                 createExactPointSymbolizer("start", geometryStartProperty, color, wellKnownName),
                 SF.textSymbolizer(SF.fill(color), DEFAULT_FONT, SF.halo(Color.WHITE, 1), FF.property("designation"),
@@ -1182,16 +1248,253 @@ public class CorePlugin extends Plugin {
 
         if (fromMajor < 2 || (fromMajor == 2 && fromMinor < 7)) {
             upgradeTasks.add(new HtmlRemoval(dbConnector, "commentaire"));
-            findUpgradeTasks(2, 7, dbConnector, upgradeTasks); //Reccursive call to findUpgradeTasks from the 2.7 version of the plugin reached with the previous Task.
-            return;
-        } else if (fromMajor < 2 || (fromMajor == 2 && fromMinor < 23)) {
+        }
+        if (fromMajor < 2 || (fromMajor == 2 && fromMinor < 23)) {
             upgradeTasks.add(new UpgradeLink1NtoNN(dbRegistry[0], dbConnector.getDatabaseName(), Upgrades1NtoNNSupported.DESORDRE));
             upgradeTasks.add(new UpgradePrestationsCoordinates(dbRegistry[0], dbConnector.getDatabaseName(), 2,23));
-            findUpgradeTasks(2, 23, dbConnector, upgradeTasks); //Reccursive call to findUpgradeTasks from the 2.23 version of the plugin reached with the previous Task.
-            return;
+        }
+        if (fromMajor < 2 || (fromMajor == 2 && fromMinor < 36)) {
+            upgradeTasks.add(new RemoveOldDependanceConf(dbConnector));
+        }
+        super.findUpgradeTasks(fromMajor, fromMinor, dbConnector, upgradeTasks);
+    }
 
+    /**
+     * Method that returns an image of the chosen element, depending on the
+     * state of the current map. From the current map, a zoom is performed on the element
+     * with a buffer of 50 meters around the element, then the image are resized with the
+     * given dimensions.
+     * Return null, if the element is null. Use a the default dimension, if dim is null.
+     * @param e
+     * @param dim
+     * @return BufferedImage image of the element
+     */
+    public static java.awt.Image takePictureOfElement(Element e, Dimension dim) {
+        final double BUFFER_DISTANCE = 100;
+        final double DEFAULT_BUFFER_DISTANCE = 100;
+
+        if (e == null) return null;
+        try {
+            FXMapPane map = Injector.getSession().getFrame().getMapTab().getMap();
+            final FXMap uiMap =  map.getUiMap();
+            final MapLayer container = CorePlugin.getMapLayerForElement(e);
+            if (container == null) {
+                SIRS.LOGGER.log(Level.SEVERE, "Impossible de récupérer la couche de l'élément (id: {0}).", e.getId());
+                return null;
+            }
+            if (!(container instanceof FeatureMapLayer)) {
+                if (e instanceof AvecGeometrie) {
+                    Geometry geom = ((AvecGeometrie) e).getGeometry();
+                    if (geom != null) {
+                        final JTSEnvelope2D env = JTS.toEnvelope(geom);
+                        final Envelope selectionEnvelope = SIRS.pseudoBuffer(env, BUFFER_DISTANCE, DEFAULT_BUFFER_DISTANCE);
+                        return cropImageFromMap(uiMap, selectionEnvelope, dim);
+                    } else {
+                        SIRS.LOGGER.log(Level.WARNING, "L'élément (id: {0}) ne possède pas de géométrie.", e.getId());
+                        return null;
+                    }
+                } else {
+                    SIRS.LOGGER.log(Level.WARNING, "L'élément (id: {0}) n'est présent dans aucune couche cartographique.", e.getId());
+                    return null;
+                }
+            }
+
+            final FeatureMapLayer fLayer = (FeatureMapLayer) container;
+
+            final Id idFilter = GO2Utilities.FILTER_FACTORY.id(Collections.singleton(new DefaultFeatureId(e.getId())));
+            fLayer.setSelectionFilter(idFilter);
+            fLayer.setVisible(true);
+
+            // Envelope spatiale
+            final FeatureType fType = fLayer.getCollection().getFeatureType();
+            final GenericName typeName = fType.getName();
+            QueryBuilder queryBuilder = new QueryBuilder(
+                    NamesExt.create(typeName.scope().toString(), typeName.head().toString()));
+            queryBuilder.setFilter(idFilter);
+            GeometryDescriptor geomDescriptor = fType.getGeometryDescriptor();
+            if (geomDescriptor != null) {
+                queryBuilder.setProperties(new GenericName[]{geomDescriptor.getName()});
+            } else {
+                // zoom impossible
+                return null;
+            }
+
+            FeatureCollection subCollection = fLayer.getCollection().subCollection(queryBuilder.buildQuery());
+            Envelope tmpEnvelope = subCollection.getEnvelope();
+            if (tmpEnvelope == null) {
+                // Récupération de l'enveloppe impossible
+                return null;
+            }
+            return cropImageFromMap(uiMap, SIRS.pseudoBuffer(tmpEnvelope, BUFFER_DISTANCE, DEFAULT_BUFFER_DISTANCE), dim);
+        } catch (PortrayalException | DataStoreException ex) {
+            SIRS.LOGGER.log(Level.WARNING, "Impossible de prendre une photo de l'élément: " + e.getId(), ex);
+        }
+        return null;
+    }
+
+    /**
+     * Method used to crop an image of the FXMap framed on the Envelope.
+     * Dimension is the dimension of the crop.
+     * @param uiMap1
+     * @param env
+     * @param dim
+     * @return
+     * @throws PortrayalException
+     */
+    public static java.awt.Image cropImageFromMap(final FXMap uiMap1, final Envelope env, Dimension dim) throws PortrayalException {
+        if (uiMap1 == null || env == null) {
+            SIRS.LOGGER.log(Level.WARNING, "Impossible de rogner l'image. les paramètres uiMap1 et env ne peuvent être null.");
         }
 
-        super.findUpgradeTasks(fromMajor, fromMinor, dbConnector, upgradeTasks);
+        if (dim == null) {
+            final Rectangle2D dispSize = uiMap1.getCanvas().getDisplayBounds();
+            dim = new Dimension((int) dispSize.getWidth(), (int) dispSize.getHeight());
+        }
+
+        final Hints hints = new Hints();
+        hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        hints.put(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        final PortrayalExtension ext = (J2DCanvas canvas) -> {
+            final GraphicScaleBarJ2D graphicScaleBarJ2D = new GraphicScaleBarJ2D(canvas);
+            graphicScaleBarJ2D.setPosition(SwingConstants.SOUTH_WEST);
+            final GraphicNorthArrowJ2D northArrowJ2D = new GraphicNorthArrowJ2D(canvas, Session.NORTH_ARROW_TEMPLATE);
+            northArrowJ2D.setPosition(SwingConstants.SOUTH_WEST);
+            northArrowJ2D.setOffset(10, 60);
+
+            try {
+                final double span = canvas.getVisibleEnvelope2D().getSpan(0);
+                if (span > 5000) {
+                    graphicScaleBarJ2D.setTemplate(Session.SCALEBAR_KILOMETER_TEMPLATE);
+                } else {
+                    graphicScaleBarJ2D.setTemplate(Session.SCALEBAR_METER_TEMPLATE);
+                }
+            } catch (Exception ex) {
+                SIRS.LOGGER.log(Level.WARNING, ex.getMessage(), ex);
+            }
+            canvas.getContainer().getRoot().getChildren().add(graphicScaleBarJ2D);
+            canvas.getContainer().getRoot().getChildren().add(northArrowJ2D);
+        };
+
+        final CanvasDef cdef = new CanvasDef(dim, new Color(0, 0, 0, 0));
+        final SceneDef sdef = new SceneDef(uiMap1.getContainer().getContext(), hints, ext);
+        final ViewDef vdef = new ViewDef(env);
+        return DefaultPortrayalService.portray(cdef, sdef, vdef);
+    }
+
+    /**
+     * Try to get the map layer which contains {@link Element}s of given class.
+     * @param element The element we want to retrieve on map.
+     * @return The Map layer in which are contained elements of input type, or null.
+     */
+    public static MapLayer getMapLayerForElement(Element element) {
+        if (element == null) return null;
+        if (element.getClass().equals(TronconDigue.class)) {
+            return getMapLayerForElement(TRONCON_LAYER_NAME);
+        } else if (element instanceof BorneDigue) {
+            return getMapLayerForElement(BORNE_LAYER_NAME);
+        } else if (isPhotoTroncon(element)) {
+            return getMapLayerForElement(PHOTO_TRONCON_LAYER_NAME);
+        } else if (element instanceof AbstractPositionDocumentAssociable) {
+            final Previews previews = Injector.getSession().getPreviews();
+            final String documentId = ((AbstractPositionDocumentAssociable) element).getSirsdocument(); // IL est nécessaire qu'un document soit associé pour déterminer le type de la couche.
+            final Preview previewLabel = previews.get(documentId);
+            Class documentClass = null;
+            try {
+                documentClass = Class.forName(previewLabel.getElementClass(), true, Thread.currentThread().getContextClassLoader());
+            } catch (ClassNotFoundException ex) {
+                SIRS.LOGGER.log(Level.WARNING,"Impossible de charger la classe du document : "+documentId , ex);
+            }
+
+            final LabelMapper mapper = LabelMapper.get(documentClass);
+            return getMapLayerForElement(mapper.mapClassName());
+
+        } else {
+            final LabelMapper mapper = LabelMapper.get(element.getClass());
+            final MapLayer foundLayer = getMapLayerForElement(mapper.mapClassName());
+            if (foundLayer == null) {
+                return getMapLayerForElement(mapper.mapClassNamePlural());
+            } else {
+                return foundLayer;
+            }
+        }
+    }
+
+    /**
+     * Try to get the map layer using its name.
+     * @param layerName Identifier of the map layer to retrieve
+     * @return The matching map layer, or null.
+     */
+    public static MapLayer getMapLayerForElement(String layerName) {
+        final MapContext context = Injector.getSession().getMapContext();
+        if (context == null) return null;
+        for (MapLayer layer : context.layers()) {
+            if (layer.getName().equalsIgnoreCase(layerName)) {
+                return layer;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Makes the layer of an element visible in the map context.
+     * @param e
+     */
+    public static void modifyLayerVisibilityForElement(final Element e, final boolean visible) {
+        try {
+            final MapLayer layerForElement = CorePlugin.getMapLayerForElement(e);
+            final List<MapLayer> layers = getMapLayers();
+
+            for (MapLayer layer: layers) {
+                if (layer.getName().equals(layerForElement.getName())) {
+                    layer.setVisible(visible);
+                    break;
+                }
+            }
+        } catch(NullPointerException ex) {
+            SIRS.LOGGER.log(Level.WARNING, "Impossible de rendre visible l'élément (id: {0}).", e.getId());
+        }
+    }
+
+    private StructBeanSupplier photoTronconSupplier() {
+        final TronconDigueRepository repository = (TronconDigueRepository) getSession().getRepositoryForClass(TronconDigue.class);
+        return new StructBeanSupplier(Photo.class,() -> repository.getAllTronconPhotos());
+    }
+
+    private static boolean isPhotoTroncon(final Element e) {
+        final Element p = e.getParent();
+        if (p != null) {
+            return p.getClass().equals(TronconDigue.class);
+        }
+        return false;
+    }
+
+    public static List<MapLayer> getMapLayers() {
+        Session session = Injector.getSession();
+        ArgumentChecks.ensureNonNull("session", session);
+
+        FXMainFrame frame = session.getFrame();
+        ArgumentChecks.ensureNonNull("frame", frame);
+
+        FXMapTab mapTab = frame.getMapTab();
+        ArgumentChecks.ensureNonNull("map tab", mapTab);
+
+        FXMapPane map = mapTab.getMap();
+        ArgumentChecks.ensureNonNull("FXMapPane", map);
+
+        FXMap uiMap = map.getUiMap();
+        ArgumentChecks.ensureNonNull("FXMap", uiMap);
+
+        ContextContainer2D container = uiMap.getContainer();
+        ArgumentChecks.ensureNonNull("container", container);
+
+        MapContext context = container.getContext();
+        ArgumentChecks.ensureNonNull("MapContext", context);
+
+        List<MapLayer> layers = context.layers();
+        ArgumentChecks.ensureNonNull("context layers", layers);
+
+        return layers;
     }
 }

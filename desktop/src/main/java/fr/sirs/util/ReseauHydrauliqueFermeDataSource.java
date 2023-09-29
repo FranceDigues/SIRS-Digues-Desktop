@@ -18,6 +18,7 @@
  */
 package fr.sirs.util;
 
+import fr.sirs.CorePlugin;
 import fr.sirs.Injector;
 import static fr.sirs.core.SirsCore.DIGUE_ID_FIELD;
 import fr.sirs.core.component.Previews;
@@ -28,19 +29,26 @@ import fr.sirs.core.model.Observation;
 import fr.sirs.core.model.ObservationReseauHydrauliqueFerme;
 import fr.sirs.core.model.OuvrageHydrauliqueAssocie;
 import fr.sirs.core.model.Photo;
+import fr.sirs.core.model.RefSecurite;
 import fr.sirs.core.model.ReseauHydrauliqueCielOuvert;
 import fr.sirs.core.model.ReseauHydrauliqueFerme;
 import fr.sirs.core.model.StationPompage;
 import fr.sirs.core.model.TronconDigue;
+import static fr.sirs.util.JRDomWriterDesordreSheet.IMAGE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterReseauFermeSheet.DESORDRE_TABLE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterReseauFermeSheet.OBSERVATION_TABLE_DATA_SOURCE;
+import static fr.sirs.util.JRDomWriterReseauFermeSheet.OBSERVATION_SPEC_TABLE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterReseauFermeSheet.PHOTO_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterReseauFermeSheet.RESEAU_OUVRAGE_TABLE_DATA_SOURCE;
+import static fr.sirs.util.JRDomWriterReseauFermeSheet.SECURITE_ID_FIELD;
+import java.awt.Dimension;
+import java.awt.Image;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
@@ -51,7 +59,11 @@ import net.sf.jasperreports.engine.JRField;
  * @author Samuel Andrés (Geomatys)
  */
 public class ReseauHydrauliqueFermeDataSource extends ObjectDataSource<ReseauHydrauliqueFerme> {
-    
+
+    private static Logger LOGGER = Logger.getLogger(ReseauHydrauliqueFermeDataSource.class.getName());
+
+    private final boolean printLocationInsert;
+
     /**
      * Groupe par désignation de désordre et classe par date décroissante à l'intérieur de chaque groupe.
      * Inutilisé (était utilisé pour ordonner les lignes du tableau des observations/désordres).
@@ -72,16 +84,19 @@ public class ReseauHydrauliqueFermeDataSource extends ObjectDataSource<ReseauHyd
         }
     };
 
-    public ReseauHydrauliqueFermeDataSource(Iterable<ReseauHydrauliqueFerme> iterable) {
+    public ReseauHydrauliqueFermeDataSource(Iterable<ReseauHydrauliqueFerme> iterable, final boolean printLocationInsert) {
         super(iterable);
+        this.printLocationInsert = printLocationInsert;
     }
 
-    public ReseauHydrauliqueFermeDataSource(final Iterable<ReseauHydrauliqueFerme> iterable, final Previews previewLabelRepository){
+    public ReseauHydrauliqueFermeDataSource(final Iterable<ReseauHydrauliqueFerme> iterable, final Previews previewLabelRepository, final boolean printLocationInsert){
         super(iterable, previewLabelRepository);
+        this.printLocationInsert = printLocationInsert;
     }
 
-    public ReseauHydrauliqueFermeDataSource(final Iterable<ReseauHydrauliqueFerme> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter){
+    public ReseauHydrauliqueFermeDataSource(final Iterable<ReseauHydrauliqueFerme> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter, final boolean printLocationInsert){
         super(iterable, previewLabelRepository, stringConverter);
+        this.printLocationInsert = printLocationInsert;
     }
 
     @Override
@@ -108,12 +123,12 @@ public class ReseauHydrauliqueFermeDataSource extends ObjectDataSource<ReseauHyd
             if(currentObject.getPhotos()!=null && !currentObject.getPhotos().isEmpty()){
                 photos.addAll(currentObject.getPhotos());
             }
-            photos.sort(PHOTO_COMPARATOR);
+            photos.sort(SirsComparator.PHOTO_COMPARATOR);
             return new ObjectDataSource<>(photos, previewRepository, stringConverter);
         }
-        else if(OBSERVATION_TABLE_DATA_SOURCE.equals(name)){
+        else if(OBSERVATION_TABLE_DATA_SOURCE.equals(name) || OBSERVATION_SPEC_TABLE_DATA_SOURCE.equals(name)){
             final ObservableList<ObservationReseauHydrauliqueFerme> observations = currentObject.getObservations();
-            observations.sort(OBSERVATION_COMPARATOR);
+            observations.sort(SirsComparator.OBSERVATION_COMPARATOR);
             return new ObjectDataSource<>(observations, previewRepository, stringConverter);
         }
         else if(RESEAU_OUVRAGE_TABLE_DATA_SOURCE.equals(name)){
@@ -130,7 +145,7 @@ public class ReseauHydrauliqueFermeDataSource extends ObjectDataSource<ReseauHyd
                 }
             }
             
-            reseauOuvrageList.sort(ELEMENT_COMPARATOR);
+            reseauOuvrageList.sort(SirsComparator.ELEMENT_COMPARATOR);
             return new ObjectDataSource<>(reseauOuvrageList, previewRepository, stringConverter);
         }
         else if(DESORDRE_TABLE_DATA_SOURCE.equals(name)){
@@ -145,8 +160,23 @@ public class ReseauHydrauliqueFermeDataSource extends ObjectDataSource<ReseauHyd
             }
             Collections.sort(desordreRows);
             return new ObjectDataSource<>(desordreRows, previewRepository, stringConverter);
+        } else if (IMAGE_DATA_SOURCE.equals(name)) {
+            if (this.printLocationInsert) {
+                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1080));
+                if (img != null) {
+                    return img;
+                } else {
+                    return noImage();
+                }
+            } else {
+                return null;
+            }
+        } else if (SECURITE_ID_FIELD.equals(name)) {
+            if(currentObject != null && currentObject.getSecuriteId() != null){
+                return parsePropertyValue(currentObject.getSecuriteId(), RefSecurite.class, String.class);
+            }
+            return null;
         }
         else return super.getFieldValue(jrf);
     }
-
 }

@@ -1,18 +1,18 @@
 /**
  * This file is part of SIRS-Digues 2.
- *
+ * <p>
  * Copyright (C) 2019, FRANCE-DIGUES,
- *
+ * <p>
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- *
+ * <p>
  * SIRS-Digues 2 is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * SIRS-Digues 2. If not, see <http://www.gnu.org/licenses/>
  */
@@ -21,16 +21,15 @@ package fr.sirs.theme.ui.pojotable;
 import fr.sirs.SIRS;
 import fr.sirs.Session;
 import fr.sirs.core.component.AbstractSIRSRepository;
-import fr.sirs.core.model.AbstractObservation;
-import fr.sirs.core.model.AvecForeignParent;
-import fr.sirs.core.model.Element;
-import fr.sirs.core.model.Preview;
+import fr.sirs.core.model.*;
 import fr.sirs.theme.ui.PojoTableChoiceStage;
 import fr.sirs.ui.Growl;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
@@ -52,6 +51,7 @@ public class ElementCopier {
 
     final protected Boolean avecForeignParent;
     final protected Boolean isAbstractObservation;
+    final protected Boolean isRapportEtude;
 
     ObjectProperty<? extends Element> container;
 
@@ -65,6 +65,7 @@ public class ElementCopier {
         this.pojoClass = pojoClass;
         this.avecForeignParent = AvecForeignParent.class.isAssignableFrom(pojoClass);
         this.isAbstractObservation = AbstractObservation.class.isAssignableFrom(pojoClass);
+        this.isRapportEtude = RapportEtude.class.isAssignableFrom(pojoClass);
         this.container = container;
         this.session = session;
 
@@ -86,6 +87,9 @@ public class ElementCopier {
             } catch (NullPointerException e) {
                 this.targetClass = Optional.empty();
             }
+        } else if (isRapportEtude) {
+            currentPojoRepo = pojoRepo;
+            this.targetClass = Optional.of(SystemeEndiguement.class);
         } else {
             this.targetClass = Optional.empty();
         }
@@ -94,6 +98,15 @@ public class ElementCopier {
         if (targetClass.isPresent()) {
             this.targetRepo = session.getRepositoryForClass(targetClass.get());
         }
+    }
+
+    public ElementCopier(Class pojoClass, ObjectProperty<? extends Element> container, Session session, AbstractSIRSRepository pojoRepo, Class targetClass) {
+        this(pojoClass, container, session, pojoRepo);
+
+        ArgumentChecks.ensureNonNull("Target class", targetClass);
+
+        this.targetClass = Optional.of(targetClass);
+        this.targetRepo = session.getRepositoryForClass(targetClass);
     }
 
     /**
@@ -124,7 +137,7 @@ public class ElementCopier {
 
         //L'identification de la targetClass est faite dans le constructeur et priorise
         //le ForeignParent sur le container.
-        if (avecForeignParent || isAbstractObservation) {
+        if (avecForeignParent || isAbstractObservation || isRapportEtude) {
 
             if (targetClass.isPresent()) {
                 // récupération de tous les éléments de la classe identifiée
@@ -173,6 +186,9 @@ public class ElementCopier {
             alert.showAndWait();
 
             return copyPojosToContainer(targetedElement, pojosToCopy);
+        } else if (this.isRapportEtude) {
+            return copyPojosToSystemeEndiguement(targetedElement, pojosToCopy);
+
         }
 
         new Growl(Growl.Type.WARNING, "La copie n'est pas définie pour ce type d'élément ou depuis cette fenêtre.").showAndFade();
@@ -182,6 +198,7 @@ public class ElementCopier {
     //======================================
     //Différentes méthodes de copie gérées :
     //======================================
+
     /**
      *
      * Copie des éléments sélectionnés vers un Foreign Parent.
@@ -302,6 +319,55 @@ public class ElementCopier {
 
     }
 
+    /**
+     *
+     * Copie des rapports d'étude sélectionnés vers un Systeme d'Endiguement.
+     *
+     * @param targetedSystemeEndiguement: élément auquel on veut ajouter les éléments
+     * copiés. Cet élément sera le SystemeEndiguement des copies.
+     * @param pojosToCopy éléments à copier.
+     * @return
+     */
+    public List<RapportEtude> copyPojosToSystemeEndiguement(final Element targetedSystemeEndiguement, final Element... pojosToCopy) {
+
+        // Si l'utilisateur est un externe, on court-circuite
+        // la copie. -> s'assurer que la copie n'est pas réalisable pour les
+        // utilisateurs externes disposant des droits sur l'élément cible.
+        if (session.editionAuthorized(targetedSystemeEndiguement)) {
+
+            List<RapportEtude> copiedPojos = new ArrayList<>();
+            boolean completSuccess = true;
+
+            RapportEtude copiedPojo;
+            for (Element pojo : pojosToCopy) {
+                if (!(pojo instanceof RapportEtude))
+                    SIRS.LOGGER.log(Level.WARNING, "Echec de la copie de l'élément :\n" + pojo.toString());
+
+                copiedPojo = (RapportEtude) pojo.copy();
+                copiedPojo.setSystemeEndiguementId(targetedSystemeEndiguement.getId());
+                copiedPojo.setDesignation(null);
+                session.getElementCreator().tryAutoIncrementDesignation(copiedPojo);
+
+                //CHECK BORNES TEMPORELLES Parent ET BORNES TEMPORELLLES copiedPojo
+                copiedPojos.add(copiedPojo);
+
+            }
+            if (currentPojoRepo == null)
+                SIRS.LOGGER.log(Level.WARNING, "Repository introuvable");
+
+            currentPojoRepo.executeBulk(copiedPojos);
+            if (!completSuccess) {
+                new Growl(Growl.Type.WARNING, "Certains éléments n'ont pas pu être copiés.").showAndFade();
+            }
+            return copiedPojos;
+
+        } else {
+            new Growl(Growl.Type.WARNING, "Les éléments n'ont pas été copiés car vous n'avez pas les droits nécessaires.").showAndFade();
+            return null;
+        }
+
+    }
+
     //Getters
     public AbstractSIRSRepository getTargetRepo() {
         return targetRepo;
@@ -317,6 +383,10 @@ public class ElementCopier {
 
     public Boolean getAvecForeignParent() {
         return avecForeignParent;
+    }
+
+    public Boolean getRapportEtude() {
+        return isRapportEtude;
     }
 
     public Boolean getIsAbstractObservation() {

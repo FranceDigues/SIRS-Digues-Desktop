@@ -19,7 +19,6 @@
 package fr.sirs.plugin.berge.map;
 
 import fr.sirs.core.model.Berge;
-import fr.sirs.core.model.Digue;
 import fr.sirs.map.ConvertGeomToTronconHandler;
 import org.geotoolkit.gui.javafx.render2d.FXMap;
 

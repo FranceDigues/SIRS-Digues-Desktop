@@ -21,12 +21,15 @@ package fr.sirs.plugin.document.ui;
 import fr.sirs.Injector;
 import fr.sirs.SIRS;
 import java.io.File;
+import java.util.prefs.Preferences;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.DirectoryChooser;
+
+import static fr.sirs.plugin.document.ui.DocumentsPane.ROOT_FOLDER;
 
 /**
  *
@@ -52,6 +55,13 @@ public class MainFolderPane extends GridPane {
     public MainFolderPane() {
         SIRS.loadFXML(this);
         Injector.injectDependencies(this);
+        final Preferences prefs = Preferences.userRoot().node("DocumentPlugin");
+        if(prefs != null) {
+            final String initial = prefs.get(ROOT_FOLDER, null);
+            if (initial != null) {
+                rootFolderField.setText(initial);
+            }
+        }
     }
     
 }

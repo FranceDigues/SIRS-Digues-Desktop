@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import fr.sirs.theme.ui.*?>
+<?import fr.sirs.util.FXFreeTab?>
+<?import fr.sirs.util.FXFileTextField?>
+<?import fr.sirs.util.FXComponentField?>
+<?import org.geotoolkit.gui.javafx.util.*?>
+<?import jidefx.scene.control.field.*?>
+<?import jfxtras.scene.control.*?>
+<?import javafx.scene.web.*?>
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+
+
+<fx:root fx:id="uiBorderPane" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+  <center>
+    <TabPane TabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+      <tabs>
+
+<!-- ATTRIBUTE TAB-->
+        <Tab text="Informations">
+          <ScrollPane>
+            <content>
+          <VBox spacing="30.0" BorderPane.alignment="CENTER">
+            <children>
+
+  <FXValidityPeriodPane fx:id="uiValidityPeriod"/>
+
+<!-- FORM WHICH WILL CONTAIN ALL SIMPLE EDITORS -->
+  <FXPositionDependancePane fx:id="uiPosition" />
+
+
+            <!-- AmenagementHydraulique -->
+            <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="NEVER" />
+                <ColumnConstraints hgrow="ALWAYS" />
+              </columnConstraints>
+              <children>
+
+                   <Label text="%superficie" GridPane.rowIndex="0" />
+                   <Spinner fx:id="ui_superficie" GridPane.columnIndex="1" GridPane.rowIndex="0"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+
+                   <Label text="%capaciteStockage" GridPane.rowIndex="1" />
+                   <Spinner fx:id="ui_capaciteStockage" GridPane.columnIndex="1" GridPane.rowIndex="1"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+
+                   <Label text="%profondeurMoyenne" GridPane.rowIndex="2" />
+                   <Spinner fx:id="ui_profondeurMoyenne" GridPane.columnIndex="1" GridPane.rowIndex="2"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+
+                   <Label text="%organismeId" GridPane.rowIndex="3" />
+                   <ComboBox fx:id="ui_organismeId" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                   <Label text="%fonctionnementId" GridPane.rowIndex="4" />
+                   <ComboBox fx:id="ui_fonctionnementId" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                   <Label text="%typeId" GridPane.rowIndex="5" />
+                   <ComboBox fx:id="ui_typeId" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+
+              </children>
+              <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+              </padding>
+            </GridPane>
+
+            <!-- AbstractDependance -->
+            <GridPane hgap="10.0" styleClass="gray-light" vgap="10.0">
+              <columnConstraints>
+                <ColumnConstraints hgrow="NEVER" />
+                <ColumnConstraints hgrow="ALWAYS" />
+              </columnConstraints>
+              <children>
+                   <!-- EString -->                 
+                   <Label text="%libelle" GridPane.rowIndex="0" />
+                   <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
+
+              </children>
+              <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+              </padding>
+            </GridPane>
+            <TextArea fx:id="ui_commentaire" maxHeight="-Infinity"  prefHeight="200.0" />
+
+            </children>
+            <padding>
+              <Insets bottom="10.0" left="50.0" right="50.0" top="30.0" />
+            </padding>
+          </VBox>
+            </content>
+          </ScrollPane>
+        </Tab>
+
+<!-- REFERENCE TABS -->
+
+        <FXFreeTab fx:id="ui_gestionnaireIds" text="%gestionnaireIds"/>
+        <FXFreeTab fx:id="ui_tronconIds" text="%tronconIds"/>
+        <FXFreeTab fx:id="ui_observations" text="%observations"/>
+        <FXFreeTab fx:id="ui_proprietaireIds" text="%proprietaireIds"/>
+        <!--<FXFreeTab fx:id="ui_proprietes" text="%proprietes"/>
+        <FXFreeTab fx:id="ui_gestions" text="%gestions"/>-->
+        <FXFreeTab fx:id="ui_photos" text="%photos"/>
+        <FXFreeTab fx:id="ui_traits" text="%traits"/>
+
+      </tabs>
+    </TabPane>
+  </center>
+
+</fx:root>
+

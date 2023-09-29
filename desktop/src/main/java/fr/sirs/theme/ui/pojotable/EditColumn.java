@@ -19,43 +19,19 @@
 package fr.sirs.theme.ui.pojotable;
 
 import fr.sirs.SIRS;
+import javafx.util.Callback;
+
 import java.util.function.Function;
 import java.util.function.Predicate;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.Tooltip;
-import javafx.scene.image.ImageView;
-import javafx.util.Callback;
-import org.geotoolkit.gui.javafx.util.ButtonTableCell;
 
 /**
  *
  * @author Samuel Andrés (Geomatys) [extraction de la PojoTable]
+ * @author Estelle Idée (Geomatys)
  */
-public class EditColumn extends TableColumn {
+public class EditColumn extends AbstractColumnWithButton {
 
     public EditColumn(Callback cellValueFactory, Function editFct, Predicate visiblePredicate) {
-        super("Edition");
-        setSortable(false);
-        setResizable(false);
-        setPrefWidth(24);
-        setMinWidth(24);
-        setMaxWidth(24);
-        setGraphic(new ImageView(SIRS.ICON_EDIT_BLACK));
-
-        final Tooltip tooltip = new Tooltip("Ouvrir la fiche de l'élément");
-
-        setCellValueFactory(cellValueFactory);
-
-        setCellFactory(new Callback<TableColumn, TableCell>() {
-
-            @Override
-            public TableCell call(TableColumn param) {
-                ButtonTableCell button = new ButtonTableCell(
-                        false, new ImageView(SIRS.ICON_EDIT_BLACK), visiblePredicate, editFct);
-                button.setTooltip(tooltip);
-                return button;
-            }
-        });
+        super(cellValueFactory, editFct, visiblePredicate, "Edition", SIRS.ICON_EDIT_BLACK,"Ouvrir la fiche de l'élément");
     }
 }

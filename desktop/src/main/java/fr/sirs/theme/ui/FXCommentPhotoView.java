@@ -43,13 +43,23 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SplitPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.geotoolkit.gui.javafx.util.TaskManager;
 
 /**
@@ -82,6 +92,18 @@ public class FXCommentPhotoView extends SplitPane {
             @Override
             protected double computeValue() {
                 return heightProperty().get() - uiPhotoLibelle.getHeight() - uiPhotoDate.getHeight();
+            }
+        });
+
+        uiPhotoView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                if(MouseButton.PRIMARY.equals(mouseEvent.getButton())){
+                    //check double clicked
+                    if(mouseEvent.getClickCount() == 2){
+                        fullScreenImageView(uiPhotoView.getImage());
+                    }
+                }
             }
         });
 
@@ -165,9 +187,9 @@ public class FXCommentPhotoView extends SplitPane {
         if (!o1WithPhoto && !o2WithPhoto) {
             return 0;
         } else if (o1WithPhoto && !o2WithPhoto) {
-            return 2;
-        } else if (o2WithPhoto && !o1WithPhoto) {
             return -2;
+        } else if (o2WithPhoto && !o1WithPhoto) {
+            return 2;
         } else {
             return o2.getDate().compareTo(o1.getDate());
         }
@@ -281,5 +303,42 @@ public class FXCommentPhotoView extends SplitPane {
         } else {
             uiPhotoScroll.setValue(0);
         }
+    }
+
+    /**
+     * take an image view and create a dialog which put on the full screen the image
+     */
+    public static void fullScreenImageView(final Image image) {
+        final Stage zoomPhotoStage = new Stage();
+        zoomPhotoStage.setResizable(true);
+        zoomPhotoStage.initModality(Modality.APPLICATION_MODAL);
+        zoomPhotoStage.initOwner(null);
+
+        ImageView iv = new ImageView();
+        iv.setImage(image);
+        iv.fitHeightProperty().bind(zoomPhotoStage.heightProperty());
+        iv.setPreserveRatio(true);
+        iv.setSmooth(true);
+
+        StackPane sp = new StackPane();
+        sp.getChildren().add(iv);
+        StackPane.setAlignment(sp, Pos.CENTER);
+        zoomPhotoStage.addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent event) -> {
+            if (KeyCode.ESCAPE == event.getCode()) {
+                zoomPhotoStage.close();
+            }
+        });
+        zoomPhotoStage.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent clic) -> {
+                if(MouseButton.PRIMARY.equals(clic.getButton())){
+                    //check double clicked
+                    if(clic.getClickCount() == 2){
+                        zoomPhotoStage.close();
+                    }
+                }
+            });
+
+        zoomPhotoStage.setScene(new Scene(sp));
+        zoomPhotoStage.setFullScreen(true);
+        zoomPhotoStage.showAndWait();
     }
 }

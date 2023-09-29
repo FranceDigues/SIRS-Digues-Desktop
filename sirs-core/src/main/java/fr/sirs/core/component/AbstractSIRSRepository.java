@@ -162,9 +162,9 @@ public abstract class AbstractSIRSRepository<T extends Identifiable> extends Cou
         if(entity instanceof AvecForeignParent){
             if(((AvecForeignParent) entity).getForeignParentId()==null) throw new IllegalArgumentException("L'élément ne peut être enregistré sans élement parent.");
         }
-        if(entity instanceof Positionable) {
-            ConvertPositionableCoordinates.COMPUTE_MISSING_COORD.test((Positionable) entity);
-        }
+//        if(entity instanceof Positionable) {
+//            ConvertPositionableCoordinates.COMPUTE_MISSING_COORD.test((Positionable) entity);
+//        }
     }
 
     /**
@@ -272,7 +272,7 @@ public abstract class AbstractSIRSRepository<T extends Identifiable> extends Cou
         final List<BulkDeleteDocument> toDelete = new ArrayList<>();
         for(final T toBeDeleted : bulkList){
             toDelete.add(BulkDeleteDocument.of(toBeDeleted));
-            if(cache.containsKey(toBeDeleted.getId())) cache.remove(toBeDeleted.getId());
+            cache.remove(toBeDeleted.getId());
         }
         return db.executeBulk(toDelete);
     }
@@ -281,6 +281,10 @@ public abstract class AbstractSIRSRepository<T extends Identifiable> extends Cou
     public void add(T entity) {
         ArgumentChecks.ensureNonNull("Document à ajouter", entity);
         checkIntegrity(entity);
+        //Not sure if needed
+        if(entity instanceof Positionable) {
+            ConvertPositionableCoordinates.COMPUTE_MISSING_COORD.test((Positionable) entity);
+        }
         if (entity instanceof AvecDateMaj && !(entity instanceof ReferenceType)) {
             ((AvecDateMaj)entity).setDateMaj(LocalDate.now());
         }
@@ -291,6 +295,7 @@ public abstract class AbstractSIRSRepository<T extends Identifiable> extends Cou
     @Override
     public void update(T entity) {
         ArgumentChecks.ensureNonNull("Document à mettre à jour", entity);
+
         checkIntegrity(entity);
         if (entity instanceof AvecDateMaj && !(entity instanceof ReferenceType)) {
             ((AvecDateMaj) entity).setDateMaj(LocalDate.now());
@@ -306,6 +311,7 @@ public abstract class AbstractSIRSRepository<T extends Identifiable> extends Cou
     public void remove(T entity) {
         ArgumentChecks.ensureNonNull("Document à supprimer", entity);
         cache.remove(entity.getId());
+        removeConflictingRevisions(entity);
         super.remove(entity);
     }
 
@@ -432,6 +438,28 @@ public abstract class AbstractSIRSRepository<T extends Identifiable> extends Cou
             final StreamingViewIterator iterator = new StreamingViewIterator(query);
             ClosingDaemon.watchResource(iterator, iterator.result);
             return iterator;
+        }
+    }
+
+    /**
+     * Ensure to delete all conflicting revisions from the entity.
+     *
+     * This mechanism is necessary because actually once Couchdb delete a document
+     * by specifying its latest revision, the revision will get deleted as expected BUT
+     * the dormant conflicting revision will immediately revert as the active revision
+     * of the document. (origin of the issue 7490)
+     *
+     */
+    public void removeConflictingRevisions(final T entity) {
+        final List<List<String>> revisions = globalRepo.getConflictingRevisions(entity.getId());
+
+        if (!revisions.isEmpty()) {
+            // Must contains only one list
+            if (revisions.size() > 1) SirsCore.LOGGER.log(Level.WARNING, String.format("Found multiple list of conflicting revision IDs ( %s ) for the doc._id=%s", revisions.toString(), entity.getId()));
+            for (final String rev: revisions.get(0)) {
+                final T toDelete = super.get(entity.getId(), rev);
+                super.remove(toDelete);
+            }
         }
     }
 

@@ -37,19 +37,13 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.DialogPane;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeTableCell;
+import javafx.scene.control.*;
 import javafx.scene.control.TreeTableColumn.CellDataFeatures;
-import javafx.scene.control.TreeTableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.util.Callback;
+import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.logging.Logging;
 import fr.sirs.core.component.SystemeEndiguementRepository;
 import fr.sirs.core.component.DigueRepository;
@@ -63,7 +57,7 @@ import fr.sirs.core.model.report.ModeleRapport;
 import fr.sirs.plugin.document.DynamicDocumentTheme;
 import fr.sirs.plugin.document.ODTUtils;
 
-import static fr.sirs.plugin.document.PropertiesFileUtilities.*;
+import static fr.sirs.plugin.document.DocumentPropertiesFileUtilities.*;
 import fr.sirs.ui.Growl;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -78,10 +72,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import org.apache.sis.measure.NumberRange;
 import org.geotoolkit.nio.IOUtilities;
 
@@ -101,7 +91,7 @@ public class DocumentsPane extends GridPane {
     private Button setFolderButton;
 
     @FXML
-    private TreeTableView<File> tree1;
+    private TreeTableView<File> tree;
 
     @FXML
     private Button addDocButton;
@@ -117,6 +107,23 @@ public class DocumentsPane extends GridPane {
 
     @FXML
     private Button hideFileButton;
+
+    @FXML
+    private TreeTableColumn ui_name;
+    @FXML
+    private TreeTableColumn ui_modifDate;
+    @FXML
+    private TreeTableColumn ui_size;
+    @FXML
+    private TreeTableColumn ui_inventory;
+    @FXML
+    private TreeTableColumn ui_classement;
+    @FXML
+    private TreeTableColumn ui_doSynthesis;
+    @FXML
+    private TreeTableColumn ui_publish;
+    @FXML
+    private TreeTableColumn ui_open;
 
     protected static final String BUTTON_STYLE = "buttonbar-button";
 
@@ -150,11 +157,6 @@ public class DocumentsPane extends GridPane {
     public static final String DATE_RANGE_MIN   = "dateRangeMin";
     public static final String DATE_RANGE_MAX   = "dateRangeMax";
 
-    public static final String SE = "se";
-    public static final String TR = "tr";
-    public static final String DG = "dg";
-
-
     private static final Logger LOGGER = Logging.getLogger("fr.sirs");
 
     private final FileTreeItem root;
@@ -162,6 +164,7 @@ public class DocumentsPane extends GridPane {
     private final DynamicDocumentTheme dynDcTheme;
 
     public DocumentsPane(final FileTreeItem root, final DynamicDocumentTheme dynDcTheme) {
+        ArgumentChecks.ensureNonNull("root", root);
         SIRS.loadFXML(this);
         Injector.injectDependencies(this);
         this.root = root;
@@ -201,145 +204,56 @@ public class DocumentsPane extends GridPane {
         hideShowButton.getStyleClass().add(BUTTON_STYLE);
         hideFileButton.getStyleClass().add(BUTTON_STYLE);
 
-        // Name column
-        tree1.getColumns().get(0).setEditable(false);
-        tree1.getColumns().get(0).setCellValueFactory(new Callback() {
-            @Override
-            public ObservableValue call(Object param) {
-                final TreeItem item = ((CellDataFeatures)param).getValue();
-                if (item != null) {
-                    final File f = (File) item.getValue();
-                    return new SimpleObjectProperty(f);
-                }
-                return null;
-            }
-        });
-        tree1.getColumns().get(0).setCellFactory(new Callback() {
-            @Override
-            public TreeTableCell call(Object param) {
-                return new FileNameCell();
-            }
-        });
-
-        // Date column
-        tree1.getColumns().get(1).setEditable(false);
-        tree1.getColumns().get(1).setCellValueFactory(new Callback() {
-            @Override
-            public ObservableValue call(Object param) {
-                final TreeItem item = ((CellDataFeatures)param).getValue();
-                if (item != null) {
-                    final File f = (File) item.getValue();
-                    synchronized (DATE_FORMATTER) {
-                        return new SimpleStringProperty(DATE_FORMATTER.format(new Date(f.lastModified())));
+        tree.getColumns().forEach(column -> {
+            column.setEditable(false);
+            if (column.equals(ui_name)) {
+                column.setCellValueFactory(getSimpleObjectFileCallback());
+                column.setCellFactory(param -> new FileNameCell());
+            } else if (column.equals(ui_modifDate)) {
+                column.setCellValueFactory((Callback) param -> {
+                    final TreeItem item = ((CellDataFeatures) param).getValue();
+                    if (item != null) {
+                        final File f = (File) item.getValue();
+                        synchronized (DATE_FORMATTER) {
+                            return new SimpleStringProperty(DATE_FORMATTER.format(new Date(f.lastModified())));
+                        }
                     }
-                }
-                return null;
-            }
-        });
-
-        // Size column
-        tree1.getColumns().get(2).setEditable(false);
-        tree1.getColumns().get(2).setCellValueFactory(new Callback() {
-            @Override
-            public ObservableValue call(Object param) {
-                final FileTreeItem f = (FileTreeItem) ((CellDataFeatures)param).getValue();
-                if (f != null) {
-                    return new SimpleStringProperty(f.getSize());
-                }
-                return null;
-            }
-        });
-
-        // Inventory number column
-        tree1.getColumns().get(3).setCellValueFactory(new Callback() {
-            @Override
-            public ObservableValue call(Object param) {
-                final TreeItem item = ((CellDataFeatures)param).getValue();
-                if (item != null) {
-                    final File f = (File) item.getValue();
+                    return null;
+                });
+            } else if (column.equals(ui_size)) {
+                column.setCellValueFactory((Callback) param -> {
+                    final FileTreeItem f = (FileTreeItem) ((CellDataFeatures) param).getValue();
+                    if (f != null) {
+                        return new SimpleStringProperty(f.getSize());
+                    }
+                    return null;
+                });
+            } else if (column.equals(ui_inventory)) {
+                column.setCellValueFactory(getSimpleObjectFileCallback());
+                column.setCellFactory(param -> new PropertyCell(INVENTORY_NUMBER));
+            } else if (column.equals(ui_classement)) {
+                column.setCellValueFactory(getSimpleObjectFileCallback());
+                column.setCellFactory(param -> new PropertyCell(CLASS_PLACE));
+            } else if (column.equals(ui_doSynthesis)) {
+                column.setCellValueFactory(getSimpleObjectFileCallback());
+                column.setCellFactory(param -> new DOIntegatedCell());
+            } else if (column.equals(ui_publish)) {
+                column.setCellValueFactory(param -> {
+                    final FileTreeItem f = (FileTreeItem) param.getValue();
                     return new SimpleObjectProperty(f);
-                }
-                return null;
-            }
-        });
-        tree1.getColumns().get(3).setCellFactory(new Callback() {
-            @Override
-            public TreeTableCell call(Object param) {
-                return new PropertyCell(INVENTORY_NUMBER);
-            }
-        });
-
-        // class place column
-        tree1.getColumns().get(4).setCellValueFactory(new Callback() {
-            @Override
-            public ObservableValue call(Object param) {
-                final TreeItem item = ((CellDataFeatures)param).getValue();
-                if (item != null) {
-                    final File f = (File) item.getValue();
+                });
+                column.setCellFactory(param -> new PublicationCell(root));
+            } else if (column.equals(ui_open)) {
+                column.setCellValueFactory(param -> {
+                    final FileTreeItem f = (FileTreeItem) param.getValue();
                     return new SimpleObjectProperty(f);
-                }
-                return null;
-            }
-        });
-        tree1.getColumns().get(4).setCellFactory(new Callback() {
-            @Override
-            public TreeTableCell call(Object param) {
-                return new PropertyCell(CLASS_PLACE);
+                });
+                column.setCellFactory(param -> new OpenCell());
             }
         });
 
-        // do integrated column
-        tree1.getColumns().get(5).setCellValueFactory(new Callback() {
-            @Override
-            public ObservableValue call(Object param) {
-                final TreeItem item = ((CellDataFeatures)param).getValue();
-                if (item != null) {
-                    final File f = (File) item.getValue();
-                    return new SimpleObjectProperty(f);
-                }
-                return null;
-            }
-        });
-        tree1.getColumns().get(5).setCellFactory(new Callback() {
-            @Override
-            public TreeTableCell call(Object param) {
-                return new DOIntegatedCell();
-            }
-        });
-
-        // publish column
-        tree1.getColumns().get(6).setCellValueFactory(new Callback() {
-            @Override
-            public ObservableValue call(Object param) {
-                final FileTreeItem f = (FileTreeItem) ((CellDataFeatures)param).getValue();
-                return new SimpleObjectProperty(f);
-            }
-        });
-        tree1.getColumns().get(6).setCellFactory(new Callback() {
-            @Override
-            public TreeTableCell call(Object param) {
-                return new PublicationCell(root);
-            }
-        });
-
-        // open column
-        tree1.getColumns().get(7).setCellValueFactory(new Callback() {
-            @Override
-            public ObservableValue call(Object param) {
-                final FileTreeItem f = (FileTreeItem) ((CellDataFeatures)param).getValue();
-                return new SimpleObjectProperty(f);
-            }
-        });
-        tree1.getColumns().get(7).setCellFactory(new Callback() {
-            @Override
-            public TreeTableCell call(Object param) {
-                return new OpenCell();
-            }
-        });
-
-
-        tree1.setShowRoot(false);
-        tree1.setRoot(root);
+        tree.setShowRoot(false);
+        tree.setRoot(root);
 
         final Preferences prefs = Preferences.userRoot().node("DocumentPlugin");
         final String rootPath   = prefs.get(ROOT_FOLDER, null);
@@ -374,6 +288,17 @@ public class DocumentsPane extends GridPane {
 
         setFolderButton.disableProperty().bind(guestOrExtern);
         deleteDocButton.disableProperty().bind(guestOrExtern);
+    }
+
+    private static Callback getSimpleObjectFileCallback() {
+        return param -> {
+            final TreeItem item = ((CellDataFeatures) param).getValue();
+            if (item != null) {
+                final File f = (File) item.getValue();
+                return new SimpleObjectProperty(f);
+            }
+            return null;
+        };
     }
 
     @FXML
@@ -520,7 +445,7 @@ public class DocumentsPane extends GridPane {
         final Optional opt = dialog.showAndWait();
         if(opt.isPresent() && ButtonType.OK.equals(opt.get())){
             File f = new File(ipane.newFileFIeld.getText());
-            LoadingPane.showDialog(ODTUtils.writeSummary(root, f));
+            DocumentLoadingPane.showDialog(ODTUtils.writeSummary(root, f));
         }
     }
 
@@ -533,7 +458,7 @@ public class DocumentsPane extends GridPane {
 
     @FXML
     public void hideFiles(ActionEvent event) {
-        FileTreeItem item = (FileTreeItem) tree1.getSelectionModel().getSelectedItem();
+        FileTreeItem item = (FileTreeItem) tree.getSelectionModel().getSelectedItem();
         item.hidden.setValue(!item.hidden.getValue());
         update();
     }
@@ -550,7 +475,7 @@ public class DocumentsPane extends GridPane {
     }
 
     private File getSelectedFile() {
-        TreeItem<File> item = tree1.getSelectionModel().getSelectedItem();
+        TreeItem<File> item = tree.getSelectionModel().getSelectedItem();
         if (item != null) {
             return item.getValue();
         }
@@ -612,7 +537,7 @@ public class DocumentsPane extends GridPane {
         }
     }
 
-    private static class DOIntegatedCell extends TreeTableCell {
+    private static class DOIntegatedCell<S> extends TreeTableCell<S, File> {
 
         private final CheckBox box = new CheckBox();
 
@@ -620,32 +545,27 @@ public class DocumentsPane extends GridPane {
             setGraphic(box);
             setAlignment(Pos.CENTER);
             box.disableProperty().bind(editingProperty());
-            box.selectedProperty().addListener(new ChangeListener<Boolean>() {
-
-                @Override
-                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                    File f = (File) getItem();
-                    if (f != null) {
-                        setBooleanProperty(f, DO_INTEGRATED, newValue);
-                    }
+            box.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                File f = getItem();
+                if (f != null) {
+                    setBooleanProperty(f, DO_INTEGRATED, newValue);
                 }
             });
         }
 
         @Override
-        public void updateItem(Object item, boolean empty) {
+        public void updateItem(File item, boolean empty) {
             super.updateItem(item, empty);
-            File f = (File) item;
-            if (f == null || f.isDirectory()) {
+            if (item == null || item.isDirectory()) {
                 box.setVisible(false);
             } else {
                 box.setVisible(true);
-                box.setSelected(getBooleanProperty(f, DO_INTEGRATED));
+                box.setSelected(getBooleanProperty(item, DO_INTEGRATED));
             }
         }
     }
 
-    private static class PropertyCell extends TreeTableCell {
+    private static class PropertyCell<S> extends TreeTableCell<S, File> {
 
         private TextField text = new TextField();
 
@@ -655,32 +575,27 @@ public class DocumentsPane extends GridPane {
             this.property = property;
             setGraphic(text);
             text.disableProperty().bind(editingProperty());
-            text.textProperty().addListener(new ChangeListener<String>() {
-
-                @Override
-                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                    File f = (File) getItem();
-                    if (f != null) {
-                        setProperty(f, property, newValue);
-                    }
+            text.textProperty().addListener((observable, oldValue, newValue) -> {
+                File f = getItem();
+                if (f != null) {
+                    setProperty(f, property, newValue);
                 }
             });
         }
 
         @Override
-        public void updateItem(Object item, boolean empty) {
+        public void updateItem(File item, boolean empty) {
             super.updateItem(item, empty);
-            File f = (File) item;
-            if (f == null || f.isDirectory()) {
+            if (item == null || item.isDirectory()) {
                 text.setVisible(false);
             } else {
                 text.setVisible(true);
-                text.setText(getProperty(f, property));
+                text.setText(getProperty(item, property));
             }
         }
     }
 
-    private static class PublicationCell extends TreeTableCell {
+    private static class PublicationCell<S> extends TreeTableCell<S, FileTreeItem> {
 
         private final Button button = new Button();
 
@@ -697,7 +612,7 @@ public class DocumentsPane extends GridPane {
         }
 
         public void handle(ActionEvent event) {
-            final FileTreeItem item = (FileTreeItem) getItem();
+            final FileTreeItem item = getItem();
             if (getBooleanProperty(item.getValue(), DYNAMIC)) {
                 regenerateDynamicDocument(item.getValue());
             } else if (item.getValue().getName().equals(DOCUMENT_FOLDER)) {
@@ -718,7 +633,7 @@ public class DocumentsPane extends GridPane {
             final Optional opt = dialog.showAndWait();
             if(opt.isPresent() && ButtonType.OK.equals(opt.get())){
                 File f = new File(ipane.newFileFIeld.getText());
-                LoadingPane.showDialog(ODTUtils.writeDoSynth(item, f));
+                DocumentLoadingPane.showDialog(ODTUtils.writeDoSynth(item, f));
             }
         }
 
@@ -740,7 +655,7 @@ public class DocumentsPane extends GridPane {
                 if (modele != null) {
                     final Task<File> generator = ODTUtils.generateDoc(modele, getTronconList(), item, root.getLibelle(), dateRange);
                     generator.setOnSucceeded(evt -> Platform.runLater(() -> root.update(false)));
-                    LoadingPane.showDialog(generator);
+                    DocumentLoadingPane.showDialog(generator);
                 } else {
                     showErrorDialog("Pas de modèle disponible pour le fichier: " + item.getName());
                 }
@@ -750,7 +665,7 @@ public class DocumentsPane extends GridPane {
         }
 
         private Collection<TronconDigue> getTronconList() {
-            final FileTreeItem item = (FileTreeItem) getItem();
+            final FileTreeItem item = getItem();
             final File modelFolder  = getModelFolder(item.getValue());
             Collection<TronconDigue> elements;
             if (getIsModelFolder(modelFolder, SE)) {
@@ -783,11 +698,10 @@ public class DocumentsPane extends GridPane {
         }
 
         @Override
-        public void updateItem(Object item, boolean empty) {
+        public void updateItem(FileTreeItem item, boolean empty) {
             super.updateItem(item, empty);
-            final FileTreeItem ft = (FileTreeItem) item;
-            if (ft != null) {
-                final File f          = ft.getValue();
+            if (item != null) {
+                final File f          = item.getValue();
                 if (f != null && (getBooleanProperty(f, DYNAMIC) || f.getName().equals(DOCUMENT_FOLDER))) {
                     if (getBooleanProperty(f, DYNAMIC)) {
                         button.setTooltip(new Tooltip("Mettre à jour le fichier dynamique"));
@@ -804,10 +718,9 @@ public class DocumentsPane extends GridPane {
         }
     }
 
-    private static class OpenCell extends TreeTableCell {
+    private static class OpenCell<S> extends TreeTableCell<S, FileTreeItem> {
 
         private final Button button = new Button();
-
 
         public OpenCell() {
             setGraphic(button);
@@ -815,11 +728,10 @@ public class DocumentsPane extends GridPane {
             button.getStyleClass().add(BUTTON_STYLE);
             button.disableProperty().bind(editingProperty());
             button.setOnAction(this::handle);
-
         }
 
         public void handle(ActionEvent event) {
-            final FileTreeItem item = (FileTreeItem) getItem();
+            final FileTreeItem item = getItem();
             if (item != null && item.getValue() != null) {
                 File file = item.getValue();
 
@@ -836,11 +748,10 @@ public class DocumentsPane extends GridPane {
 
 
         @Override
-        public void updateItem(Object item, boolean empty) {
+        public void updateItem(FileTreeItem item, boolean empty) {
             super.updateItem(item, empty);
-            final FileTreeItem ft = (FileTreeItem) item;
-            if (ft != null) {
-                final File f          = ft.getValue();
+            if (item != null) {
+                final File f          = item.getValue();
                 if (f != null && !f.isDirectory()) {
                     button.setTooltip(new Tooltip("Ouvrir le fichier"));
                     button.setVisible(true);
@@ -853,7 +764,7 @@ public class DocumentsPane extends GridPane {
         }
     }
 
-    private static class FileNameCell extends TreeTableCell {
+    private static class FileNameCell<S> extends TreeTableCell<S, File> {
 
         private final Label label = new Label();
 
@@ -862,16 +773,15 @@ public class DocumentsPane extends GridPane {
         }
 
         @Override
-        public void updateItem(Object item, boolean empty) {
+        public void updateItem(File item, boolean empty) {
             super.updateItem(item, empty);
-            File f = (File) item;
             label.opacityProperty().unbind();
-            if (f != null) {
+            if (item != null) {
                 final String name;
-                if (getIsModelFolder(f)) {
-                    name = getProperty(f, LIBELLE);
+                if (getIsModelFolder(item)) {
+                    name = getProperty(item, LIBELLE);
                 } else {
-                    name = f.getName();
+                    name = item.getName();
                 }
                 label.setText(name);
                 FileTreeItem fti = (FileTreeItem) getTreeTableRow().getTreeItem();

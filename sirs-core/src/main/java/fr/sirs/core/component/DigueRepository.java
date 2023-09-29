@@ -2,7 +2,7 @@
  * This file is part of SIRS-Digues 2.
  *
  * Copyright (C) 2016, FRANCE-DIGUES,
- * 
+ *
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
@@ -58,6 +58,18 @@ public class DigueRepository extends AbstractSIRSRepository<Digue> {
     public List<Digue> getBySystemeEndiguement(final SystemeEndiguement se) {
         ArgumentChecks.ensureNonNull("Digue parent", se);
         return this.queryView(BY_SYSTEME_ENDIGUEMENT_ID, se.getId());
+    }
+
+    /**
+     * Method to get all @{@link fr.sirs.core.model.Digue} by their SystemeEndiguement's id.
+     * @param seIds the array of SystemeEndiguements' ids of the @{@link fr.sirs.core.model.SystemeEndiguement}. If one element of the array is null -> get all Digue with no SE.
+     * <p>
+     * To collect only elements with no systemeEndiguementId, then use String[] {null} as method argument.
+     * <p>
+     * @return the list of the@{@link fr.sirs.core.model.Digue}
+     */
+    public List<Digue> getBySystemeEndiguementIds(final String... seIds) {
+        return this.queryView(BY_SYSTEME_ENDIGUEMENT_ID, seIds);
     }
 }
 

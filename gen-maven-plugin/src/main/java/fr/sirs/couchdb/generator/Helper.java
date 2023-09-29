@@ -110,6 +110,11 @@ public class  Helper {
 
     public static final String ZONE_VEGETATION_UI = "ui_zoneVegetation";
 
+    public static final String ETAT_OUVRAGE_COM_FIELD_NAME = "etatOuvrageCom";
+    public static final String ETAT_ACCESSOIRE_COM_FIELD_NAME = "etatAccessoireCom";
+    public static final String ETAT_GENIE_CIVIL_COM_FIELD_NAME = "etatGenieCivilCom";
+    public static final String MANOEUVRE_OUVRAGE_COM_FIELD_NAME = "manoeuvreOuvrageCom";
+
     public static final String OBJET_TYPE = "Objet";
     public static final String LINEAR_ID_UI = "ui_"+LINEAR_ID_FIELD_NAME;
 

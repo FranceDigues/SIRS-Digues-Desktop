@@ -21,6 +21,7 @@ package fr.sirs.theme.ui;
 import fr.sirs.Injector;
 import fr.sirs.SIRS;
 import fr.sirs.Session;
+import fr.sirs.util.FXFreeTab;
 import fr.sirs.core.TronconUtils;
 import fr.sirs.core.TronconUtils.ArchiveMode;
 import fr.sirs.core.component.Previews;
@@ -30,16 +31,20 @@ import fr.sirs.core.model.Digue;
 import fr.sirs.core.model.Element;
 import fr.sirs.core.model.GardeTroncon;
 import fr.sirs.core.model.GestionTroncon;
+import fr.sirs.core.model.Photo;
 import fr.sirs.core.model.Preview;
 import fr.sirs.core.model.ProprieteTroncon;
 import fr.sirs.core.model.RefRive;
 import fr.sirs.core.model.RefTypeTroncon;
+import fr.sirs.core.model.RefTypologieTroncon;
 import fr.sirs.core.model.SystemeReperage;
 import fr.sirs.core.model.TronconDigue;
 import fr.sirs.digue.FXSystemeReperagePane;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -74,12 +79,14 @@ public class FXTronconDiguePane extends AbstractFXElementPane<TronconDigue> {
 
     // Onglet "Information"
     @FXML FXValidityPeriodPane uiValidityPeriod;
+    @FXML FXAmenagementHydrauliqueAttachementPane uiAmenagementHydrauliqueAttachement;
     @FXML TextField ui_libelle;
     @FXML TextArea ui_commentaire;
     @FXML ComboBox ui_digueId;
     @FXML protected Button ui_digueId_link;
     @FXML ComboBox ui_typeRiveId;
     @FXML ComboBox ui_typeTronconId;
+    @FXML ComboBox ui_typologieTronconId;
     @FXML ComboBox ui_systemeRepDefautId;
 
     // Onglet "SR"
@@ -96,6 +103,8 @@ public class FXTronconDiguePane extends AbstractFXElementPane<TronconDigue> {
     private final ForeignParentPojoTable<ProprieteTroncon> uiProprietesTable;
     @FXML private Tab uiGardesTab;
     private final ForeignParentPojoTable<GardeTroncon> uiGardesTable;
+    @FXML protected FXFreeTab ui_photos;
+    private PojoTable photosTable;
 
     // Booleen déterminant s'il est nécessaire de calculer l'état d'archivage du tronçon et des objets qui s'y réfèrent lors de l'enregistrement.
     protected LocalDate initialArchiveDate;
@@ -153,6 +162,7 @@ public class FXTronconDiguePane extends AbstractFXElementPane<TronconDigue> {
 
         uiValidityPeriod.disableFieldsProperty().bind(disableFieldsProperty());
         uiValidityPeriod.targetProperty().bind(elementProperty());
+        uiAmenagementHydrauliqueAttachement.targetProperty().bind(elementProperty());
 
         /*
          * Disabling rules.
@@ -166,6 +176,7 @@ public class FXTronconDiguePane extends AbstractFXElementPane<TronconDigue> {
 
         ui_typeRiveId.disableProperty().bind(disableFieldsProperty());
         ui_typeTronconId.disableProperty().bind(disableFieldsProperty());
+        ui_typologieTronconId.disableProperty().bind(disableFieldsProperty());
         ui_systemeRepDefautId.disableProperty().bind(disableFieldsProperty());
 
         srController.editableProperty().bind(disableFieldsProperty().not());
@@ -180,6 +191,14 @@ public class FXTronconDiguePane extends AbstractFXElementPane<TronconDigue> {
         uiProprietesTable.editableProperty().bind(disableFieldsProperty().not());
         uiGardesTable = new ForeignParentPojoTable<>(GardeTroncon.class, "Période de gardiennage", elementProperty());
         uiGardesTable.editableProperty().bind(disableFieldsProperty().not());
+
+        ui_photos.setContent(() -> {
+            photosTable = new PojoTable(Photo.class, null, elementProperty());
+            photosTable.editableProperty().bind(disableFieldsProperty().not());
+            updatePhotosTable(elementProperty.get());
+            return photosTable;
+        });
+        ui_photos.setClosable(false);
 
         // Troncon change listener
         elementProperty.addListener(this::initFields);
@@ -301,7 +320,9 @@ public class FXTronconDiguePane extends AbstractFXElementPane<TronconDigue> {
             SIRS.initCombo(ui_typeTronconId, SIRS.observableList(
                     previewRepository.getByClass(RefTypeTroncon.class)).sorted(),
                     newElement.getTypeTronconId() == null ? null : previewRepository.get(newElement.getTypeTronconId()));
-
+            SIRS.initCombo(ui_typologieTronconId, SIRS.observableList(
+                            previewRepository.getByClass(RefTypologieTroncon.class)).sorted(),
+                    newElement.getTypologieTronconId() == null ? null : previewRepository.get(newElement.getTypologieTronconId()));
 
             final SystemeReperageRepository srRepo = Injector.getBean(SystemeReperageRepository.class);
             final SystemeReperage defaultSR = newElement.getSystemeRepDefautId() == null? null : srRepo.get(newElement.getSystemeRepDefautId());;
@@ -318,11 +339,25 @@ public class FXTronconDiguePane extends AbstractFXElementPane<TronconDigue> {
             uiGardesTable.setForeignParentId(newElement.getId());
             uiGardesTable.setTableItems(() -> (ObservableList) SIRS.observableList(session.getGardesByTronconId(newElement.getId())));
         }
+
+        updatePhotosTable(newElement);
+    }
+
+    private void updatePhotosTable(final TronconDigue newElement) {
+        if (photosTable == null)
+            return;
+
+        if (newElement == null) {
+            photosTable.setTableItems(null);
+        } else {
+            photosTable.setParentElement(newElement);
+            photosTable.setTableItems(()-> (ObservableList) newElement.getPhotos());
+        }
     }
 
     @Override
     public void preSave() {
-        final TronconDigue element = (TronconDigue) elementProperty().get();
+        final TronconDigue element = elementProperty().get();
 
         Object cbValue;
         cbValue = ui_digueId.getValue();
@@ -348,6 +383,16 @@ public class FXTronconDiguePane extends AbstractFXElementPane<TronconDigue> {
             element.setTypeTronconId(((Element)cbValue).getId());
         } else if (cbValue == null) {
             element.setTypeTronconId(null);
+        }
+        cbValue = ui_typologieTronconId.getValue();
+        if (cbValue instanceof Preview) {
+            element.setTypologieTronconId(((Preview)cbValue).getElementId());
+        } else if (cbValue instanceof Element) {
+            element.setTypologieTronconId(((Element)cbValue).getId());
+        } else if (cbValue == null) {
+            element.setTypologieTronconId(null);
+        } else {
+            SIRS.LOGGER.log(Level.WARNING, "Value not supported for TronconDigue ui_typologieTronconId : {0}", ui_typologieTronconId);
         }
         cbValue = ui_systemeRepDefautId.getValue();
         if (cbValue instanceof Preview) {

@@ -388,6 +388,10 @@ public class ModelHelper extends Helper {
                     case COMMENTAIRE_FIELD_NAME:
                     case SUITE_FIELD_NAME:
                     case EVOLUTION_FIELD_NAME:
+                    case ETAT_OUVRAGE_COM_FIELD_NAME:
+                    case ETAT_ACCESSOIRE_COM_FIELD_NAME:
+                    case ETAT_GENIE_CIVIL_COM_FIELD_NAME:
+                    case MANOEUVRE_OUVRAGE_COM_FIELD_NAME:
                         return "TextArea";
                     default:
                         break;

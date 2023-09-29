@@ -26,7 +26,10 @@ import fr.sirs.core.component.Previews;
 import fr.sirs.core.model.Positionable;
 import fr.sirs.core.model.Preview;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import javafx.concurrent.Task;
 import org.apache.sis.storage.DataStoreException;
@@ -42,9 +45,11 @@ import org.geotoolkit.data.memory.WrapFeatureCollection;
 import org.geotoolkit.data.session.Session;
 import org.geotoolkit.feature.Attribute;
 import org.geotoolkit.feature.Feature;
+import static org.geotoolkit.feature.FeatureTypeUtilities.createSubType;
 import org.geotoolkit.feature.FeatureUtilities;
 import org.geotoolkit.feature.Property;
 import org.geotoolkit.feature.type.FeatureType;
+import org.geotoolkit.feature.type.PropertyDescriptor;
 import org.geotoolkit.internal.Loggers;
 import org.geotoolkit.map.FeatureMapLayer;
 import org.geotoolkit.storage.FactoryMetadata;
@@ -60,12 +65,21 @@ public class ExportTask extends Task<Boolean> {
     private final FeatureMapLayer layer;
     private final FileFeatureStoreFactory factory;
     private final File folder;
+    private final String[] columnsToFilter;
 
-    public ExportTask(FeatureMapLayer layer, File folder, FileFeatureStoreFactory factory) {
+    /**
+     *
+     * @param layer data to export
+     * @param folder output location
+     * @param factory handle the data store
+     * @param columnsToFilter allows to filter the features. Leave to null to keep all columns
+     */
+    public ExportTask(FeatureMapLayer layer, File folder, FileFeatureStoreFactory factory, String[] columnsToFilter) {
         updateTitle("Export de " + layer.getName());
         this.folder = folder;
         this.factory = factory;
         this.layer = layer;
+        this.columnsToFilter = columnsToFilter;
     }
 
     @Override
@@ -119,7 +133,8 @@ public class ExportTask extends Task<Boolean> {
                 if (col.isEmpty()) {
                     continue;
                 }
-                final FeatureType inType = col.getFeatureType();
+                FeatureType inType = col.getFeatureType();
+                inType = filterFTByColumns(inType);
                 final String inTypeName = inType.getName().tip().toString();
                 //output file path
                 File file = new File(folder, inTypeName + factory.getFileExtensions()[0]);
@@ -154,6 +169,21 @@ public class ExportTask extends Task<Boolean> {
         return true;
     }
 
+    private FeatureType filterFTByColumns(final FeatureType ft) {
+        if (columnsToFilter == null) return ft;
+        final List<GenericName> pkeys = new ArrayList<GenericName>();
+
+        for (String toKeep: columnsToFilter) {
+            PropertyDescriptor descriptor = ft.getDescriptor(toKeep);
+            if (descriptor != null) pkeys.add(descriptor.getName());
+        }
+
+        if (pkeys.isEmpty()){
+            return ft;
+        } else {
+            return createSubType(ft, pkeys.toArray(new GenericName[pkeys.size()]));
+        }
+    }
 
     private static class FillCoordCollection extends WrapFeatureCollection{
 

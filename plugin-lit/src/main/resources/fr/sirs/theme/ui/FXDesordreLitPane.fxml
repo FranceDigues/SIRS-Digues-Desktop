@@ -108,6 +108,10 @@
         <FXFreeTab fx:id="ui_ouvrageVoirieIds" text="%ouvrageVoirieIds"/>
         <FXFreeTab fx:id="ui_echelleLimnimetriqueIds" text="%echelleLimnimetriqueIds"/>
         <FXFreeTab fx:id="ui_articleIds" text="%articleIds"/>
+        <FXFreeTab fx:id="ui_ouvrageFranchissementIds" text="%ouvrageFranchissementIds"/>
+        <FXFreeTab fx:id="ui_voieAccesIds" text="%voieAccesIds"/>
+        <FXFreeTab fx:id="ui_stationPompageIds" text="%stationPompageIds"/>
+        <FXFreeTab fx:id="ui_ouvertureBatardableIds" text="%ouvertureBatardableIds"/>
 
       </tabs>
     </TabPane>

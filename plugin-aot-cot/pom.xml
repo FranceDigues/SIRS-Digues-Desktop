@@ -5,7 +5,7 @@
     <!-- Name of the plugin, used for packaging and description -->
     <artifactId>plugin-aot-cot</artifactId>
     <!-- Version must be composed of two integers (major and minor version) separated by a dot. -->
-    <version>1.8</version>
+    <version>1.9</version>
     <packaging>jar</packaging>
 
     <name>Plugin AOT COT</name>
@@ -19,7 +19,7 @@
     </parent>
 
     <properties>
-        <plugin.core.version.min>25</plugin.core.version.min>
+        <plugin.core.version.min>30</plugin.core.version.min>
     </properties>
 
     <dependencies>

@@ -29,7 +29,7 @@ import org.geotoolkit.internal.GeotkFX;
  */
 public class DependanceTransformAction extends FXMapAction {
     public DependanceTransformAction(FXMap map) {
-        super(map,"Dépendance","Transformer une géométrie en dépendance", GeotkFX.ICON_DUPLICATE);
+        super(map,"Dépendance ou AH","Transformer une géométrie en dépendance ou AH", GeotkFX.ICON_DUPLICATE);
 
         this.disabledProperty().bind(Injector.getSession().geometryEditionProperty().not());
 

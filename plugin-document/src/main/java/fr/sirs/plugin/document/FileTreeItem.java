@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import javafx.scene.control.TreeItem;
-import static fr.sirs.plugin.document.PropertiesFileUtilities.getBooleanProperty;
+import static fr.sirs.plugin.document.DocumentPropertiesFileUtilities.getBooleanProperty;
 import static fr.sirs.plugin.document.ui.DocumentsPane.DO_INTEGRATED;
 import static fr.sirs.plugin.document.ui.DocumentsPane.HIDDEN;
 import javafx.beans.property.BooleanProperty;
@@ -57,7 +57,7 @@ public class FileTreeItem extends TreeItem<File> {
         super(item);
         hidden.setValue(getBooleanProperty(item, HIDDEN));
         hidden.addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) -> {
-            PropertiesFileUtilities.setBooleanProperty(getValue(), HIDDEN, newValue);
+            DocumentPropertiesFileUtilities.setBooleanProperty(getValue(), HIDDEN, newValue);
         });
         
         if (item != null && item.isDirectory()) {
@@ -188,7 +188,7 @@ public class FileTreeItem extends TreeItem<File> {
     
     public String getLibelle() {
         final File f = getValue();
-        String name = PropertiesFileUtilities.getProperty(getValue(), DocumentsPane.LIBELLE);
+        String name = DocumentPropertiesFileUtilities.getProperty(getValue(), DocumentsPane.LIBELLE);
         if (name.isEmpty()) {
             name = f.getName();
         }
@@ -196,15 +196,15 @@ public class FileTreeItem extends TreeItem<File> {
     }
     
     public String getSize() {
-        return PropertiesFileUtilities.getStringSizeFile(getValue());
+        return DocumentPropertiesFileUtilities.getStringSizeFile(getValue());
     }
     
     public String getInventoryNumber() {
-        return PropertiesFileUtilities.getProperty(getValue(), DocumentsPane.INVENTORY_NUMBER);
+        return DocumentPropertiesFileUtilities.getProperty(getValue(), DocumentsPane.INVENTORY_NUMBER);
     }
     
     public String getClassPlace() {
-        return PropertiesFileUtilities.getProperty(getValue(), DocumentsPane.CLASS_PLACE);
+        return DocumentPropertiesFileUtilities.getProperty(getValue(), DocumentsPane.CLASS_PLACE);
     }
     
     public boolean isDirectory() {
@@ -212,15 +212,15 @@ public class FileTreeItem extends TreeItem<File> {
     }
     
     public boolean isSe() {
-        return PropertiesFileUtilities.getIsModelFolder(getValue(), DocumentsPane.SE);
+        return DocumentPropertiesFileUtilities.getIsModelFolder(getValue(), DocumentPropertiesFileUtilities.SE);
     }
     
     public boolean isDg() {
-        return PropertiesFileUtilities.getIsModelFolder(getValue(), DocumentsPane.DG);
+        return DocumentPropertiesFileUtilities.getIsModelFolder(getValue(), DocumentPropertiesFileUtilities.DG);
     }
     
     public boolean isTr() {
-        return PropertiesFileUtilities.getIsModelFolder(getValue(), DocumentsPane.TR);
+        return DocumentPropertiesFileUtilities.getIsModelFolder(getValue(), DocumentPropertiesFileUtilities.TR);
     }
             
     private static class FileTreeItemComparator implements Comparator<TreeItem<File>> {

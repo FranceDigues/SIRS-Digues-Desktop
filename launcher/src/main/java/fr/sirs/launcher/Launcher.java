@@ -150,7 +150,7 @@ public class Launcher extends Application {
                 primaryStage.show();
             } catch (DbAccessException ex) {
                 SirsCore.LOGGER.log(Level.SEVERE, "Problème d'accès au CouchDB, utilisateur n'ayant pas les droits administrateur.", ex);
-                GeotkFX.newExceptionDialog("L'utilisateur de la base CouchDB n'a pas les bons droits. " +
+                GeotkFX.newExceptionDialog("Probléme d'accès à la base de donnée. Vérifier que CouhDB est bien lancé ou que l'utilisateur de la base CouchDB a les bons droits. " +
                         "Réinstaller CouchDB ou supprimer cet utilisateur \"geouser\" des administrateurs de CouchDB, " +
                         "puis relancer l'application.", ex).showAndWait();
                 System.exit(1);
@@ -277,7 +277,7 @@ public class Launcher extends Application {
             return true;
         }
     }
-    
+
     /**
      * Check End User License Agreement. If user has not validated it yet, we
      * display the license until he accepts it.

@@ -21,6 +21,7 @@ package fr.sirs.util;
 import fr.sirs.SIRS;
 import fr.sirs.core.SirsCore;
 import fr.sirs.core.authentication.AuthenticationWallet;
+import fr.sirs.ui.FXBasemapEditor;
 import fr.sirs.ui.FXDocumentRootEditor;
 import fr.sirs.ui.FXSirsPreferenceEditor;
 import java.util.logging.Level;
@@ -101,17 +102,20 @@ public class FXPreferenceEditor extends Stage {
 
     private synchronized void initializeCenter() {
         clear();
-        
+
         final TabPane tPane = new TabPane();
         final FXSirsPreferenceEditor sirsEditor = new FXSirsPreferenceEditor();
         final FXDocumentRootEditor docConfig = new FXDocumentRootEditor();
+        final FXBasemapEditor basemapConfig = new FXBasemapEditor();
         tPane.getTabs().addAll(
                 new Tab(sirsEditor.getTitle(), sirsEditor),
-                new Tab(docConfig.getTitle(), docConfig)
+                new Tab(docConfig.getTitle(), docConfig),
+                new Tab(basemapConfig.getTitle(), basemapConfig)
         );
 
         configurations.add(sirsEditor);
         configurations.add(docConfig);
+        configurations.add(basemapConfig);
 
         AuthenticationWallet wallet = AuthenticationWallet.getDefault();
         if (wallet != null) {

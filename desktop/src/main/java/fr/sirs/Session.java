@@ -24,16 +24,13 @@ import fr.sirs.core.SirsCore;
 import fr.sirs.core.SirsCoreRuntimeException;
 import fr.sirs.core.component.SirsDBInfoRepository;
 import fr.sirs.core.component.UtilisateurRepository;
-import fr.sirs.core.model.AvecLibelle;
-import fr.sirs.core.model.Element;
-import fr.sirs.core.model.LabelMapper;
-import fr.sirs.core.model.PositionDocument;
-import fr.sirs.core.model.ReferenceType;
-import fr.sirs.core.model.Utilisateur;
+import fr.sirs.core.model.*;
 import fr.sirs.other.FXDesignationPane;
 import fr.sirs.other.FXReferencePane;
 import fr.sirs.other.FXValidationPane;
 import fr.sirs.theme.Theme;
+import fr.sirs.theme.ui.AbstractFXElementPane;
+import fr.sirs.theme.ui.FXElementContainerPane;
 import fr.sirs.theme.ui.PojoTable;
 import fr.sirs.ui.report.FXModeleRapportsPane;
 import fr.sirs.ui.ModeleElementTable;
@@ -45,7 +42,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
-import java.net.URL;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,12 +53,15 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
@@ -72,6 +71,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.BorderPane;
 import javafx.util.Duration;
 import org.apache.sis.measure.Units;
+import org.apache.sis.storage.DataStoreException;
 import org.apache.sis.util.ArgumentChecks;
 import org.apache.sis.util.collection.Cache;
 import org.apache.sis.util.iso.SimpleInternationalString;
@@ -88,7 +88,6 @@ import org.geotoolkit.map.CoverageMapLayer;
 import org.geotoolkit.map.MapBuilder;
 import org.geotoolkit.map.MapContext;
 import org.geotoolkit.map.MapItem;
-import org.geotoolkit.osmtms.OSMTileMapClient;
 import org.geotoolkit.storage.coverage.CoverageReference;
 import org.geotoolkit.storage.coverage.CoverageStore;
 import org.geotoolkit.style.DefaultDescription;
@@ -182,7 +181,6 @@ public class Session extends SessionCore {
                     new Dimension(100,100));
 
 
-
     @Autowired
     public Session(CouchDbConnector couchDbConnector) {
         super(couchDbConnector);
@@ -247,41 +245,59 @@ public class Session extends SessionCore {
                 }
             }
 
-            try{
-                //Fond de plan
-                backgroundGroup.setName("Fond de plan");
-                mapContext.items().add(0,backgroundGroup);
-//                final CoverageStore store = new OSMTileMapClient(new URL("http://tile.openstreetmap.org"), null, 18, true);
-//                final CoverageStore store = new OSMTileMapClient(new URL("http://c.tile.stamen.com/terrain"), null, 18, true);
-                final CoverageStore store = new OSMTileMapClient(new URL("http://c.tile.stamen.com/toner"), null, 18, true);
-
-                for (GenericName n : store.getNames()) {
-                    final CoverageReference cr = store.getCoverageReference(n);
-                    final CoverageMapLayer cml = MapBuilder.createCoverageLayer(cr);
-                    cml.setName("Stamen");
-                    cml.setDescription(new DefaultDescription(
-                            new SimpleInternationalString("Stamen"),
-                            new SimpleInternationalString("Stamen")));
-//                    cml.setName("Open Street Map");
-//                    cml.setDescription(new DefaultDescription(
-//                            new SimpleInternationalString("Open Street Map"),
-//                            new SimpleInternationalString("Open Street Map")));
-                    cml.setVisible(false);
-                    backgroundGroup.items().add(cml);
-                    break;
-                }
-            } catch(Exception ex){
-                SirsCore.LOGGER.log(Level.WARNING, "Cannot retrieve background layers.", ex);
-                final Runnable r = () -> GeotkFX.newExceptionDialog("Impossible de construire le fond de plan OpenStreetMap", ex).show();
-                if (Platform.isFxApplicationThread()) {
-                    r.run();
-                } else {
-                    Platform.runLater(r);
-                }
+            //Fond de plan
+            backgroundGroup.setName("Fond de plan");
+            mapContext.items().add(0, backgroundGroup);
+            final CoverageMapLayer basemapLayer = getBasemapLayer();
+            if (basemapLayer != null) {
+                backgroundGroup.items().add(basemapLayer);
             }
-
         }
         return mapContext;
+    }
+
+    public static CoverageMapLayer getBasemapLayer() {
+        try{
+            final BasemapImporter importer = new BasemapImporter();
+            importer.loadFromPreferences();
+            return getFirstCoverageMapLayer(importer.getStore(), importer.getTitle());
+        } catch(Exception ex){
+            SirsCore.LOGGER.log(Level.WARNING, "Cannot retrieve background layers.", ex);
+            final Runnable r = () -> GeotkFX.newExceptionDialog("Impossible de construire le fond de carte. Veuillez vérifier le paramétrage du fond de carte par défaut. Chargement du fond de carte intial", ex).show();
+            if (Platform.isFxApplicationThread()) {
+                r.run();
+            } else {
+                Platform.runLater(r);
+            }
+            // Loading of initial basemap
+            try {
+                final BasemapImporter importer = new BasemapImporter();
+                return getFirstCoverageMapLayer(importer.getStore(), importer.getTitle());
+            } catch (Exception ex2) {
+                SIRS.LOGGER.log(Level.SEVERE, "Impossible to load the initial basemap.", ex2);
+                final Runnable r2 = () -> GeotkFX.newExceptionDialog("Impossible de charger le fond de carte initial.", ex2).show();
+                if (Platform.isFxApplicationThread()) {
+                    r2.run();
+                } else {
+                    Platform.runLater(r2);
+                }
+                return null;
+            }
+        }
+    }
+
+    private static CoverageMapLayer getFirstCoverageMapLayer(final CoverageStore store, final String title) throws DataStoreException {
+        for (GenericName n : store.getNames()) {
+            final CoverageReference cr = store.getCoverageReference(n);
+            final CoverageMapLayer cml = MapBuilder.createCoverageLayer(cr);
+            cml.setName(title);
+            cml.setDescription(new DefaultDescription(
+                    new SimpleInternationalString(title),
+                    new SimpleInternationalString(title)));
+            cml.setVisible(false);
+            return cml;
+        }
+        return null;
     }
 
     /**
@@ -419,6 +435,14 @@ public class Session extends SessionCore {
                     return null;
                 } else {
                     final FXFreeTab tab = new FXFreeTab(theme.getName());
+                    if (SirsCore.REGISTRE_THEME_NAME.equals(theme.getName())) {
+                        tab.setOnClosed(event -> theme.resetContent());
+                        tab.setOnSelectionChanged(event -> {
+                            if (((FXFreeTab) event.getSource()).isSelected()) {
+                                theme.refresh();
+                            }
+                        });
+                    }
                     tab.setContent(parent);
                     tab.selectedProperty().addListener(theme.getSelectedPropertyListener());
                     return tab;
@@ -484,11 +508,6 @@ public class Session extends SessionCore {
         try {
             return openEditors.getOrCreate(target, () -> {
                 final FXFreeTab newTab = tabCreator.call();
-                if (newTab != null) {
-                    newTab.setOnClosed(event -> {
-                        openEditors.remove(target);
-                                });
-                }
                 return newTab;
             });
         } catch (Exception e) {
@@ -564,6 +583,24 @@ public class Session extends SessionCore {
                 FadeTransition ft = new FadeTransition(Duration.millis(1000), n);
                 ft.setFromValue(0.0);
                 ft.setToValue(1.0);
+
+                tab.setOnClosed(event -> {
+                    // line moved from method getOrCreateTab(final Object target, final Callable<FXFreeTab> tabCreator)
+                    // since more complex setOnClosed event required.
+                    Injector.getSession().openEditors.remove(target);
+
+                    if (!(n instanceof FXElementContainerPane)) return;
+
+                    // Force to remove listeners before closing the tab.
+                    FXElementContainerPane containerPane = (FXElementContainerPane) n;
+                    final ObservableList<Node> children = containerPane.getChildren();
+                    if (children.isEmpty()) return;
+
+                    children.stream().filter(child -> child instanceof AbstractFXElementPane)
+                            .map(child -> (AbstractFXElementPane) child)
+                            .forEach(pane -> pane.removeListenersBeforeClosingTab());
+                });
+
                 Platform.runLater(() -> {
                     content.setCenter(n);
                     n.requestFocus();

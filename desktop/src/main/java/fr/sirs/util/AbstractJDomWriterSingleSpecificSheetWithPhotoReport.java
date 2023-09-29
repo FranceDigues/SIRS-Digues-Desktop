@@ -2,7 +2,7 @@
  * This file is part of SIRS-Digues 2.
  *
  * Copyright (C) 2016, FRANCE-DIGUES,
- * 
+ *
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
@@ -43,37 +43,37 @@ import org.xml.sax.SAXException;
  *
  * @author Samuel Andrés (Geomatys)
  * @param <T>
- * 
+ *
  */
 public abstract class AbstractJDomWriterSingleSpecificSheetWithPhotoReport<T extends fr.sirs.core.model.Element> extends AbstractJDomWriterSingleSpecificSheet<T> {
 
     // Auteur du cadre de fond des titres de section.
     protected static final int TITLE_SECTION_BG_HEIGHT = 14;
-    
+
     // Marge verticale entre le cadre des titres de section et le texte.
     protected static final int TITLE_SECTION_MARGIN_V = 1;
-    
+
     // Indentation du texte des titres de section.
     protected static final int TITLE_SECTION_INDENT = 10;
-    
+
     // Taille de police des titres de section.
-    protected static final int TITLE_SECTION_FONT_SIZE = 9;
-    
+    protected static final int TITLE_SECTION_FONT_SIZE = 8;
+
     // Hauteur réservée aux tableaux.
     protected static final int TABLE_HEIGHT = 0;
-    
+
     // Taille de police dans les tableaux.
     protected static final int TABLE_FONT_SIZE = 7;
-    
+
     // Hauteur des en-têtes de colonnes des tableaux.
     protected static final int TABLE_HEADER_HEIGHT = 20;
-    
+
     // Hauteur des cellules des tableaux.
     protected static final int TABLE_CELL_HEIGHT = 10;
-    
+
     // Indique si la dernière colonne des tableaux doit occuper la place restante dans la page.
     protected static final boolean TABLE_FILL_WIDTH = true;
-    
+
     public AbstractJDomWriterSingleSpecificSheetWithPhotoReport(final Class<T> classToMap) {
         super(classToMap);
     }

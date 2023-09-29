@@ -275,7 +275,7 @@ public class ObjectTable extends BorderPane {
                             layer.setName(n.tip().toString());
 
                             FileFeatureStoreFactory factory = (FileFeatureStoreFactory) DataStores.getFactoryById("csv");
-                            TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory));
+                            TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory, null));
                         }
                     } catch (Exception ex) {
                         Dialog d = new Alert(Alert.AlertType.ERROR, "Impossible de créer le fichier CSV", ButtonType.OK);

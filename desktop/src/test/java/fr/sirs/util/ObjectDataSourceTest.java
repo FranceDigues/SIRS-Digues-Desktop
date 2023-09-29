@@ -83,7 +83,7 @@ public class ObjectDataSourceTest {
         o3.setDate(LocalDate.now().plusDays(1l));
         obs.add(o3);
 
-        obs.sort(ObjectDataSource.OBSERVATION_COMPARATOR);
+        obs.sort(SirsComparator.OBSERVATION_COMPARATOR);
 
         assertTrue(obs.indexOf(o3) == 0);
         assertTrue(obs.indexOf(o1) == 1);
@@ -116,7 +116,7 @@ public class ObjectDataSourceTest {
         o3.setDate(LocalDate.now().plusDays(1l));
         obs.add(o3);
 
-        obs.sort(ObjectDataSource.PHOTO_COMPARATOR);
+        obs.sort(SirsComparator.PHOTO_COMPARATOR);
 
         assertTrue(obs.indexOf(o3) == 0);
         assertTrue(obs.indexOf(o1) == 1);
@@ -183,7 +183,7 @@ public class ObjectDataSourceTest {
         d10.setDesignation("d10");
         des.add(d10);
 
-        des.sort(ObjectDataSource.ELEMENT_COMPARATOR);
+        des.sort(SirsComparator.ELEMENT_COMPARATOR);
 
         assertTrue(des.indexOf(d1) == 0);
         assertTrue(des.indexOf(d10) == 1);

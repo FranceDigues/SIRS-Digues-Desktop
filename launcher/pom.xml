@@ -73,10 +73,10 @@
                     <additionalAppResources>
                         ${additional.resources}
                     </additionalAppResources>
-                    <!-- To activate back to allow the user to choose the install directory -->
-<!--                    <bundleArguments>
+                    <!-- To activate back to allow the user to choose the install directory, only on windows -->
+                    <bundleArguments>
                         <installdirChooser>true</installdirChooser>
-                    </bundleArguments>-->
+                    </bundleArguments>
                     <nativeReleaseVersion>${project.version}</nativeReleaseVersion>
                     <mainClass>fr.sirs.launcher.Launcher</mainClass>
                     <needMenu>true</needMenu>
@@ -101,7 +101,7 @@
                         As application performance is not affected when running with
                         512MB, we define it as maximal heap amount. -->
                         <jvmArg>-Xms256m</jvmArg>
-                        <jvmArg>-Xmx1024m</jvmArg>
+                        <jvmArg>-Xmx2048m</jvmArg>
                         <!-- We de-activate JIT compilation to reduce code cache / class space. -->
                         <jvmArg>-XX:-TieredCompilation</jvmArg>
                         <jvmArg>-Xmixed</jvmArg>

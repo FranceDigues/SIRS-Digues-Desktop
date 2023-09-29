@@ -25,6 +25,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -44,6 +46,8 @@ public class FXPhotoPane extends FXPhotoPaneStub {
     @FXML protected StackPane ui_photo_stack;
     @FXML protected HBox ui_hbox_container;
 
+    private boolean isVerticalPhoto = false;
+
     /**
      * Constructor. Initialize part of the UI which will not require update when element edited change.
      */
@@ -54,16 +58,17 @@ public class FXPhotoPane extends FXPhotoPaneStub {
         ui_scroll_pane.setBorder(Border.EMPTY);
 
         ui_hbox_container.setFillHeight(true);
-
         ui_photo.setPreserveRatio(true);
         ui_chemin.textProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
             if (newValue != null) {
                 ui_photo.setImage(SIRS.getOrLoadImage(ui_chemin.getURI().toString()));
                 ui_photo.minWidth(0);
                 ui_photo.minHeight(0);
+                Image image = ui_photo.getImage();
+                isVerticalPhoto = image.getHeight() > image.getWidth();
                 // Compute height when parent size or padding change.
                 ui_photo.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> {
-                    double height = ui_hbox_container.getHeight();
+                    double height = Math.min(ui_hbox_container.getHeight(), getHeight());
                     final Insets padding = ui_photo_stack.getPadding();
                     if (padding != null) {
                         height -= padding.getBottom() + padding.getTop();
@@ -71,7 +76,7 @@ public class FXPhotoPane extends FXPhotoPaneStub {
                     return Math.max(0, height);
                 }, ui_hbox_container.heightProperty(), ui_photo_stack.paddingProperty()));
 
-                // Compute height when parent size or padding change.
+                // Compute width when parent size or padding change.
                 ui_photo.fitWidthProperty().bind(Bindings.createDoubleBinding(() -> {
                     double width = getWidth() - ui_scroll_pane.getWidth() - ui_hbox_container.getSpacing();
                     final Insets padding = ui_photo_stack.getPadding();

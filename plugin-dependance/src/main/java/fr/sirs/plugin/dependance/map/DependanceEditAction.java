@@ -29,7 +29,7 @@ import org.geotoolkit.internal.GeotkFX;
  */
 public class DependanceEditAction extends FXMapAction {
     public DependanceEditAction(FXMap map) {
-        super(map,"Dépendance","Création / Modification de dépendance", GeotkFX.ICON_EDIT);
+        super(map,"Dépendance ou AH","Création / Modification de dépendance ou AH", GeotkFX.ICON_EDIT);
 
         this.disabledProperty().bind(Injector.getSession().geometryEditionProperty().not());
 

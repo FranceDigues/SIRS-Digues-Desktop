@@ -1,18 +1,18 @@
 /**
  * This file is part of SIRS-Digues 2.
- *
+ * <p>
  * Copyright (C) 2016, FRANCE-DIGUES,
- * 
+ * <p>
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- *
+ * <p>
  * SIRS-Digues 2 is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * SIRS-Digues 2. If not, see <http://www.gnu.org/licenses/>
  */
@@ -33,6 +33,7 @@ import fr.sirs.core.model.Positionable;
 import fr.sirs.core.model.Preview;
 import fr.sirs.core.model.SystemeReperage;
 import fr.sirs.core.model.SystemeReperageBorne;
+import fr.sirs.util.property.SirsPreferences;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,14 +67,14 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
  *
  * Note : implements {@link ChangeListener}, so we update graphic according to
  * the text in the cell.
- * 
+ *
  * @author Johann Sorel (Geomatys)
  * @author Alexis Manin (Geomatys)
  * @param <S>
  */
 public class ReferenceTableCell<S> extends FXTableCell<S, String> implements ChangeListener<String> {
 
-    public static final Image ICON_LINK = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_LINK,16,FontAwesomeIcons.DEFAULT_COLOR),null);
+    public static final Image ICON_LINK = SwingFXUtils.toFXImage(IconBuilder.createImage(FontAwesomeIcons.ICON_LINK, 16, FontAwesomeIcons.DEFAULT_COLOR), null);
 
     public static final String OBJECT_DELETED = "Objet supprimé !";
 
@@ -84,8 +85,16 @@ public class ReferenceTableCell<S> extends FXTableCell<S, String> implements Cha
     private static final Map<String, StringProperty> CACHED_VALUES = new WeakHashMap<>();
     private static final LibelleUpdater LIBELLE_UPDATER = new LibelleUpdater();
 
+    private static final ChangeListener CLEAR_CACHE_LISTENER = (c, o, n) -> {
+        if (!CACHED_VALUES.isEmpty()) CACHED_VALUES.clear();
+    };
+
+    static {
+        SirsPreferences.INSTANCE.showCasePropProperty().addListener(CLEAR_CACHE_LISTENER);
+    }
+
     private final Class refClass;
-    private final ComboBox editor = new ComboBox();
+    private ComboBox editor = new ComboBox();
 
     public ReferenceTableCell(final Class referenceClass) {
         ArgumentChecks.ensureNonNull("Reference class", referenceClass);
@@ -105,6 +114,15 @@ public class ReferenceTableCell<S> extends FXTableCell<S, String> implements Cha
         } catch (NoSuchBeanDefinitionException e) {
             SIRS.LOGGER.log(Level.FINE, "Cannot register a listener on CouchDB doc change, because the emitter is not present in spring context.", e);
         }
+        /*
+         * Listener to update displayed txt according to selected {@link SirsPreferences#getShowCase()}
+         * Todo (try to move it at table or column level rather than at cell level to reduce the number of listeners)
+         */
+        final ChangeListener updateTextListener = (c, o, n) -> {
+            editor = new ComboBox(); //Ensure comboBox is refreshed
+            this.cancelEdit(); //Cancel also update item and ensure update even if currently editing
+        };
+        SirsPreferences.INSTANCE.showCasePropProperty().addListener(updateTextListener);
     }
 
     @Override
@@ -113,10 +131,11 @@ public class ReferenceTableCell<S> extends FXTableCell<S, String> implements Cha
         Object newValue = editor.getValue();
         if (newValue == null) {
             commitEdit(null);
-        } if (newValue instanceof Preview) {
-            commitEdit(((Preview)newValue).getElementId());
+        }
+        if (newValue instanceof Preview) {
+            commitEdit(((Preview) newValue).getElementId());
         } else if (newValue instanceof Identifiable) {
-            commitEdit(((Identifiable)newValue).getId());
+            commitEdit(((Identifiable) newValue).getId());
         } else {
             cancelEdit();
         }
@@ -139,23 +158,23 @@ public class ReferenceTableCell<S> extends FXTableCell<S, String> implements Cha
         } else {
             items = SIRS.observableList(previews.getByClass(refClass)).sorted();
         }
-
-        // Analyze current item to determine default selection
-        final String elementId = getItem();
-        Object selected = null;
-        if (elementId != null && !elementId.isEmpty()) {
-            try {
-                if (SystemeReperageBorne.class.isAssignableFrom(refClass) || BorneDigue.class.isAssignableFrom(refClass)) {
-                    selected = Injector.getSession().getElement(elementId).orElse(null);
-                } else {
-                    selected = previews.get(elementId);
-                }
-            } catch (DocumentNotFoundException e) {
-                SirsCore.LOGGER.fine("No document found for id " + elementId);
-            }
-        }
-
         if (items != null && !items.isEmpty()) {
+
+            // Analyze current item to determine default selection
+            final String elementId = getItem();
+            Object selected = null;
+            if (elementId != null && !elementId.isEmpty()) {
+                try {
+                    if (SystemeReperageBorne.class.isAssignableFrom(refClass) || BorneDigue.class.isAssignableFrom(refClass)) {
+                        selected = Injector.getSession().getElement(elementId).orElse(null);
+                    } else {
+                        selected = previews.get(elementId);
+                    }
+                } catch (DocumentNotFoundException e) {
+                    SirsCore.LOGGER.fine("No document found for id " + elementId);
+                }
+            }
+
             SIRS.initCombo(editor, items, selected);
             super.startEdit();
             textProperty().unbind();
@@ -184,7 +203,7 @@ public class ReferenceTableCell<S> extends FXTableCell<S, String> implements Cha
         String item = getItem();
         final Element element = Injector.getSession().getElement(item).orElse(null);
         if (element instanceof SystemeReperageBorne) {
-            Element parent = ((SystemeReperageBorne)element).getParent();
+            Element parent = ((SystemeReperageBorne) element).getParent();
             if (parent instanceof SystemeReperage) {
                 toUse = (SystemeReperage) parent;
             }
@@ -219,15 +238,15 @@ public class ReferenceTableCell<S> extends FXTableCell<S, String> implements Cha
                 // On essaye de récupérer le preview label, car l'objet en entrée doit être un ID.
                 try {
                     // Cas spécifique aux références vers les levés de profil en travers (depuis les tableaux de LevePositionProfilTravers) : on veut afficher la date (SYM-1587)
-                    if(LeveProfilTravers.class.equals(refClass)){
+                    if (LeveProfilTravers.class.equals(refClass)) {
                         final LeveProfilTravers lpt = Injector.getSession().getRepositoryForClass(LeveProfilTravers.class).get(item);
-                        text = new SimpleStringProperty(lpt.getDateLeve().toString());
+                        text = new SimpleStringProperty(lpt.getDateLeve() == null ? "" : lpt.getDateLeve().toString());
                         CACHED_VALUES.put(item, text);
-                    }
-                    else {
-                        final Preview tmpPreview = getPreview((String) item);
+                    } else {
+                        final Preview tmpPreview = getPreview(item);
                         if (tmpPreview != null) {
                             text = tmpPreview.libelleProperty();
+                            text.setValue(new SirsStringConverter().toString(tmpPreview));
                             if (text.get() == null) {
                                 // Si l'objet pointé n'a pas de libellé, une valeur par défaut est nécessaire
                                 // afin de montrer qu'une liaison existe réellement.

@@ -46,6 +46,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import org.apache.sis.util.ArgumentChecks;
 import org.ektorp.CouchDbConnector;
+import org.geotoolkit.map.MapItem;
 
 /**
  * Designed to verify compatibility between installed plugins and database modules.
@@ -90,11 +91,6 @@ public class ModuleChecker extends Task<Boolean> {
     private void upgrade() throws InterruptedException, ExecutionException {
         final ChangeListener<String> msgListener = (obs, oldMsg, newMsg) -> updateMessage(newMsg);
         final String titleFormat = "Mise à jour %d sur %d";
-        SirsDBInfo info = DatabaseRegistry.getInfo(connector).orElse(null);
-        if (info == null) {
-            // should never happen...
-            throw new IllegalStateException("Chosen database is not SIRS database !");
-        }
         for (int i = 0; i < upgrades.size(); i++) {
             updateTitle(String.format(titleFormat, i + 1, upgrades.size()));
             final Upgrade upgrade = upgrades.get(i);
@@ -122,6 +118,9 @@ public class ModuleChecker extends Task<Boolean> {
                 t.get();
             }
 
+            //Retrieve info on each updagre cause upgrades can eventually update info object, avoiding conflicting updates
+            SirsDBInfo info = DatabaseRegistry.getInfo(connector).orElse(null);
+            if (info == null) throw new IllegalStateException("Chosen database is not SIRS database !"); // should never happen...
             info.getModuleDescriptions().get(upgrade.toUpgrade.getConfiguration().getName()).setVersion(getVersion(upgrade.toUpgrade));
             connector.update(info);
         }
@@ -287,7 +286,6 @@ public class ModuleChecker extends Task<Boolean> {
             return new StringBuilder().append(conf.getVersionMajor()).append('.').append(conf.getVersionMinor()).toString();
         }
     }
-
 
     public static class ModuleVersion implements Comparable<PluginInfo> {
 

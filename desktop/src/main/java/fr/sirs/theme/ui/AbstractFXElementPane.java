@@ -70,4 +70,15 @@ public abstract class AbstractFXElementPane<T extends Element> extends BorderPan
         }
     }
 
+    /**
+     * Method called when closing the FXFreeTab containing this Pane.
+     * <p>
+     * This method is necessary as when reopening the element's pane,
+     * a new tab is created with a brand new Pane and the old one remains existing with its listeners,
+     * leading to as many calls to the listeners as the tab was closed/reopened
+     * <p>
+     * Method to be overriden in case more listeners are added in the FXPane of the element.
+     */
+    public void removeListenersBeforeClosingTab() {}
+
 }

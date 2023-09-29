@@ -43,9 +43,11 @@ import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.ProxySelector;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -59,18 +61,28 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.SystemDefaultCredentialsProvider;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
+import org.apache.http.params.HttpParams;
 import org.apache.sis.util.ArgumentChecks;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.ektorp.CouchDbConnector;
 import org.ektorp.CouchDbInstance;
 import org.ektorp.DbAccessException;
@@ -78,6 +90,7 @@ import org.ektorp.ReplicationCommand;
 import org.ektorp.ReplicationStatus;
 import org.ektorp.ReplicationTask;
 import org.ektorp.http.HttpResponse;
+import org.ektorp.http.IdleConnectionMonitor;
 import org.ektorp.http.PreemptiveAuthRequestInterceptor;
 import org.ektorp.http.RestTemplate;
 import org.ektorp.http.StdHttpClient;
@@ -633,7 +646,7 @@ public class DatabaseRegistry {
 
                 final Map<String, ModuleDescription> srcModules = srcInfo.getModuleDescriptions();
                 final Map<String, ModuleDescription> dstModules = dstInfo.getModuleDescriptions();
-                final int dstModuleListSize = dstModules == null ? 0 : dstModules.size();
+                //final int dstModuleListSize = dstModules == null ? 0 : dstModules.size();
 
                 if (dstModules == null && srcModules != null) {
                     modules = srcModules;
@@ -649,10 +662,11 @@ public class DatabaseRegistry {
                      */
                     for (final Map.Entry<String, ModuleDescription> entry : srcModules.entrySet()) {
                         final ModuleDescription desc = dstModules.get(entry.getKey());
+
                         if (desc == null) {
                             dstModules.put(entry.getKey(), entry.getValue());
-                        }
-                        else if (!desc.getVersion().equals(entry.getValue().getVersion())) {
+                        //Currently ModuleChecker ensure this never happen (?)
+                        } else if (!desc.getVersion().equals(entry.getValue().getVersion())) {
                             throwException = true;
                             moduleError.append(System.lineSeparator())
                                     .append(desc.title.get())
@@ -665,16 +679,20 @@ public class DatabaseRegistry {
                                     .append(" (")
                                     .append(cleanDatabaseName(sourceDb))
                                     .append(')');
+                        } else {
+                            //Merge layers content
+                            final String k = entry.getKey();
+                            final ModuleDescription desc2 = entry.getValue();
+
+                            this.mergeModuleDescriptions(desc, desc2);
+                            dstModules.put(k, desc2);
                         }
                     }
 
                     if (throwException) {
                         throw new IllegalArgumentException(moduleError.toString());
                     }
-                    else if (dstModuleListSize < dstModules.size()) {
-                        // module description have changed, we must trigger its update.
-                        modules = dstModules;
-                    }
+                    modules = dstModules;
                 }
             } else if (srcSRID != null) {
                 sridToSet = srcSRID;
@@ -725,7 +743,19 @@ public class DatabaseRegistry {
                 // If the error has not been thrown back, it means it was not
                 // related to a replication execution. It can be an exception
                 // related to status parsing failing, for example.
-                SirsCore.LOGGER.log(Level.WARNING, "An error happened while submitting replication", e);
+
+                // Add an additional attempt if the exception is a read timeout exception.
+                Throwable cause = e.getCause();
+                if (cause instanceof SocketTimeoutException) {
+                    if (cause.getMessage() != null && cause.getMessage().equals("Read timed out")) {
+                        remainingAttempt++;
+                        SirsCore.LOGGER.log(Level.FINE, "Replication exceeds the socket timeout but continues nonetheless", e);
+                    } else {
+                        SirsCore.LOGGER.log(Level.WARNING, "An error happened while submitting replication", e);
+                    }
+                } else {
+                    SirsCore.LOGGER.log(Level.WARNING, "An error happened while submitting replication", e);
+                }
             }
         }
 
@@ -753,6 +783,24 @@ public class DatabaseRegistry {
                 .id(operationStatus.getId())
                 .cancel(true)
                 .build());
+    }
+
+    public ReplicationStatus cancelCopy(final String dstDbName) {
+        ReplicationStatus status = null;
+        Optional<ReplicationTask> task = null;
+
+        try {
+            task = getReplicationTasksByTarget(dstDbName).findFirst();
+        } catch (IOException ex) {
+            SirsCore.LOGGER.log(Level.WARNING, "Cannot request active task.", ex);
+        }
+        if (task != null && task.isPresent()) {
+            status = couchDbInstance.replicate(new ReplicationCommand.Builder()
+                    .cancel(true)
+                    .id(task.get().getReplicationId())
+                    .build());
+        }
+        return status;
     }
 
     /**
@@ -860,6 +908,45 @@ public class DatabaseRegistry {
                         || cleanDatabaseName(t.getTargetDatabaseName()).equals(cleanedDst)));
     }
 
+    private Stream<ReplicationTask> getReplicationTasksByTarget(final String dst) throws IOException {
+        final String cleanedDst = cleanDatabaseName(dst);
+        return getReplicationTasks().filter(t -> (cleanDatabaseName(t.getTargetDatabaseName()).equals(cleanedDst)));
+    }
+
+    /**
+     * Merge ModuleDescription layers into desc2
+     * @param desc1
+     * @param desc2
+     */
+    private void mergeModuleDescriptions(ModuleDescription desc1, ModuleDescription desc2) {
+        mergeLayers(desc1.layers, desc2.layers);
+    }
+
+    /**
+     * Merge layers1 and layers 2 into layers2
+     * @param layers1
+     * @param layers2
+     */
+    private void mergeLayers(List<ModuleDescription.Layer> layers1, List<ModuleDescription.Layer> layers2) {
+        List<ModuleDescription.Layer> toAdd = new ArrayList<>();
+
+        if (layers1.isEmpty()) return;
+
+        for (ModuleDescription.Layer l1: layers1) {
+            boolean found = false;
+
+            for (ModuleDescription.Layer l2: layers2) {
+                if (l1.getTitle() != null && l1.getTitle().equals(l2.getTitle())) {
+                    found = true;
+                    mergeLayers(l1.children, l2.children);
+                }
+            }
+            if (!found) {
+                toAdd.add(l1);
+            }
+        }
+        layers2.addAll(toAdd);
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     //
@@ -1256,6 +1343,36 @@ public class DatabaseRegistry {
             }
             return client;
         }
+
+        @Override
+        public ClientConnectionManager configureConnectionManager(
+                HttpParams params) {
+
+            if (conman == null) {
+                SchemeRegistry schemeRegistry = new SchemeRegistry();
+                schemeRegistry.register(configureScheme());
+                if (enableSSL) {
+                    /* In case where the proxy is accessible with a HTTP protocole
+                    * and the initial request use HTTPS, scheme registry doen't
+                    * recognized the requested Scheme 'http' - Redmine-7235.
+                    * An other (better?) solution would be to search https scheme
+                    * raiser than http one.
+                     */
+                    schemeRegistry.register(new Scheme("http", port, PlainSocketFactory.getSocketFactory()));
+                }
+
+                PoolingClientConnectionManager cm = new PoolingClientConnectionManager(schemeRegistry);
+                cm.setMaxTotal(maxConnections);
+                cm.setDefaultMaxPerRoute(maxConnections);
+                conman = cm;
+            }
+
+            if (cleanupIdleConnections) {
+                IdleConnectionMonitor.monitor(conman);
+            }
+            return conman;
+        }
+
     }
 
     private static class SirsFilters {}

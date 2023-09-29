@@ -20,6 +20,7 @@ package fr.sirs.map;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.MultiPoint;
 import fr.sirs.Injector;
 import fr.sirs.SIRS;
 import static fr.sirs.SIRS.CRS_WGS84;
@@ -445,6 +446,15 @@ Injector.getSession().getProjection(),
 //            final String attX = String.valueOf(feature.getPropertyValue(uiAttX.getValue().getName().tip().toString()));
 //            final String attY = String.valueOf(feature.getPropertyValue(uiAttY.getValue().getName().tip().toString()));
 //            geom = GO2Utilities.JTS_FACTORY.createPoint(new Coordinate(Double.valueOf(attX), Double.valueOf(attY)));
+                        // REDMINE 8012 - Fix import when shapefile uses Multipoints instead of Points
+                        // REDMINE 8012 - Fix import when shapefile uses Multipoints instead of Points
+                        // The import shapefile must contain a code and a libelle for each borne to import. We thus don't allow multipoints containing several bornes / points.
+                        if (value instanceof MultiPoint) {
+                            final MultiPoint value1 = (MultiPoint) value;
+                            if (value1.getNumGeometries() == 1) {
+                                value = value1.getGeometryN(0);
+                            }
+                        }
                         if (value instanceof Point) {
                             final Point borneGeom;
                             if (isIdentity) {

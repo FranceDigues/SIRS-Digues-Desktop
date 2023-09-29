@@ -159,16 +159,29 @@ public class DocumentChangeEmiter {
         final Map<Class, List<Element>> changedElements = Collections.unmodifiableMap(tmpChangedElements);
         removedElements = Collections.unmodifiableSet(removedElements);
 
+        List<DocumentListener> docCreated = new ArrayList<>();
+        List<DocumentListener> docChanged = new ArrayList<>();
+        List<DocumentListener> docDeleted = new ArrayList<>();
         for (DocumentListener listener : getListenersUnmodifiable()) {
             if (!addedElements.isEmpty()) {
-                listener.documentCreated(addedElements);
+                docCreated.add(listener);
             }
             if (!changedElements.isEmpty()) {
-                listener.documentChanged(changedElements);
+                docChanged.add(listener);
             }
             if (!removedElements.isEmpty()) {
-                listener.documentDeleted(removedElements);
+                docDeleted.add(listener);
             }
+        }
+
+        for (DocumentListener dl : docCreated) {
+            dl.documentCreated(addedElements);
+        }
+        for (DocumentListener dl : docChanged) {
+            dl.documentChanged(changedElements);
+        }
+        for (DocumentListener dl : docDeleted) {
+            dl.documentDeleted(removedElements);
         }
     }
 

@@ -18,6 +18,7 @@
  */
 package fr.sirs.plugin.dependance.map;
 
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToolBar;
@@ -27,6 +28,7 @@ import org.geotoolkit.gui.javafx.render2d.FXMap;
 
 /**
  * @author Cédric Briançon (Geomatys)
+ * @author Maxime Gavens (Geomatys)
  */
 public class DependanceToolBar extends ToolBar {
     private static final String LEFT = "buttongroup-left";
@@ -36,7 +38,7 @@ public class DependanceToolBar extends ToolBar {
     public DependanceToolBar(final FXMap map) {
         getStylesheets().add("/org/geotoolkit/gui/javafx/buttonbar.css");
 
-        getItems().add(new Label("Dépendance"));
+        getItems().add(new Label("Dépendance et AH"));
 
         final ToggleButton buttonEdit = new DependanceEditAction(map).createToggleButton(ActionUtils.ActionTextBehavior.HIDE);
         buttonEdit.getStyleClass().add(LEFT);
@@ -44,9 +46,17 @@ public class DependanceToolBar extends ToolBar {
         final ToggleButton buttonTransform = new DependanceTransformAction(map).createToggleButton(ActionUtils.ActionTextBehavior.HIDE);
         buttonTransform.getStyleClass().add(CENTER);
 
-        final ToggleButton buttonCreateDesorder = new DesordreCreateAction(map).createToggleButton(ActionUtils.ActionTextBehavior.HIDE);
-        buttonCreateDesorder.getStyleClass().add(RIGHT);
+        final ToggleButton buttonCreateDesorder = new AbstractAmenagementHydrauliqueEditAction(map).createToggleButton(ActionUtils.ActionTextBehavior.HIDE);
+        buttonCreateDesorder.getStyleClass().add(CENTER);
 
-        getItems().add(new HBox(buttonEdit, buttonTransform, buttonCreateDesorder));
+        final ToggleButton butEditTrait = new TraitAmenagementHydrauliqueEditAction(map).createToggleButton(ActionUtils.ActionTextBehavior.HIDE);
+        butEditTrait.setMaxHeight(Double.MAX_VALUE);
+        butEditTrait.getStyleClass().add(CENTER);
+
+        final Button importTrait = new ConvertGeomToTraitAction(map).createButton(ActionUtils.ActionTextBehavior.HIDE);
+        importTrait.setMaxHeight(Double.MAX_VALUE);
+        importTrait.getStyleClass().add(RIGHT);
+
+        getItems().add(new HBox(buttonEdit, buttonTransform, buttonCreateDesorder, butEditTrait, importTrait));
     }
 }

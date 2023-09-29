@@ -1,20 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import fr.sirs.theme.ui.*?>
-<?import fr.sirs.util.FXFileTextField?>
-<?import fr.sirs.util.FXComponentField?>
-<?import org.geotoolkit.gui.javafx.util.*?>
-<?import jidefx.scene.control.field.*?>
-<?import jfxtras.scene.control.*?>
-<?import javafx.scene.web.*?>
-<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
-
 
 <fx:root fx:id="uiBorderPane" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
   <center>
@@ -44,16 +33,17 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints-->
               <children>
-                   <!-- EString -->                 
-                   <Label text="%libelle" GridPane.rowIndex="0" />
-                   <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="0"  />
-                   <Label text="%typeRiveId" GridPane.rowIndex="1" />
-                   <ComboBox fx:id="ui_typeRiveId" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                   <Button fx:id="ui_typeRiveId_link" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                   <Label text="%systemeRepDefautId" GridPane.rowIndex="2" />
-                   <ComboBox fx:id="ui_systemeRepDefautId" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                   <Button fx:id="ui_systemeRepDefautId_link" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-
+                   <!-- EString -->
+                  <Label text="%libelle" GridPane.rowIndex="0"/>
+                  <TextField fx:id="ui_libelle" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                  <Label text="%typeRiveId" GridPane.rowIndex="1"/>
+                  <ComboBox fx:id="ui_typeRiveId" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                  <Button fx:id="ui_typeRiveId_link" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                  <Label text="%typologieTronconId" GridPane.rowIndex="2"/>
+                  <ComboBox fx:id="ui_typologieTronconId" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                  <Label text="%systemeRepDefautId" GridPane.rowIndex="3"/>
+                  <ComboBox fx:id="ui_systemeRepDefautId" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                  <Button fx:id="ui_systemeRepDefautId_link" GridPane.columnIndex="2" GridPane.rowIndex="3"/>
               </children>
               <padding>
                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

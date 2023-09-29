@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<fx:root id="BorderPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="507.0" prefWidth="1264.0" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <center>
+        <VBox prefHeight="487.0" prefWidth="1248.0">
+            <children>
+                <Label text="Propriétés du document" GridPane.columnSpan="2147483647" GridPane.rowIndex="1">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Label>
+                <GridPane fx:id="uiGrid" hgap="10.0" maxHeight="1.7976931348623157E308" styleClass="gray-light" vgap="10.0" GridPane.rowIndex="2">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="NEVER" maxWidth="201.0" minWidth="171.0" prefWidth="171.0" />
+                        <ColumnConstraints hgrow="NEVER" maxWidth="360.0" minWidth="335.0" prefWidth="345.0" />
+                        <ColumnConstraints halignment="CENTER" hgrow="NEVER" maxWidth="139.0" minWidth="36.0" prefWidth="36.0" />
+                        <ColumnConstraints hgrow="NEVER" maxWidth="360.0" minWidth="335.0" prefWidth="345.0" />
+                  <ColumnConstraints hgrow="NEVER" maxWidth="300.0" minWidth="100.0" prefWidth="300.0" />
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints maxHeight="1.7976931348623157E308" valignment="TOP" vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints vgrow="NEVER" />
+                        <RowConstraints minHeight="10.0" vgrow="NEVER" />
+                        <RowConstraints minHeight="10.0" vgrow="NEVER" />
+                    </rowConstraints>
+                    <children>
+                        <Label text="Titre du document :" GridPane.rowIndex="0" />
+                        <TextField fx:id="uiTitre" prefHeight="29.0" prefWidth="581.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="0" />
+
+                        <!-- Date filter -->
+                        <HBox GridPane.rowIndex="1">
+                            <children>
+                                <Label text="Avec période " />
+                                <CheckBox fx:id="uiPeriod" />
+                                <Label text=" du :" />
+                            </children>
+                            <padding>
+                                <Insets bottom="10.0" right="10.0" top="10.0" />
+                            </padding>
+                        </HBox>
+                        <DatePicker fx:id="uiPeriodeDebut" prefHeight="29.0" prefWidth="264.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <Label text="au :" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                        <DatePicker fx:id="uiPeriodeFin" prefHeight="29.0" prefWidth="264.0" GridPane.columnIndex="3" GridPane.halignment="RIGHT" GridPane.rowIndex="1">
+                     <GridPane.margin>
+                        <Insets />
+                     </GridPane.margin></DatePicker>
+
+                        <Label text="Système d'endiguement :" GridPane.rowIndex="2" />
+                        <ComboBox fx:id="uiSystemEndiguement" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="2" />
+
+                        <Label text="Prestations :" GridPane.rowIndex="3" />
+
+                        <TableView fx:id="uiPrestationTable" layoutX="44.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="3">
+                            <columns>
+                                <TableColumn fx:id="ui_prestation" minWidth="188.0" prefWidth="276.0" text="Prestation" />
+                                <TableColumn fx:id="ui_troncon" minWidth="188.0" prefWidth="276.0" text="Tronçon" />
+                                <TableColumn fx:id="ui_type" minWidth="270.0" prefWidth="332.0" text="Type de prestation" />
+                                <TableColumn fx:id="ui_statut" maxWidth="285.0" minWidth="4.0" prefWidth="135.0" text="Statut" />
+                            </columns>
+                        </TableView>
+
+                        <Label text="Non horodatées : " GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                        <Button fx:id="uiSelectNonTimeStamped" mnemonicParsing="false" onAction="#selectNonTimeStamped" styleClass="btn-single" text="Sélectionner" textAlignment="CENTER" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                        <Button fx:id="uiSelectAll" mnemonicParsing="false" onAction="#selectAll" styleClass="btn-single" text="Tout sélectionner" textAlignment="CENTER" wrapText="true" GridPane.columnIndex="3" GridPane.halignment="LEFT" GridPane.rowIndex="5" GridPane.rowSpan="2" GridPane.valignment="CENTER" />
+
+                        <Button fx:id="uiGenerate" mnemonicParsing="false" onAction="#generateReport" styleClass="btn-single" text="Générer" textAlignment="CENTER" wrapText="true" GridPane.columnIndex="3" GridPane.halignment="RIGHT" GridPane.rowIndex="5" GridPane.rowSpan="2" GridPane.valignment="CENTER">
+                            <GridPane.margin>
+                                <Insets right="50.0" />
+                            </GridPane.margin>
+                        </Button>
+                    </children>
+                    <GridPane.margin>
+                        <Insets />
+                    </GridPane.margin>
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+                </GridPane>
+            </children>
+            <padding>
+                <Insets bottom="10.0" right="10.0" top="10.0" />
+            </padding>
+        </VBox>
+    </center>
+    <opaqueInsets>
+        <Insets />
+    </opaqueInsets>
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
+</fx:root>

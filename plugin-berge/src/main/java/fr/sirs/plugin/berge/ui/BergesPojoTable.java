@@ -32,6 +32,9 @@ import org.geotoolkit.filter.DefaultPropertyName;
 import org.geotoolkit.filter.binarylogic.DefaultAnd;
 import org.opengis.filter.Filter;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  *
  * @author Guilhem Legal (Geomatys)
@@ -39,6 +42,7 @@ import org.opengis.filter.Filter;
 public class BergesPojoTable extends PojoTable {
 
     private final TextField uiKeywordSearch = new TextField();
+    private final List<String> COLUMNS_TO_REMOVE = Arrays.asList("typeTronconId", "amenagementHydrauliqueId");
 
      /**
      * Création de la table présentant les obligations réglementaires.
@@ -47,6 +51,10 @@ public class BergesPojoTable extends PojoTable {
      */
     public BergesPojoTable(final Class clazz, final ObjectProperty<? extends Element> container) {
         super(clazz, "Liste des berges", container);
+
+        // Remove the non-necessary colomns
+        this.getTable().getColumns().removeIf(c -> COLUMNS_TO_REMOVE.contains(c.getId()));
+
 
         if (getFilterUI() instanceof VBox) {
             final VBox vbox = (VBox) getFilterUI();

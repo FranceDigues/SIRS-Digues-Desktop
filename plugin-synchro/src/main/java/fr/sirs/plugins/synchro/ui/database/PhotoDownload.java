@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.stream.Stream;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleLongProperty;
@@ -76,8 +77,7 @@ public class PhotoDownload extends StackPane {
     @FXML
     private Label uiSize;
 
-    @FXML
-    private Button uiImportBtn;
+    private boolean estimated = false;
 
     private final ObjectProperty<Set<String>> tronconIds =new SimpleObjectProperty<>();
 
@@ -87,10 +87,13 @@ public class PhotoDownload extends StackPane {
 
     private final AsyncPool pool;
 
-    public PhotoDownload(final AsyncPool pool, final Session session, final ObservableValue<Function<PhotoAndTroncon, Path>> destinationProvider) {
+    public PhotoDownload(final AsyncPool pool, final Session session,
+            final ObservableValue<Function<PhotoAndTroncon, Path>> destinationProvider,
+            final BooleanProperty importProperty) {
         ArgumentChecks.ensureNonNull("Asynchronous executor", pool);
         ArgumentChecks.ensureNonNull("Session", session);
         ArgumentChecks.ensureNonNull("Path provider", destinationProvider);
+        ArgumentChecks.ensureNonNull("importProperty", importProperty);
         SIRS.loadFXML(this);
         this.pool = pool;
         this.session = session;
@@ -98,6 +101,7 @@ public class PhotoDownload extends StackPane {
 
         uiForm.disableProperty().bind(uiProgressPane.visibleProperty());
         uiDate.disableProperty().bind(uiDateTrigger.selectedProperty().not());
+        importProperty.addListener((o,oldV,newV)-> {if (oldV != null)  importPhotos();});
     }
 
     ObjectProperty<Set<String>> getTronconIds() {
@@ -110,7 +114,6 @@ public class PhotoDownload extends StackPane {
 
         final CouchDbConnector connector = session.getConnector();
 
-//        final Task<Map.Entry<Long, Long>> t
         final Task<AttachmentsSizeAndTroncons> t = AttachmentUtilities.estimateSizeAndTroncons(connector, photos);
 
         t.setOnFailed(ResultTaskUtilities.failedEstimation(t));
@@ -120,15 +123,17 @@ public class PhotoDownload extends StackPane {
         uiCancel.setOnAction(evt -> t.cancel(true));
 
         TaskManager.INSTANCE.submit(t);
+        estimated = true;
     }
 
-    @FXML
-    void importPhotos(ActionEvent event) {
-        final Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION, "Confirmer le Téléchargement ?\nSi vous souhaitez choisir au préalable le(s) répertoire(s) de destination, Cliquez d'abord sur le bouton \"Estimer\".", ButtonType.NO, ButtonType.YES);
-        confirmation.setResizable(true);
-        final Optional<ButtonType> res = confirmation.showAndWait();
-        if (!((res.isPresent() && ButtonType.YES.equals(res.get())))) {
-            return;
+    void importPhotos() {
+        if (!estimated) {
+            final Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION, "Confirmer le Téléchargement ?\nSi vous souhaitez choisir au préalable le(s) répertoire(s) de destination, Cliquez d'abord sur le bouton \"Estimer\".", ButtonType.NO, ButtonType.YES);
+            confirmation.setResizable(true);
+            final Optional<ButtonType> res = confirmation.showAndWait();
+            if (!(res.isPresent() && ButtonType.YES.equals(res.get()))) {
+                return;
+            }
         }
 
         final CouchDbConnector connector = session.getConnector();

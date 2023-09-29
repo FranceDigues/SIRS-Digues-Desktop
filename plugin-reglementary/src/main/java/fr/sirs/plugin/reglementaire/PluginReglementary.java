@@ -1,18 +1,18 @@
 /**
  * This file is part of SIRS-Digues 2.
- *
+ * <p>
  * Copyright (C) 2016, FRANCE-DIGUES,
- * 
+ * <p>
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- *
+ * <p>
  * SIRS-Digues 2 is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * SIRS-Digues 2. If not, see <http://www.gnu.org/licenses/>
  */
@@ -46,6 +46,7 @@ import javafx.scene.image.Image;
  */
 public class PluginReglementary extends Plugin {
     private static final String NAME = "plugin-reglementary";
+    public static final String NODE_PREFERENCE_NAME = "ReglementaryPlugin";
     private static final String TITLE = "Module réglementaire";
 
     public PluginReglementary() {
@@ -53,6 +54,7 @@ public class PluginReglementary extends Plugin {
         loadingMessage.set("module réglementaire");
         themes.add(new DocumentsTheme());
         themes.add(new StatesGeneratorTheme());
+        themes.add(new RegistreTheme());
     }
 
     /**

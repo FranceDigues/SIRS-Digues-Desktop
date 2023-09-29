@@ -30,6 +30,7 @@ import fr.sirs.core.component.HerbaceeVegetationRepository;
 import fr.sirs.core.component.InvasiveVegetationRepository;
 import fr.sirs.core.component.ParcelleVegetationRepository;
 import fr.sirs.core.component.PeuplementVegetationRepository;
+import fr.sirs.core.component.PlanVegetationRepository;
 import fr.sirs.core.component.SirsDBInfoRepository;
 import fr.sirs.core.model.ArbreVegetation;
 import fr.sirs.core.model.HerbaceeVegetation;
@@ -129,7 +130,7 @@ public final class VegetationSession {
 
     private final ObjectProperty<PlanVegetation> planProperty = new SimpleObjectProperty<>();
 
-    private final AbstractSIRSRepository<PlanVegetation> planRepo;
+    private final PlanVegetationRepository planRepo;
     private final ArbreVegetationRepository arbreRepo;
     private final HerbaceeVegetationRepository herbaceeRepo;
     private final InvasiveVegetationRepository invasiveRepo;
@@ -138,14 +139,14 @@ public final class VegetationSession {
 
     private final MapItem vegetationGroup;
 
-    private VegetationSession(){
+    private VegetationSession() {
         final Session session = Injector.getSession();
-        planRepo = session.getRepositoryForClass(PlanVegetation.class);
-        arbreRepo = (ArbreVegetationRepository)session.getRepositoryForClass(ArbreVegetation.class);
-        herbaceeRepo = (HerbaceeVegetationRepository)session.getRepositoryForClass(HerbaceeVegetation.class);
-        invasiveRepo = (InvasiveVegetationRepository)session.getRepositoryForClass(InvasiveVegetation.class);
-        parcelleRepo = (ParcelleVegetationRepository)session.getRepositoryForClass(ParcelleVegetation.class);
-        peuplementRepo = (PeuplementVegetationRepository)session.getRepositoryForClass(PeuplementVegetation.class);
+        planRepo = (PlanVegetationRepository) session.getRepositoryForClass(PlanVegetation.class);
+        arbreRepo = (ArbreVegetationRepository) session.getRepositoryForClass(ArbreVegetation.class);
+        herbaceeRepo = (HerbaceeVegetationRepository) session.getRepositoryForClass(HerbaceeVegetation.class);
+        invasiveRepo = (InvasiveVegetationRepository) session.getRepositoryForClass(InvasiveVegetation.class);
+        parcelleRepo = (ParcelleVegetationRepository) session.getRepositoryForClass(ParcelleVegetation.class);
+        peuplementRepo = (PeuplementVegetationRepository) session.getRepositoryForClass(PeuplementVegetation.class);
 
         vegetationGroup = MapBuilder.createItem();
         vegetationGroup.setName("Végétation");
@@ -186,7 +187,7 @@ public final class VegetationSession {
         return vegetationGroup;
     }
 
-    public AbstractSIRSRepository<PlanVegetation> getPlanRepository() {
+    public PlanVegetationRepository getPlanRepository() {
         return planRepo;
     }
 

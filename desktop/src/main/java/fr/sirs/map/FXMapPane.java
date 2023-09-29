@@ -30,16 +30,10 @@ import fr.sirs.Printable;
 import fr.sirs.Session;
 import fr.sirs.core.SirsCore;
 import fr.sirs.core.SirsCoreRuntimeException;
-import fr.sirs.core.component.Previews;
-import fr.sirs.core.model.AbstractPositionDocumentAssociable;
 import fr.sirs.core.model.AvecBornesTemporelles;
 import fr.sirs.core.model.AvecGeometrie;
 import org.geotoolkit.gui.javafx.util.TaskManager;
-import fr.sirs.core.model.BorneDigue;
 import fr.sirs.core.model.Element;
-import fr.sirs.core.model.LabelMapper;
-import fr.sirs.core.model.Preview;
-import fr.sirs.core.model.TronconDigue;
 import fr.sirs.ui.Growl;
 import fr.sirs.util.odt.ODTUtils;
 import java.awt.Color;
@@ -489,57 +483,6 @@ public class FXMapPane extends BorderPane implements Printable {
         TaskManager.INSTANCE.submit(new FocusOnMap(target));
     }
 
-    /**
-     * Try to get the map layer which contains {@link Element}s of given class.
-     * @param element The element we want to retrieve on map.
-     * @return The Map layer in which are contained elements of input type, or null.
-     */
-    private MapLayer getMapLayerForElement(Element element) {
-        if (element.getClass().equals(TronconDigue.class)) {
-            return getMapLayerForElement(CorePlugin.TRONCON_LAYER_NAME);
-        } else if (element instanceof BorneDigue) {
-            return getMapLayerForElement(CorePlugin.BORNE_LAYER_NAME);
-        } else if (element instanceof AbstractPositionDocumentAssociable) {
-            final Previews previews = Injector.getSession().getPreviews();
-            final String documentId = ((AbstractPositionDocumentAssociable) element).getSirsdocument(); // IL est nécessaire qu'un document soit associé pour déterminer le type de la couche.
-            final Preview previewLabel = previews.get(documentId);
-            Class documentClass = null;
-            try {
-                documentClass = Class.forName(previewLabel.getElementClass(), true, Thread.currentThread().getContextClassLoader());
-            } catch (ClassNotFoundException ex) {
-                SIRS.LOGGER.log(Level.WARNING, null, ex);
-            }
-
-            final LabelMapper mapper = LabelMapper.get(documentClass);
-            return getMapLayerForElement(mapper.mapClassName());
-
-        } else {
-            final LabelMapper mapper = LabelMapper.get(element.getClass());
-            final MapLayer foundLayer = getMapLayerForElement(mapper.mapClassName());
-            if (foundLayer == null) {
-                return getMapLayerForElement(mapper.mapClassNamePlural());
-            } else {
-                return foundLayer;
-            }
-        }
-    }
-
-    /**
-     * Try to get the map layer using its name.
-     * @param layerName Identifier of the map layer to retrieve
-     * @return The matching map layer, or null.
-     */
-    private MapLayer getMapLayerForElement(String layerName) {
-        final MapContext context = Injector.getSession().getMapContext();
-        if (context == null) return null;
-        for (MapLayer layer : context.layers()) {
-            if (layer.getName().equalsIgnoreCase(layerName)) {
-                return layer;
-            }
-        }
-        return null;
-    }
-
     @Override
     public String getPrintTitle() {
         return "Carte";
@@ -676,7 +619,12 @@ public class FXMapPane extends BorderPane implements Printable {
             updateProgress(currentProgress++, maxProgress);
             updateMessage("Recherche de la couche correspondante");
 
-            final MapLayer container = getMapLayerForElement(toFocusOn);
+            final MapLayer container = CorePlugin.getMapLayerForElement(toFocusOn);
+            if (container == null) {
+                final Growl growlInfo = new Growl(Growl.Type.INFO, "Aucune couche de données n'a encore été créée pour cet élément.");
+                Platform.runLater(growlInfo::showAndFade);
+                return false;
+            }
             if (!(container instanceof FeatureMapLayer)) {
                 if (toFocusOn instanceof AvecGeometrie) {
                     Geometry geom = ((AvecGeometrie) toFocusOn).getGeometry();
@@ -692,7 +640,7 @@ public class FXMapPane extends BorderPane implements Printable {
                         return true;
                     }
                 } else {
-                    final Growl growlInfo = new Growl(Growl.Type.WARNING, "L'objet n'est présent dans aucune couche cartographique.");
+                    final Growl growlInfo = new Growl(Growl.Type.WARNING, "L'objet n'a pas de géométrie.");
                     Platform.runLater(growlInfo::showAndFade);
                     return false;
                 }

@@ -18,15 +18,37 @@
  */
 package fr.sirs.util;
 
+import fr.sirs.core.SirsCore;
+import java.io.File;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.prefs.Preferences;
+import java.util.prefs.BackingStoreException;
+import org.junit.AfterClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.BeforeClass;
 
 /**
  *
  * @author Samuel Andrés (Geomatys) <samuel.andres at geomatys.com>
  */
 public class JRXMLUtilTest {
-    
+    @BeforeClass
+    public static void initConfigurationPreferences() throws BackingStoreException {
+        Preferences prefs = Preferences.userNodeForPackage(SirsCore.class);
+        Path tmpPath = new File(System.getProperty("java.io.tmpdir")).toPath();
+        prefs.put("CONFIGURATION_FOLDER_PATH", tmpPath.toString());
+        prefs.flush();
+    }
+
+    @AfterClass
+    public static void clearConfigurationPreferences() throws BackingStoreException {
+        Preferences prefs = Preferences.userNodeForPackage(SirsCore.class);
+        prefs.clear();
+        prefs.flush();
+    }
+
     @Test
     public void test_extractDesignation() {
         assertEquals("27", JRXMLUtil.extractDesignation("TrD - 27 : Isère RD du pont RN90 (P 549) à amont pont de Pique Pierre (P 610)"));
@@ -53,6 +75,10 @@ public class JRXMLUtilTest {
                         "3) Ct - 7 : Cardinet\n" +
                         "4) Ct - 3 : Platz", true, 1));
     }
-     
-     
+
+    @Test
+    public void test_displayFormattedDate() {
+        assertEquals("28/06/2023",
+                JRXMLUtil.displayFormattedDate(LocalDate.of(2023,06,28)));
+    }
 }

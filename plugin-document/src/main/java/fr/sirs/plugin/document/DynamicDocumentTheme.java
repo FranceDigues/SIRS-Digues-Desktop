@@ -2,7 +2,7 @@
  * This file is part of SIRS-Digues 2.
  *
  * Copyright (C) 2016, FRANCE-DIGUES,
- * 
+ *
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
@@ -21,7 +21,6 @@ package fr.sirs.plugin.document;
 import fr.sirs.plugin.document.ui.DynamicDocumentsPane;
 import fr.sirs.theme.ui.AbstractPluginsButtonTheme;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.Parent;
 import javafx.scene.image.Image;
 
@@ -34,9 +33,12 @@ public class DynamicDocumentTheme extends AbstractPluginsButtonTheme {
     private static final Image BUTTON_IMAGE = new Image(DocumentManagementTheme.class.getResourceAsStream("images/gen_etats.png"));
 
     private final FileTreeItem root;
-    
+
     public DynamicDocumentTheme(final FileTreeItem root) {
         super("Documents dynamiques", "Documents dynamiques", BUTTON_IMAGE);
+        if (root == null) {
+            throw new IllegalArgumentException("root cannot be null");
+        }
         this.root = root;
     }
 
@@ -44,17 +46,13 @@ public class DynamicDocumentTheme extends AbstractPluginsButtonTheme {
     public Parent createPane() {
         return new DynamicDocumentsPane(root);
     }
-    
+
     @Override
     public ChangeListener<Boolean> getSelectedPropertyListener() {
-        return new ChangeListener<Boolean>() {
-
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (newValue && root.getValue() != null) {
-                    PropertiesFileUtilities.updateFileSystem(root.getValue());
-                    root.update(root.rootShowHiddenFile);
-                }
+        return (observable, oldValue, newValue) -> {
+            if (newValue && root.getValue() != null) {
+                DocumentPropertiesFileUtilities.updateFileSystem(root.getValue());
+                root.update(root.rootShowHiddenFile);
             }
         };
     }

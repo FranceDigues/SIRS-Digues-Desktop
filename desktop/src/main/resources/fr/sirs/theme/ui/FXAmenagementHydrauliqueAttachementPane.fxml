@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import org.geotoolkit.gui.javafx.util.*?>
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<fx:root maxWidth="1.7976931348623157E308" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <top>
+      <GridPane fx:id="uiGridPane" styleClass="gray-light" hgap="10.0" vgap="10.0" BorderPane.alignment="CENTER">
+          <columnConstraints>
+          </columnConstraints>
+          <rowConstraints>
+          </rowConstraints>
+          <children>
+              <Label text="Amenagement hydraulique" />
+              <HBox alignment="CENTER" GridPane.columnIndex="2">
+                  <RadioButton fx:id="uiWithAh" mnemonicParsing="false" text="oui" />
+                  <RadioButton fx:id="uiWithoutAh" mnemonicParsing="false" text="non" />
+              </HBox>
+          </children>
+          <padding>
+              <Insets top="10.0" bottom="10.0" left="10.0" right="10.0" />
+          </padding>
+      </GridPane>
+   </top>
+</fx:root>

@@ -28,7 +28,7 @@ import fr.sirs.core.model.TronconDigue;
 import fr.sirs.theme.AbstractTheme;
 import fr.sirs.theme.TronconTheme;
 import fr.sirs.util.SimpleFXEditMode;
-import java.util.List;
+import fr.sirs.util.property.SirsPreferences;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -45,6 +45,8 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+
+import java.util.List;
 
 /**
  *
@@ -102,7 +104,8 @@ public class FXTronconThemePane extends BorderPane {
             byClass.add(EMPTY_PREVIEW);
         }
         final ObservableList<Preview> linearPreviews = SIRS.observableList(byClass).sorted();
-        SIRS.initCombo(uiLinearChoice, linearPreviews, linearPreviews.isEmpty() ? null : linearPreviews.get(0));
+        // HACK-REDMINE-4408 : hide archived troncons from selection lists
+        SIRS.initCombo(uiLinearChoice, linearPreviews, null, SirsPreferences.getHideArchivedProperty(), false);
 
     }
 
@@ -126,7 +129,7 @@ public class FXTronconThemePane extends BorderPane {
     }
 
     protected Parent createContent(AbstractTheme.ThemeManager manager) {
-        
+
         //Composant : Consultation/Edition
         final Separator separator = new Separator();
         separator.setVisible(false);
@@ -140,7 +143,7 @@ public class FXTronconThemePane extends BorderPane {
         table.editableProperty.bind(editMode.editionState());
         table.foreignParentProperty().bindBidirectional(linearIdProperty);
 
-        // Remplissage du BorderPane parent (englobant) (center, top, right, bottom, left). 
+        // Remplissage du BorderPane parent (englobant) (center, top, right, bottom, left).
         return new BorderPane(table, topPane, null, null, null);
     }
 }

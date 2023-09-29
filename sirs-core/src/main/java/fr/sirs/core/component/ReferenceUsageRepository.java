@@ -28,13 +28,17 @@ import org.ektorp.support.View;
 import fr.sirs.core.model.ReferenceUsage;
 import org.apache.sis.util.ArgumentChecks;
 import org.ektorp.ViewQuery;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 @View(name = USAGES, map="classpath:ReferenceUsages-map.js")
 public class ReferenceUsageRepository extends
         CouchDbRepositorySupport<ReferenceUsage> {
 
     public static final String USAGES = "usages";
 
+    @Autowired
     public ReferenceUsageRepository(CouchDbConnector couchDbConnector) {
         super(ReferenceUsage.class, couchDbConnector);
         initStandardDesignDocument();
