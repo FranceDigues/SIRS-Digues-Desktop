@@ -44,6 +44,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
+
+import fr.sirs.util.javafx.SpinnerUtils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -101,9 +103,11 @@ public class FXPlanVegetationPane extends BorderPane {
         uiPlanDebut.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, Integer.MAX_VALUE, LocalDate.now().getYear()));
         uiPlanDebut.setEditable(true);
         uiPlanDebut.getValueFactory().valueProperty().bindBidirectional(plan.anneeDebutProperty());
+        SpinnerUtils.commitOnFocusLost(uiPlanDebut);
         uiPlanFin.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, Integer.MAX_VALUE, LocalDate.now().getYear()+10));
         uiPlanFin.setEditable(true);
         uiPlanFin.getValueFactory().valueProperty().bindBidirectional(plan.anneeFinProperty());
+        SpinnerUtils.commitOnFocusLost(uiPlanFin);
         initialDebutPlan = plan.getAnneeDebut();
         initialFinPlan = plan.getAnneeFin();
         uiPlanFin.valueProperty().addListener((ChangeListener) new ChangeListener<Integer>() {

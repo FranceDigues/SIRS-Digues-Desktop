@@ -39,6 +39,8 @@ import static java.lang.Double.min;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+
+import fr.sirs.util.javafx.SpinnerUtils;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -180,6 +182,8 @@ public class FXPositionConventionChoicePane extends BorderPane {
 
         ui_prDebut.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-Double.MAX_VALUE, Double.MAX_VALUE, 0, 1));
         ui_prFin.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-Double.MAX_VALUE, Double.MAX_VALUE, 0, 1));
+        SpinnerUtils.commitOnFocusLost(ui_prDebut);
+        SpinnerUtils.commitOnFocusLost(ui_prFin);
 
         ui_sr.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<SystemeReperage>() {
 

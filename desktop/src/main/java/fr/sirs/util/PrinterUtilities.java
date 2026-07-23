@@ -88,6 +88,8 @@ public final class PrinterUtilities {
     private static MutableStyle backupSelectStyle;
     // to store layers' queries before changing its filter to hide the archived elements
     private static Map<FeatureMapLayer, Query> backupQueries;
+    // to store the selection overlay layer that renders the selected element on top of all layers
+    private static FeatureMapLayer selectionOverlayLayer;
     private static  boolean wasVisible;
     private static final List<String> FALSE_GETTERS = new ArrayList<>();
     static{
@@ -288,11 +290,11 @@ public final class PrinterUtilities {
 
         final JRDataSource source;
         if (elementsToPrint.get(0) instanceof Desordre)
-            source = new DesordreDataSource((List<Desordre>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert);
+            source = new DesordreDataSource((List<Desordre>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert, selectionOverlayLayer);
         else if (elementsToPrint.get(0) instanceof ReseauHydrauliqueFerme)
-            source = new ReseauHydrauliqueFermeDataSource((List<ReseauHydrauliqueFerme>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert);
+            source = new ReseauHydrauliqueFermeDataSource((List<ReseauHydrauliqueFerme>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert, selectionOverlayLayer);
         else if (elementsToPrint.get(0) instanceof OuvrageHydrauliqueAssocie)
-            source = new OuvrageHydrauliqueAssocieDataSource((List<OuvrageHydrauliqueAssocie>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert);
+            source = new OuvrageHydrauliqueAssocieDataSource((List<OuvrageHydrauliqueAssocie>) elementsToPrint, previewLabelRepository, stringConverter, printLocationInsert, selectionOverlayLayer);
         else
             throw new RuntimeException("Can't print the type of Elements selected : "+elementsToPrint.get(0).getClass().getSimpleName());
         print = JasperFillManager.fillReport(jasperReport, parameters, source);
@@ -305,16 +307,17 @@ public final class PrinterUtilities {
     }
 
     private static void modifyMapPriorPrinting(List<? extends Element> elements) {
-        wasVisible = CorePlugin.getMapLayerForElement(elements.get(0)).isVisible();
-        if (!elements.isEmpty() && !wasVisible) CorePlugin.modifyLayerVisibilityForElement(elements.get(0), true);
+        final Element element = elements.get(0);
+        wasVisible = CorePlugin.getMapLayerForElement(element).isVisible();
+        if (!elements.isEmpty() && !wasVisible) CorePlugin.modifyLayerVisibilityForElement(element, true);
         // increase the size of PointSymbolizers, LineSymbolizers and TextSymbolizers for the styles of visible layers
         backUpStyles = LocationInsertUtilities.modifyContextSymbolsSizeAndGetBackUpStyles(MULTIPLIER);
-        // increase the size of PointSymbolizers, LineSymbolizers and TextSymbolizers for the selectionStyle of Desordre
-        backupSelectStyle = LocationInsertUtilities.modifySelectionSymbolSize(MULTIPLIER, elements.get(0));
+        // Create a selection overlay layer to ensure the selected element is rendered on top of all other layers
+        selectionOverlayLayer = LocationInsertUtilities.createSelectionOverlayLayer(element, MULTIPLIER);
         // Hide archived Elements from all visible layers
         // elementsToShow is the list of the printed elements : Desordre, OuvrageHydrauliqueAssocie or ReseauHydrauliqueFerme - all extends Objet
         // casted to Objet to get their TronconDigue from the linearId attribut
-        if (!(elements.get(0) instanceof Objet)) {
+        if (!(element instanceof Objet)) {
             SIRS.LOGGER.log(Level.WARNING, "Trying to print elements that are not Objet");
             throw new RuntimeException("Trying to print elements that are not Objet");
         }
@@ -323,12 +326,13 @@ public final class PrinterUtilities {
 
     // public method to be accessed from FXDisorderPrintPane, FXReseauFermePrintPane, FXOuvrageAssociePrintPane
     public static void restoreMap(Element e) {
+        // Remove the selection overlay layer first
+        LocationInsertUtilities.removeSelectionOverlayLayer(selectionOverlayLayer);
+        selectionOverlayLayer = null;
         // hide the layer back if it was hidden before
         if (!wasVisible) CorePlugin.modifyLayerVisibilityForElement(e, false);
         // restore layers style
         LocationInsertUtilities.changeBackLayersSymbolSize(backUpStyles);
-        // restore selectionStyle of the element layer
-        LocationInsertUtilities.changeBackSelectionSymbolSize(e, backupSelectStyle);
         // Restore hidden archived Elements from all visible layers
         LocationInsertUtilities.showBackArchivedElements(backupQueries);
         backUpStyles = null;

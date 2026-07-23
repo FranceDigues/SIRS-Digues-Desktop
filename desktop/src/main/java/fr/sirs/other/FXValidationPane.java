@@ -298,13 +298,13 @@ public class FXValidationPane extends BorderPane {
                 }
                 result =resultBuilder.toString();
             } else {
-                SIRS.LOGGER.log(Level.INFO, "Impossible d'identifi\u00e9 un tron\u00e7on pour les \u00e9l\u00e9ments de type : {0}", elementClass.getCanonicalName());
+                SIRS.LOGGER.log(Level.INFO, "Impossible d''identifier un tron\u00e7on pour les \u00e9l\u00e9ments de type : " + elementClass.getCanonicalName());
                 result = "";
             }
 
 //                return tronconRepository.get();
         } catch (Exception e) {
-            SIRS.LOGGER.log(Level.INFO, "Exception - Impossible d'identifi\u00e9 un tron\u00e7on pour l'\u00e9l\u00e9ment {0} de type : {1}", new Object[]{preview.getDocId(), preview.getDocClass()});
+            SIRS.LOGGER.log(Level.INFO, "Exception - Impossible d''identifier un tron\u00e7on pour l'\u00e9l\u00e9ment " + preview.getDocId() + " de type : " + preview.getDocClass());
             result = "";
         }
         return result;

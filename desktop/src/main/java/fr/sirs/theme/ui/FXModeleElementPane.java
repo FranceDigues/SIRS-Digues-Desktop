@@ -86,7 +86,7 @@ public class FXModeleElementPane extends AbstractFXElementPane<ModeleElement> {
     /**
      * Attributs que l'on ne souhaite pas garder dans le formulaire.
      */
-    private static final List<String> FIELDS_TO_IGNORE = Arrays.asList(new String[]{SIRS.AUTHOR_FIELD, SIRS.VALID_FIELD, SIRS.FOREIGN_PARENT_ID_FIELD, SIRS.GEOMETRY_MODE_FIELD, ODTUtils.CLASS_KEY});
+    private static final List<String> FIELDS_TO_IGNORE = Arrays.asList(new String[]{SIRS.AUTHOR_FIELD, SIRS.VALID_FIELD, SIRS.FOREIGN_PARENT_ID_FIELD, SIRS.GEOMETRY_MODE_FIELD, SIRS.SELECTED_CRS_NAME, ODTUtils.CLASS_KEY});
 
     private static String DESKTOP_UNSUPPORTED = "Impossible de dialoguer avec le système. Pour éditer le modèle, vous pouvez cependant utiliser la fonction d'export, "
             + "puis ré-importer votre ficher lorsque vous aurez terminé vos modifications.";

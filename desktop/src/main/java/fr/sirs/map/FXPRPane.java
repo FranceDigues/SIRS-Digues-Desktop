@@ -40,6 +40,8 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Map;
 import static javafx.beans.binding.Bindings.*;
+
+import fr.sirs.util.javafx.SpinnerUtils;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -126,6 +128,10 @@ public class FXPRPane extends VBox {
         uiSourceX.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-Double.MAX_VALUE, Double.MAX_VALUE,0));
         uiSourceY.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(-Double.MAX_VALUE, Double.MAX_VALUE,0));
         uiSourceDist.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE,0));
+        SpinnerUtils.commitOnFocusLost(uiSourcePR);
+        SpinnerUtils.commitOnFocusLost(uiSourceX);
+        SpinnerUtils.commitOnFocusLost(uiSourceY);
+        SpinnerUtils.commitOnFocusLost(uiSourceDist);
         uiSourceAmontAval.setItems(FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(Direction.values())));
         uiSourceAmontAval.setValue(Direction.Aval);
 

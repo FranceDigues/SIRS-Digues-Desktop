@@ -123,6 +123,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
+import static fr.sirs.core.model.AvecObservationsAvecUrgence.*;
+
 /**
  * Utility methods used to create ODT templates, or fill ODT templates.
  *
@@ -1364,7 +1366,7 @@ public class ODTUtils {
             if (desc != null) {
                 dataRow.getCellByIndex(i).addParagraph(printer.print(element, desc));
             } else if (printMapping.get(propertyName) != null) {
-                if (propertyName.startsWith("obsN")) {
+                if (propertyName.startsWith(LAST_OBS) || propertyName.startsWith(BEFORE_LAST_OBS) || propertyName.startsWith(N_LAST_OBS)) {
                     dataRow.getCellByIndex(i).addParagraph(printMapping.get(propertyName).apply(element));
                 } else {
                     dataRow.getCellByIndex(i).addParagraph(printer.print(element, propertyName, printMapping.get(propertyName)));

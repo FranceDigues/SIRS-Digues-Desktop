@@ -18,10 +18,15 @@
  */
 package fr.sirs.theme.ui;
 
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.MetadataException;
 import fr.sirs.SIRS;
 import fr.sirs.core.model.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -86,7 +91,31 @@ public class FXCommentPhotoView extends SplitPane {
 
             @Override
             protected double computeValue() {
-                return heightProperty().get() - uiPhotoLibelle.getHeight() - uiPhotoDate.getHeight();
+                final double rotate = uiPhotoView.getRotate();
+                if (rotate == 0 || rotate == 180) {
+                    return heightProperty().get() - uiPhotoLibelle.getHeight() - uiPhotoDate.getHeight();
+                } else {
+                    // When image is rotated, the displayed height is the uiPhotoView's width
+                    return widthProperty().get() - uiCommentArea.getWidth();
+                }
+            }
+        });
+
+        uiPhotoView.fitWidthProperty().bind(new DoubleBinding() {
+
+            {
+                bind(heightProperty());
+            }
+
+            @Override
+            protected double computeValue() {
+                final double rotate = uiPhotoView.getRotate();
+                if (rotate == 0 || rotate == 180) {
+                    return widthProperty().get() - uiCommentArea.getWidth();
+                } else {
+                    // When image is rotated, the displayed height is the uiPhotoView's width
+                    return heightProperty().get() - uiPhotoLibelle.getHeight() - uiPhotoDate.getHeight();
+                }
             }
         });
 
@@ -250,10 +279,12 @@ public class FXCommentPhotoView extends SplitPane {
                         ? "" : selected.getDate().toString());
             }
 
+            final Path imagePath = SIRS.getDocumentAbsolutePath(selected);
+
             final Task<Image> loader = new TaskManager.MockTask<>("Lecture d'image",
                     () -> {
                         try {
-                            return SIRS.getOrLoadImage(SIRS.getDocumentAbsolutePath(selected).toUri().toURL().toExternalForm());
+                            return SIRS.getOrLoadImage(imagePath.toUri().toURL().toExternalForm());
                         } catch (IllegalStateException e) {
                             // Illegal state exception here means no root folder has been configured for photos,
                             // just use the given path for the photo.
@@ -276,6 +307,15 @@ public class FXCommentPhotoView extends SplitPane {
                  */
                 uiPhotoView.minWidth(0);
                 uiPhotoView.minHeight(0);
+
+                try {
+                    final SIRS.ImageInformation imageInformation = SIRS.readImageInformation(new File(imagePath.toString()));
+                    uiPhotoView.setRotate(imageInformation.rotation);
+                } catch (IOException | MetadataException | ImageProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+               // Force the fitHeight and FitWidth update via binding.
+                    setHeight(getHeight() - 1);
             }));
 
             uiImageProgress.visibleProperty().bind(loader.runningProperty());

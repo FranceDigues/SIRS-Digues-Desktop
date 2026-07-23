@@ -55,6 +55,7 @@ public class SIRSAddDataBar extends ToolBar implements ListChangeListener<MapLay
 
     private final FXMap map;
     private final Stage importStage = new Stage();
+    private final FXDataImportPane importPane;
 
     public SIRSAddDataBar(FXMap map) {
         super();
@@ -80,7 +81,7 @@ public class SIRSAddDataBar extends ToolBar implements ListChangeListener<MapLay
         importStage.setMaxWidth(Double.MAX_VALUE);
         importStage.sizeToScene();
 
-        final FXDataImportPane importPane = new FXDataImportPane();
+        importPane = new FXDataImportPane();
         importPane.configurationProperty().addListener((observable, oldValue, newValue) -> importStage.sizeToScene());
         importStage.setScene(new Scene(importPane));
 
@@ -89,6 +90,7 @@ public class SIRSAddDataBar extends ToolBar implements ListChangeListener<MapLay
     }
 
     private void onAction(ActionEvent e) {
+        importPane.forceRecreateParameters(null);
         importStage.show();
         importStage.requestFocus();
     }

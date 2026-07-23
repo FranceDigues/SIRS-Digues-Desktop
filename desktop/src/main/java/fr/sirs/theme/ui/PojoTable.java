@@ -23,6 +23,7 @@ import com.vividsolutions.jts.geom.Point;
 import fr.sirs.*;
 
 import static fr.sirs.SIRS.*;
+import static fr.sirs.core.model.AvecObservationsAvecUrgence.*;
 import static fr.sirs.util.SirsComparator.OBSERVATION_COMPARATOR;
 
 import fr.sirs.core.Repository;
@@ -188,7 +189,7 @@ public class PojoTable extends BorderPane implements Printable {
             AUTHOR_FIELD, LAST_UPDATE_AUTHOR_FIELD, VALID_FIELD, FOREIGN_PARENT_ID_FIELD, LONGITUDE_MIN_FIELD,
             LONGITUDE_MAX_FIELD, LATITUDE_MIN_FIELD, LATITUDE_MAX_FIELD, DATE_MAJ_FIELD,
             COMMENTAIRE_FIELD, GEOMETRY_MODE_FIELD, REVISION_FIELD, ID_FIELD, NEW_FIELD,
-            TIMESTAMP_START_DATE_START_VALIDITY, TIMESTAMP_END_DATE_START_VALIDITY, TIMESTAMP_END_DATE_END_VALIDITY
+            TIMESTAMP_START_DATE_START_VALIDITY, TIMESTAMP_END_DATE_START_VALIDITY, TIMESTAMP_END_DATE_END_VALIDITY, SELECTED_CRS_NAME
     };
 
     /**
@@ -804,7 +805,11 @@ public class PojoTable extends BorderPane implements Printable {
                 alert.showAndWait();
             }
         });
-        uiCopyTo.disableProperty().bind(editableProperty.not());
+
+        // An user with Extern role cannot select element other than the ones he is the author of,
+        // and thus when in editing mode, he can't copy elements created by other users.
+        // This is a hack to allow the extern user to copy any element.
+        uiCopyTo.disableProperty().bind(editableProperty.not().and(Injector.getSession().roleBinding().isNotEqualTo(Role.EXTERN)));
 
         uiDelete.getStyleClass().add(BUTTON_STYLE);
         uiDelete.setOnAction((ActionEvent event) -> {
@@ -1209,7 +1214,7 @@ public class PojoTable extends BorderPane implements Printable {
             if (!IDesordre.class.isAssignableFrom(aClass)) {
                 throw new IllegalStateException("Only valid for IDesordre elements. Class not supported : " + aClass);
             }
-            final List<TableColumn<Element, ?>> visibleColumns = ExportAction.extractVisibleColumnNames(columns);
+            final List<TableColumn<Element, ?>> visibleColumns = ExportAction.extractVisibleColumns(columns);
 
             if (file.exists()) {
                 try (Stream<String> lines = Files.lines(file.toPath())) {
@@ -2481,11 +2486,11 @@ public class PojoTable extends BorderPane implements Printable {
             this.obsOrder = obsOrder;
             final String obsName;
             if (obsOrder == 0) {
-                obsName = "Dernière observation";
+                obsName = LAST_OBS;
             } else  if (obsOrder == 1) {
-                obsName = "Avant-dernière observation";
+                obsName = BEFORE_LAST_OBS;
             } else {
-                obsName = "Observation n - " + obsOrder;
+                obsName = N_LAST_OBS + obsOrder;
             }
             descName = desc.getName();
             this.name = obsName + descName;

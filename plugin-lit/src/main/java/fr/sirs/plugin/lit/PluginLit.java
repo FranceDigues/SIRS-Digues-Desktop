@@ -19,33 +19,16 @@
 package fr.sirs.plugin.lit;
 
 import fr.sirs.CorePlugin;
-import static fr.sirs.CorePlugin.buildLayers;
-import static fr.sirs.CorePlugin.createDefaultSelectionStyle;
-import static fr.sirs.CorePlugin.createTronconSelectionStyle;
 import fr.sirs.Injector;
 import fr.sirs.Plugin;
 import fr.sirs.SIRS;
 import fr.sirs.Session;
 import fr.sirs.StructBeanSupplier;
+import fr.sirs.core.InjectorCore;
+import fr.sirs.core.SessionCore;
 import fr.sirs.core.SirsCoreRuntimeException;
-import fr.sirs.core.component.AbstractSIRSRepository;
-import fr.sirs.core.model.AutreOuvrageLit;
-import fr.sirs.core.model.DesordreLit;
-import fr.sirs.core.model.DomanialiteLit;
-import fr.sirs.core.model.Element;
-import fr.sirs.core.model.IleBancLit;
-import fr.sirs.core.model.LabelMapper;
-import fr.sirs.core.model.LargeurLit;
-import fr.sirs.core.model.Lit;
-import fr.sirs.core.model.OccupationRiveraineLit;
-import fr.sirs.core.model.OuvrageAssocieLit;
-import fr.sirs.core.model.PenteLit;
-import fr.sirs.core.model.PlageDepotLit;
-import fr.sirs.core.model.RefUrgence;
-import fr.sirs.core.model.RegimeEcoulementLit;
-import fr.sirs.core.model.SeuilLit;
-import fr.sirs.core.model.TronconLit;
-import fr.sirs.core.model.ZoneAtterrissementLit;
+import fr.sirs.core.component.TronconLitRepository;
+import fr.sirs.core.model.*;
 import fr.sirs.map.FXMapPane;
 import fr.sirs.plugin.lit.map.LitToolBar;
 import fr.sirs.util.FXFreeTab;
@@ -60,6 +43,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+
+import fr.sirs.util.LinearIdFilterFunction;
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import org.apache.sis.measure.Units;
@@ -72,11 +58,15 @@ import org.geotoolkit.map.MapItem;
 import org.geotoolkit.map.MapLayer;
 import org.geotoolkit.style.MutableStyle;
 import org.geotoolkit.style.MutableStyleFactory;
+
+import static fr.sirs.CorePlugin.*;
 import static org.geotoolkit.style.StyleConstants.DEFAULT_DESCRIPTION;
 import static org.geotoolkit.style.StyleConstants.LITERAL_ONE_FLOAT;
 import static org.geotoolkit.style.StyleConstants.LITERAL_ZERO_FLOAT;
 import static org.geotoolkit.style.StyleConstants.STROKE_CAP_SQUARE;
 import static org.geotoolkit.style.StyleConstants.STROKE_JOIN_BEVEL;
+
+import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.style.LineSymbolizer;
 import org.opengis.style.Stroke;
@@ -172,6 +162,8 @@ public class PluginLit extends Plugin {
 
         suppliers.put(DesordreLit.class, getDefaultSupplierForClass.apply(DesordreLit.class));
 
+        suppliers.put(Prestation.class, getDefaultSupplierForClass.apply(Prestation.class));
+
         suppliers.put(OuvrageAssocieLit.class, getDefaultSupplierForClass.apply(OuvrageAssocieLit.class));
         suppliers.put(OccupationRiveraineLit.class, getDefaultSupplierForClass.apply(OccupationRiveraineLit.class));
         suppliers.put(PenteLit.class, getDefaultSupplierForClass.apply(PenteLit.class));
@@ -179,6 +171,25 @@ public class PluginLit extends Plugin {
         suppliers.put(RegimeEcoulementLit.class, getDefaultSupplierForClass.apply(RegimeEcoulementLit.class));
         suppliers.put(DomanialiteLit.class, getDefaultSupplierForClass.apply(DomanialiteLit.class));
         suppliers.put(ZoneAtterrissementLit.class, getDefaultSupplierForClass.apply(ZoneAtterrissementLit.class));
+
+        // Réseaux et voiries
+        suppliers.put(VoieAcces.class, getDefaultSupplierForClass.apply(VoieAcces.class));
+        suppliers.put(OuvrageFranchissement.class, getDefaultSupplierForClass.apply(OuvrageFranchissement.class));
+        suppliers.put(OuvrageVoirie.class, getDefaultSupplierForClass.apply(OuvrageVoirie.class));
+
+        // Réseaux et ouvrages
+        suppliers.put(ReseauHydrauliqueFerme.class, getDefaultSupplierForClass.apply(ReseauHydrauliqueFerme.class));
+        suppliers.put(OuvrageHydrauliqueAssocie.class, getDefaultSupplierForClass.apply(OuvrageHydrauliqueAssocie.class));
+        suppliers.put(ReseauTelecomEnergie.class, getDefaultSupplierForClass.apply(ReseauTelecomEnergie.class));
+        suppliers.put(OuvrageTelecomEnergie.class, getDefaultSupplierForClass.apply(OuvrageTelecomEnergie.class));
+        suppliers.put(ReseauHydrauliqueCielOuvert.class, getDefaultSupplierForClass.apply(ReseauHydrauliqueCielOuvert.class));
+        suppliers.put(OuvrageParticulier.class, getDefaultSupplierForClass.apply(OuvrageParticulier.class));
+        suppliers.put(EchelleLimnimetrique.class, getDefaultSupplierForClass.apply(EchelleLimnimetrique.class));
+
+        // Documents
+        suppliers.put(PositionDocument.class, getDefaultSupplierForClass.apply(PositionDocument.class));
+        suppliers.put(PositionProfilTravers.class, getDefaultSupplierForClass.apply(PositionProfilTravers.class));
+        suppliers.put(ProfilLong.class, getDefaultSupplierForClass.apply(ProfilLong.class));
     }
 
 
@@ -203,6 +214,15 @@ public class PluginLit extends Plugin {
                 final LabelMapper mapper = LabelMapper.get(elementClass);
                 nameMap.put(elementClass.getSimpleName(), mapper.mapClassName());
             }
+
+            final Map<Class<? extends AbstractPositionDocument>, List<Class>> mapDesTypesDeDocs = getTypesDeDocsMap(nameMap);
+
+            // Redmine 7631 : show positionable for TronconLit that are same type of Objects as for TronconDigue.
+            // Use dynamic filter that evaluates at render time to include newly created TronconLit objects.
+            final Filter filter = FF.equals(
+                    FF.function(LinearIdFilterFunction.NAME, FF.literal(TronconLit.class.getCanonicalName())),
+                    FF.literal(true)
+            );
 
             try {
                 final MapItem structLayer = MapBuilder.createItem();
@@ -230,6 +250,51 @@ public class PluginLit extends Plugin {
                 container.items().add(desordreLayer);
 
                 desordreLayer.items().add(CorePlugin.createAndAddUrgenceGroup(DesordreLit.class, desordreStore, null, createDefaultSelectionStyle()));
+
+                // Réseaux de voirie
+                final BeanStore rvStore = new BeanStore(
+                        suppliers.get(VoieAcces.class),
+                        suppliers.get(OuvrageFranchissement.class),
+                        suppliers.get(OuvrageVoirie.class));
+                final MapItem rvLayer = MapBuilder.createItem();
+                rvLayer.setName("Réseaux de voirie");
+                rvLayer.items().addAll( buildLayers(rvStore, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+                rvLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+                container.items().add(rvLayer);
+
+                // Réseaux et ouvrages
+                final BeanStore roStore = new BeanStore(
+                        suppliers.get(ReseauHydrauliqueFerme.class),
+                        suppliers.get(OuvrageHydrauliqueAssocie.class),
+                        suppliers.get(ReseauTelecomEnergie.class),
+                        suppliers.get(OuvrageTelecomEnergie.class),
+                        suppliers.get(ReseauHydrauliqueCielOuvert.class),
+                        suppliers.get(OuvrageParticulier.class),
+                        suppliers.get(EchelleLimnimetrique.class));
+                final MapItem roLayer = MapBuilder.createItem();
+                roLayer.setName("Réseaux et ouvrages");
+                roLayer.items().addAll( buildLayers(roStore, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+                roLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+                container.items().add(roLayer);
+
+                // Prestations
+                final BeanStore prestaStore = new BeanStore(suppliers.get(Prestation.class));
+                final MapItem prestaLayer = MapBuilder.createItem();
+                prestaLayer.setName("Prestations");
+                prestaLayer.items().addAll( buildLayers(prestaStore, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+                prestaLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+                container.items().add(prestaLayer);
+
+                // Positionnement des documents
+                final BeanStore documentsStore = new BeanStore(
+                        suppliers.get(PositionDocument.class),
+                        suppliers.get(PositionProfilTravers.class),
+                        suppliers.get(ProfilLong.class));
+                final MapItem documentsLayer = MapBuilder.createItem();
+                documentsLayer.setName("Documents");
+                documentsLayer.items().addAll(buildLayers(documentsStore, mapDesTypesDeDocs, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+                documentsLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+                container.items().add(documentsLayer);
 
                 final MapItem otherLayer = MapBuilder.createItem();
                 otherLayer.setName("Autre (lit)");

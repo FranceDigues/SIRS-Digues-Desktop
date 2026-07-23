@@ -19,34 +19,21 @@
 package fr.sirs.plugin.berge;
 
 import fr.sirs.CorePlugin;
-import static fr.sirs.CorePlugin.buildLayers;
-import static fr.sirs.CorePlugin.createDefaultSelectionStyle;
-import static fr.sirs.CorePlugin.createTronconSelectionStyle;
 import fr.sirs.Plugin;
 import fr.sirs.Session;
 import fr.sirs.StructBeanSupplier;
 import fr.sirs.core.SirsCoreRuntimeException;
-import fr.sirs.core.model.Berge;
-import fr.sirs.core.model.Element;
-import fr.sirs.core.model.EpiBerge;
-import fr.sirs.core.model.LabelMapper;
-import fr.sirs.core.model.OuvrageRevancheBerge;
-import fr.sirs.core.model.PiedBerge;
-import fr.sirs.core.model.SommetBerge;
-import fr.sirs.core.model.TalusBerge;
-import fr.sirs.core.model.TraitBerge;
+import fr.sirs.core.model.*;
+import fr.sirs.util.LinearIdFilterFunction;
 import fr.sirs.map.FXMapPane;
 import fr.sirs.plugin.berge.map.BergeToolBar;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
+
 import javafx.scene.control.ToolBar;
 import javafx.scene.image.Image;
 import org.apache.sis.measure.Units;
@@ -58,11 +45,15 @@ import org.geotoolkit.map.MapBuilder;
 import org.geotoolkit.map.MapItem;
 import org.geotoolkit.style.MutableStyle;
 import org.geotoolkit.style.MutableStyleFactory;
+
+import static fr.sirs.CorePlugin.*;
 import static org.geotoolkit.style.StyleConstants.DEFAULT_DESCRIPTION;
 import static org.geotoolkit.style.StyleConstants.LITERAL_ONE_FLOAT;
 import static org.geotoolkit.style.StyleConstants.LITERAL_ZERO_FLOAT;
 import static org.geotoolkit.style.StyleConstants.STROKE_CAP_SQUARE;
 import static org.geotoolkit.style.StyleConstants.STROKE_JOIN_BEVEL;
+
+import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.style.LineSymbolizer;
 import org.opengis.style.Stroke;
@@ -143,6 +134,37 @@ public class PluginBerge extends Plugin {
         suppliers.put(EpiBerge.class, getDefaultSupplierForClass.apply(EpiBerge.class));
         suppliers.put(TalusBerge.class, getDefaultSupplierForClass.apply(TalusBerge.class));
         suppliers.put(OuvrageRevancheBerge.class, getDefaultSupplierForClass.apply(OuvrageRevancheBerge.class));
+
+        suppliers.put(Desordre.class, getDefaultSupplierForClass.apply(Desordre.class));
+        suppliers.put(Prestation.class, getDefaultSupplierForClass.apply(Prestation.class));
+
+        // Mesures d'événements hydro
+        suppliers.put(LaisseCrue.class, getDefaultSupplierForClass.apply(LaisseCrue.class));
+        suppliers.put(MonteeEaux.class, getDefaultSupplierForClass.apply(MonteeEaux.class));
+        suppliers.put(LigneEau.class, getDefaultSupplierForClass.apply(LigneEau.class));
+
+        // Réseaux et voiries
+        suppliers.put(VoieAcces.class, getDefaultSupplierForClass.apply(VoieAcces.class));
+        suppliers.put(OuvrageFranchissement.class, getDefaultSupplierForClass.apply(OuvrageFranchissement.class));
+        suppliers.put(OuvertureBatardable.class, getDefaultSupplierForClass.apply(OuvertureBatardable.class));
+        suppliers.put(VoieDigue.class, getDefaultSupplierForClass.apply(VoieDigue.class));
+        suppliers.put(OuvrageVoirie.class, getDefaultSupplierForClass.apply(OuvrageVoirie.class));
+
+        // Réseaux et ouvrages
+        suppliers.put(StationPompage.class, getDefaultSupplierForClass.apply(StationPompage.class));
+        suppliers.put(ReseauHydrauliqueFerme.class, getDefaultSupplierForClass.apply(ReseauHydrauliqueFerme.class));
+        suppliers.put(OuvrageHydrauliqueAssocie.class, getDefaultSupplierForClass.apply(OuvrageHydrauliqueAssocie.class));
+        suppliers.put(ReseauTelecomEnergie.class, getDefaultSupplierForClass.apply(ReseauTelecomEnergie.class));
+        suppliers.put(OuvrageTelecomEnergie.class, getDefaultSupplierForClass.apply(OuvrageTelecomEnergie.class));
+        suppliers.put(ReseauHydrauliqueCielOuvert.class, getDefaultSupplierForClass.apply(ReseauHydrauliqueCielOuvert.class));
+        suppliers.put(OuvrageParticulier.class, getDefaultSupplierForClass.apply(OuvrageParticulier.class));
+        suppliers.put(EchelleLimnimetrique.class, getDefaultSupplierForClass.apply(EchelleLimnimetrique.class));
+
+        // Documents
+        suppliers.put(PositionDocument.class, getDefaultSupplierForClass.apply(PositionDocument.class));
+        suppliers.put(PositionProfilTravers.class, getDefaultSupplierForClass.apply(PositionProfilTravers.class));
+        suppliers.put(ProfilLong.class, getDefaultSupplierForClass.apply(ProfilLong.class));
+
     }
 
 
@@ -167,6 +189,15 @@ public class PluginBerge extends Plugin {
                 nameMap.put(elementClass.getSimpleName(), mapper.mapClassName());
             }
 
+            final Map<Class<? extends AbstractPositionDocument>, List<Class>> mapDesTypesDeDocs = getTypesDeDocsMap(nameMap);
+
+            // Redmine 7631 : show positionable for Berge that are same type of Objects as for TronconDigue.
+            // Use dynamic filter that evaluates at render time to include newly created Berge objects.
+            final Filter filter = FF.equals(
+                    FF.function(LinearIdFilterFunction.NAME, FF.literal(Berge.class.getCanonicalName())),
+                    FF.literal(true)
+            );
+
             final MapItem structLayer = MapBuilder.createItem();
             structLayer.setName("Autre (berge)");
             final BeanStore otherStore = new BeanStore(suppliers.get(PiedBerge.class),
@@ -177,6 +208,75 @@ public class PluginBerge extends Plugin {
             structLayer.items().addAll(buildLayers(otherStore, nameMap, colors, createDefaultSelectionStyle(), false));
             structLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
             container.items().add(structLayer);
+
+            // Réseaux de voirie
+            final BeanStore rvStore = new BeanStore(
+                    suppliers.get(VoieAcces.class),
+                    suppliers.get(OuvrageFranchissement.class),
+                    suppliers.get(OuvertureBatardable.class),
+                    suppliers.get(VoieDigue.class),
+                    suppliers.get(OuvrageVoirie.class));
+            final MapItem rvLayer = MapBuilder.createItem();
+            rvLayer.setName("Réseaux de voirie");
+            rvLayer.items().addAll( buildLayers(rvStore, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+            rvLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+            container.items().add(rvLayer);
+
+            // Réseaux et ouvrages
+            final BeanStore roStore = new BeanStore(
+                    suppliers.get(StationPompage.class),
+                    suppliers.get(ReseauHydrauliqueFerme.class),
+                    suppliers.get(OuvrageHydrauliqueAssocie.class),
+                    suppliers.get(ReseauTelecomEnergie.class),
+                    suppliers.get(OuvrageTelecomEnergie.class),
+                    suppliers.get(ReseauHydrauliqueCielOuvert.class),
+                    suppliers.get(OuvrageParticulier.class),
+                    suppliers.get(EchelleLimnimetrique.class));
+            final MapItem roLayer = MapBuilder.createItem();
+            roLayer.setName("Réseaux et ouvrages");
+            roLayer.items().addAll( buildLayers(roStore, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+            roLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+            container.items().add(roLayer);
+
+            // Désordres
+            final MapItem desordresLayer = MapBuilder.createItem();
+            desordresLayer.setName("Désordres");
+            final BeanStore desordreStore = new BeanStore(suppliers.get(Desordre.class));
+            desordresLayer.items().addAll( buildLayers(desordreStore, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+            desordresLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+            container.items().add(desordresLayer);
+
+            desordresLayer.items().add(createAndAddUrgenceGroup(Desordre.class, desordreStore, null, createDefaultSelectionStyle()));
+
+            // Prestations
+            final BeanStore prestaStore = new BeanStore(suppliers.get(Prestation.class));
+            final MapItem prestaLayer = MapBuilder.createItem();
+            prestaLayer.setName("Prestations");
+            prestaLayer.items().addAll( buildLayers(prestaStore, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+            prestaLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+            container.items().add(prestaLayer);
+
+            // Mesures d'événements
+            final BeanStore mesuresStore = new BeanStore(
+                    suppliers.get(LaisseCrue.class),
+                    suppliers.get(MonteeEaux.class),
+                    suppliers.get(LigneEau.class));
+            final MapItem mesuresLayer = MapBuilder.createItem();
+            mesuresLayer.setName("Mesures d'événement hydro");
+            mesuresLayer.items().addAll( buildLayers(mesuresStore, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+            mesuresLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+            container.items().add(mesuresLayer);
+
+            // Positionnement des documents
+            final BeanStore documentsStore = new BeanStore(
+                    suppliers.get(PositionDocument.class),
+                    suppliers.get(PositionProfilTravers.class),
+                    suppliers.get(ProfilLong.class));
+            final MapItem documentsLayer = MapBuilder.createItem();
+            documentsLayer.setName("Documents");
+            documentsLayer.items().addAll(buildLayers(documentsStore, mapDesTypesDeDocs, nameMap, colors, createDefaultSelectionStyle(),false, filter) );
+            documentsLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+            container.items().add(documentsLayer);
 
             return Collections.singletonList(container);
         } catch (Exception e) {

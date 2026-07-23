@@ -235,7 +235,7 @@ public class FXOpenElementEditorAction extends FXMapAction {
                 final double selectionHeight = this.selection.getHeight();
                 if( (selectionWidth > POINT_RADIUS) || (selectionHeight >POINT_RADIUS) ) {
                     searchArea = new Rectangle2D.Double(
-                        anchor.getX(), anchor.getY(), selection.getWidth(), selection.getHeight());
+                        selection.getX(), selection.getY(), selection.getWidth(), selection.getHeight());
                 }  else {
                     searchArea = new Rectangle2D.Double(
                         anchor.getX()-(POINT_RADIUS/2), anchor.getY() - (POINT_RADIUS/2), POINT_RADIUS, POINT_RADIUS);

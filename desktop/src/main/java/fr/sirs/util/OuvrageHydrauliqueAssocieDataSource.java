@@ -59,6 +59,7 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
 import org.apache.sis.measure.Units;
 import org.geotoolkit.display.MeasureUtilities;
+import org.geotoolkit.map.FeatureMapLayer;
 
 /**
  * Source de données de remplissage des fiches de réseaux hydrauliques fermés.
@@ -72,21 +73,26 @@ public class OuvrageHydrauliqueAssocieDataSource extends ObjectDataSource<Ouvrag
     private static final NumberFormat DISTANCE_FORMAT = new DecimalFormat("0.00");
 
     private final boolean printLocationInsert;
+    private final FeatureMapLayer selectionOverlayLayer;
 
 
-    public OuvrageHydrauliqueAssocieDataSource(Iterable<OuvrageHydrauliqueAssocie> iterable, final boolean printLocationInsert) {
+    public OuvrageHydrauliqueAssocieDataSource(Iterable<OuvrageHydrauliqueAssocie> iterable, final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer) {
         super(iterable);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
-    public OuvrageHydrauliqueAssocieDataSource(final Iterable<OuvrageHydrauliqueAssocie> iterable, final Previews previewLabelRepository, final boolean printLocationInsert){
+    public OuvrageHydrauliqueAssocieDataSource(final Iterable<OuvrageHydrauliqueAssocie> iterable, final Previews previewLabelRepository, final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer){
         super(iterable, previewLabelRepository);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
-    public OuvrageHydrauliqueAssocieDataSource(final Iterable<OuvrageHydrauliqueAssocie> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter, final boolean printLocationInsert){
+    public OuvrageHydrauliqueAssocieDataSource(final Iterable<OuvrageHydrauliqueAssocie> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter,
+                                               final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer){
         super(iterable, previewLabelRepository, stringConverter);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
     @Override
@@ -216,7 +222,7 @@ public class OuvrageHydrauliqueAssocieDataSource extends ObjectDataSource<Ouvrag
             return new ObjectDataSource<>(desordreRows, previewRepository, stringConverter);
         } else if (IMAGE_DATA_SOURCE.equals(name)) {
             if (this.printLocationInsert) {
-                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1080));
+                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1080), selectionOverlayLayer);
                 if (img != null) {
                     return img;
                 } else {

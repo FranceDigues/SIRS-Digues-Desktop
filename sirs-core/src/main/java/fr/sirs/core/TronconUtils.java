@@ -1,18 +1,18 @@
 /**
  * This file is part of SIRS-Digues 2.
- *
+ * <p>
  * Copyright (C) 2016, FRANCE-DIGUES,
- *
+ * <p>
  * SIRS-Digues 2 is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option) any
  * later version.
- *
+ * <p>
  * SIRS-Digues 2 is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with
  * SIRS-Digues 2. If not, see <http://www.gnu.org/licenses/>
  */
@@ -150,29 +150,7 @@ public class TronconUtils {
         }
 
         // On ajoute les structures du tronçon paramètre.
-        final List<Positionable> toSave = new ArrayList<>();
-        for (final Positionable objet : getPositionableList(original)) {
-            // Si on a un objet imbriqué dans un document, on le passe. Il sera
-            // mis à jour via son parent.
-            if (!objet.getId().equals(objet.getDocumentId())) {
-                continue;
-            }
-
-            final Positionable copy = objet.copy();
-            toSave.add(copy);
-            if (copy instanceof AvecForeignParent) {
-                ((AvecForeignParent) copy).setForeignParentId(tdCopy.getId());
-            }
-            if (copy.getSystemeRepId() != null) {
-                copy.setSystemeRepId(srMapping.get(copy.getSystemeRepId()));
-            }
-        }
-
-        // On sauvegarde les changements.
-        final List<DocumentOperationResult> failures = session.executeBulk((Collection) toSave);
-        for (final DocumentOperationResult failure : failures) {
-            SirsCore.LOGGER.log(Level.WARNING, "Update failed : ".concat(failure.getError()));
-        }
+        copyElementsOnNewTroncon(tdCopy, original, session, srMapping);
 
         return tdCopy;
     }
@@ -398,19 +376,15 @@ public class TronconUtils {
         Positionable original;
         Geometry originalGeometry;
         Positionable copied;
-        final LocalDate now = LocalDate.now();
+
+        // Map to store the link between original objets ids and created ones ids.
+        final Map<String, String> mapOldandNewIds= new HashMap<>();
+        AbstractSIRSRepository<Positionable> repo;
         while (posIt.hasNext()) {
             original = posIt.next();
 
-            // Do not update archived data.
-            if (original instanceof AvecBornesTemporelles) {
-                LocalDate date = ((AvecBornesTemporelles) original).getDate_fin();
-                if (date != null && date.isBefore(now)) {
-                    continue;
-                }
-            }
-
-            final boolean isDocument = ((Element) original).getParent() == null;
+            // Redmine 8196 : We keep archived objects
+            final boolean isDocument = original.getParent() == null;
 
             //on vérifie que cet objet intersecte le segment
             originalGeometry = original.getGeometry();
@@ -457,6 +431,7 @@ public class TronconUtils {
             if (copied instanceof AvecForeignParent) {
                 ((AvecForeignParent) copied).setForeignParentId(tronconCp.getId());
             }
+            // TODO understand why this line. If it is not a document, then it is not added to the database, so why keep going ?
             if (isDocument) {
                 newPositions.add(copied);
             }
@@ -500,7 +475,22 @@ public class TronconUtils {
                 copied.setBorne_fin_distance((float) posSr.distanceEndBorne);
                 copied.setBorne_fin_aval(posSr.endAval);
             }
+
+            repo = (AbstractSIRSRepository<Positionable>) session.getRepositoryForClass(copied.getClass());
+            // Add to repo to get an id for the newly created positionable.
+            if (repo == null) {
+                // Photo is a Positionable and is located based on the parent's SR. But it is not an Objet and thus has no linearId.
+                // It will be copied directly through its parent : the Observation.
+                SirsCore.LOGGER.log(Level.WARNING, "Repository null for class : " + copied.getClass());
+            } else {
+                repo.add(copied);
+            }
+            // Store the old and new Ids to use later on to update the links between positionables.
+            mapOldandNewIds.put(original.getId(), copied.getId());
         }
+
+        // Update links between positionables.
+        updatePositionablesRefs(newPositions, mapOldandNewIds);
 
         // Et on termine par la sérialisation des objets positionés sur le nouveau tronçon.
         final List<DocumentOperationResult> bulkErrors = session.executeBulk((Collection) newPositions);
@@ -727,7 +717,25 @@ public class TronconUtils {
         }
 
         // On ajoute les structures du tronçon paramètre.
-        final List<Positionable> toSave = new ArrayList<>();
+        copyElementsOnNewTroncon(mergeResult, mergeParam, session, modifiedSRs);
+
+        return mergeResult;
+    }
+
+    /**
+     * Copy Positionables linked to the mergeParam troncon onto the mergeResult troncon.
+     * Update links between positionable objects with new Ids.
+     *
+     * @param mergeResult   The troncon used as a base for the fusion. The troncon that is being updated.
+     * @param mergeParam    The troncon containing the properties to be copied onto mergeResult.
+     * @param session       The applicative session to create the copies of the mergeParam properties.
+     * @param modifiedSRs   The SRs to be used for the copies.
+     */
+    private static void copyElementsOnNewTroncon(TronconDigue mergeResult, TronconDigue mergeParam, SessionCore session, Map<String, String> modifiedSRs) {
+        final List<Positionable> toUpdate = new ArrayList<>();
+        // Map to store the link between original objets ids and created ones ids.
+        final Map<String, String> mapOldandNewIds= new HashMap<>();
+        AbstractSIRSRepository<Positionable> repo;
         for (final Positionable objet : getPositionableList(mergeParam)) {
             // Si on a un objet imbriqué dans un document, on le passe. Il sera
             // mis à jour via son parent.
@@ -735,23 +743,37 @@ public class TronconUtils {
                 continue;
             }
 
-            final Positionable copy = objet.copy();
-            toSave.add(copy);
-            if (copy instanceof AvecForeignParent) {
-                ((AvecForeignParent) copy).setForeignParentId(mergeResult.getId());
+            final Positionable positionable = objet.copy();
+            if (positionable instanceof AvecForeignParent) {
+                ((AvecForeignParent) positionable).setForeignParentId(mergeResult.getId());
             }
-            if (copy.getSystemeRepId() != null) {
-                copy.setSystemeRepId(modifiedSRs.get(copy.getSystemeRepId()));
+            if (positionable.getSystemeRepId() != null) {
+                positionable.setSystemeRepId(modifiedSRs.get(positionable.getSystemeRepId()));
             }
+            // Add to repo to get an id for the newly created positionable.
+            repo = (AbstractSIRSRepository<Positionable>) session.getRepositoryForClass(objet.getClass());
+            repo.add(positionable);
+            // Store the old and new Ids to use later on to update the links between positionables.
+            mapOldandNewIds.put(objet.getId(), positionable.getId());
+            toUpdate.add(positionable);
         }
 
-        // On sauvegarde les changements.
-        final List<DocumentOperationResult> failures = session.executeBulk((Collection) toSave);
+        // Update link between positionables.
+        updatePositionablesRefs(toUpdate, mapOldandNewIds);
+
+        // We save the changes.
+        final List<DocumentOperationResult> failures = session.executeBulk((Collection) toUpdate);
         for (final DocumentOperationResult failure : failures) {
             SirsCore.LOGGER.log(Level.WARNING, "Update failed : ".concat(failure.getError()));
         }
+    }
 
-        return mergeResult;
+    private static void updatePositionablesRefs(List<Positionable> toUpdate, Map<String, String> mapOldandNewIds) {
+        final Map<String, String> updatePosIdsFailures = new HashMap<>();
+        toUpdate.forEach(pos -> updatePosIdsFailures.putAll(pos.updatePositionableRefs(mapOldandNewIds)));
+        for (final Map.Entry<String, String> idsNotfound : updatePosIdsFailures.entrySet()) {
+            SirsCore.LOGGER.log(Level.WARNING, "Positionable id update failed for : ".concat(idsNotfound.getValue()).concat(" with id ").concat(idsNotfound.getKey()));
+        }
     }
 
     /**

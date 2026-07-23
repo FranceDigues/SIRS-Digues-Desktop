@@ -18,7 +18,11 @@ package org.geotoolkit.gui.javafx.chooser;
 
 import java.awt.geom.NoninvertibleTransformException;
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.prefs.Preferences;
+
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
@@ -62,6 +66,21 @@ public class FXContextChooser extends BorderPane {
             setPreviousPath(file.getParentFile().getAbsolutePath());
             final MapContext context = OwcXmlIO.read(file);
             setPreviousFile(file.getAbsolutePath());
+            // Hack to remove old layers when still present in old contexts created before the Object deletion.
+            // Names are taken from the key "class" from the corresponding .properties files
+            final List<String> excludedLayers = Arrays.asList("Fondation de berge", "Talus Risberme Berge", "Crête de berge");
+            context.items().stream()
+                    .filter(i -> "Module berges".equals(i.getName()))
+                    .map(mapItem ->
+                            mapItem.items()
+                    )
+                    .flatMap(Collection::stream)
+                    .filter(item -> "Autre (berge)".equals(item.getName()))
+                    .map(autreBerge -> autreBerge.items())
+                    .forEach(autreBerge -> {
+                        autreBerge.removeIf(item -> excludedLayers.contains(item.getName()));
+                    });
+
             return context;
         }
 

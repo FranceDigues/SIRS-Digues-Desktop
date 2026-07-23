@@ -234,6 +234,7 @@ public class PrintManager {
         avoidFields.add(PARENT_FIELD);
         avoidFields.add(COUCH_DB_DOCUMENT_FIELD);
         avoidFields.add(GEOMETRY_MODE_FIELD);
+        avoidFields.add(SELECTED_CRS_NAME);
 
         // Set can contain no duplicate.
         final Set<String> tmpAvoidFields = new HashSet<>();

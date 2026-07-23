@@ -1,21 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import fr.sirs.theme.ui.*?>
 <?import fr.sirs.util.FXFreeTab?>
-<?import fr.sirs.util.FXFileTextField?>
-<?import fr.sirs.util.FXComponentField?>
-<?import org.geotoolkit.gui.javafx.util.*?>
-<?import jidefx.scene.control.field.*?>
-<?import jfxtras.scene.control.*?>
-<?import javafx.scene.web.*?>
-<?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-
-
 
 <fx:root fx:id="uiBorderPane" type="BorderPane" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
   <center>
@@ -66,14 +54,14 @@
 
                   <!-- EString -->
                    <Label text="%evolution" GridPane.rowIndex="2" />
-                   <TextArea fx:id="ui_evolution" GridPane.columnIndex="1" GridPane.rowIndex="2"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                   <TextArea fx:id="ui_evolution" GridPane.columnIndex="1" GridPane.rowIndex="2"  maxHeight="100" maxWidth="-Infinity"/>
 
                    <Label text="%suiteApporterId" GridPane.rowIndex="3" />
                    <ComboBox fx:id="ui_suiteApporterId" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                    <Button fx:id="ui_suiteApporterId_link" GridPane.columnIndex="2" GridPane.rowIndex="3" />
                    <!-- EString -->                 
                    <Label text="%suite" GridPane.rowIndex="4" />
-                   <TextArea fx:id="ui_suite" GridPane.columnIndex="1" GridPane.rowIndex="4"  maxHeight="-Infinity" maxWidth="-Infinity"/>
+                   <TextArea fx:id="ui_suite" GridPane.columnIndex="1" GridPane.rowIndex="4"  maxHeight="100" maxWidth="-Infinity"/>
 
                    <Label text="%observateurId" GridPane.rowIndex="5" />
                    <ComboBox fx:id="ui_observateurId" GridPane.columnIndex="1" GridPane.rowIndex="5" />

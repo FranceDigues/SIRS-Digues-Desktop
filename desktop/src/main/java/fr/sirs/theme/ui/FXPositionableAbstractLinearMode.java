@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+
+import fr.sirs.util.javafx.SpinnerUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -146,10 +148,12 @@ public abstract class FXPositionableAbstractLinearMode extends BorderPane implem
         SpinnerValueFactory.DoubleSpinnerValueFactory valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE, 0, 1);
         valueFactory.setConverter(conv);
         uiDistanceStart.setValueFactory(valueFactory);
+        SpinnerUtils.commitOnFocusLost(uiDistanceStart);
 
         valueFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE, 0, 1);
         valueFactory.setConverter(conv);
         uiDistanceEnd.setValueFactory(valueFactory);
+        SpinnerUtils.commitOnFocusLost(uiDistanceEnd);
 
         final ChangeListener<Geometry> geomListener = (observable, oldValue, newValue) -> {
             if (reseting) {

@@ -12,6 +12,11 @@ public interface AvecObservationsAvecUrgence extends AvecObservations {
 
     ObservableList<? extends IObservationAvecUrgence> getObservations();
 
+    // Constants used for pojoTable and for printing Desordre tables.
+    String LAST_OBS = "Dernière observation";
+    String BEFORE_LAST_OBS = "Avant-dernière observation";
+    String N_LAST_OBS = "Observation n - ";
+
     /**
      * Redmine-ticket : 7727
      * Get the degres d'urgence of the last Observation with a degrés d'urgence.

@@ -84,7 +84,6 @@ public class FXImportXYZ extends FXAbstractImportPointLeve<PointXYZ> {
         uiAttX.setConverter(stringConverter);
         uiAttY.setConverter(stringConverter);
         this.initFieldValue();
-        this.getScene().getWindow().setOnCloseRequest(ev -> this.saveFieldValue());
     }
 
     protected void initFieldValue() {
@@ -261,7 +260,7 @@ public class FXImportXYZ extends FXAbstractImportPointLeve<PointXYZ> {
     }
 
     @Override
-    protected void saveFieldValue() {
+    public void saveFieldValue() {
         super.saveFieldValue();
         savePreference(ATT_X_KEY, stringConverter.toString(uiAttX.getSelectionModel().getSelectedItem()));
         savePreference(ATT_Y_KEY, stringConverter.toString(uiAttY.getSelectionModel().getSelectedItem()));

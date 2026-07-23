@@ -18,6 +18,13 @@
  */
 package fr.sirs;
 
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.MetadataException;
+import com.drew.metadata.exif.ExifIFD0Directory;
+import com.drew.metadata.jpeg.JpegDirectory;
 import com.sun.javafx.PlatformUtil;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -676,6 +683,76 @@ public final class SIRS extends SirsCore {
             throw ex;
         } catch (Exception e) {
             throw new SirsCoreRuntimeException("Unloadable image", e);
+        }
+    }
+
+    // Inner class containing image information
+    public static class ImageInformation {
+        public final int rotation;
+        public final int width;
+        public final int height;
+
+        public ImageInformation(int rotation, int width, int height) {
+            this.rotation = rotation;
+            this.width = width;
+            this.height = height;
+        }
+
+        public String toString() {
+            return String.format("%dx%d,%d", this.width, this.height, this.rotation);
+        }
+    }
+
+    /**
+     * Extract information from an image with the rotation value and its width and height.
+     * @param imageFile the file to extract the information from.
+     * @return the created @{@link ImageInformation}
+     * @throws IOException
+     * @throws MetadataException
+     * @throws ImageProcessingException
+     */
+    public static ImageInformation readImageInformation(final File imageFile)  throws IOException, MetadataException, ImageProcessingException {
+        ArgumentChecks.ensureNonNull("imageFile", imageFile);
+        final Metadata metadata = ImageMetadataReader.readMetadata(imageFile);
+        final Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+        final JpegDirectory jpegDirectory = metadata.getFirstDirectoryOfType(JpegDirectory.class);
+
+        int orientation = 1;
+        if (directory != null) {
+            try {
+                orientation = directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+            } catch (MetadataException me) {
+                LOGGER.log(Level.WARNING, "Could not get orientation");
+            }
+        } else {
+            orientation = 1;
+        }
+
+        return getExifTransformation(jpegDirectory, orientation);
+    }
+
+    /**
+     * Create an @{@link ImageInformation} based on the @{@link JpegDirectory} and image's orientation.
+     * Based on the orientation value, we determine the rotation to apply to the picture as well as its final height and width.
+     * @param jpegDirectory
+     * @param orientation
+     * @return the created @{@link ImageInformation}
+     * @throws MetadataException
+     */
+    private static ImageInformation getExifTransformation(final JpegDirectory jpegDirectory, final int orientation) throws MetadataException {
+        final int imageWidth = jpegDirectory.getImageWidth();
+        final int imageHeight = jpegDirectory.getImageHeight();
+        switch (orientation) {
+            case 1:
+                return new ImageInformation(0, imageWidth, imageHeight);
+            case 3: // PI rotation
+                return new ImageInformation(180, imageWidth, imageHeight);
+            case 6: // -PI/2
+                return new ImageInformation(90, imageHeight, imageWidth);
+            case 8: // PI / 2
+                return new ImageInformation(270, imageHeight, imageWidth);
+            default:
+                return new ImageInformation(0, imageWidth, imageHeight);
         }
     }
 

@@ -170,6 +170,11 @@ public class ModelHelper extends Helper {
             imports.add("com.fasterxml.jackson.annotation.JsonIgnoreProperties");
         }
 
+        if (isPositionable() || POSITIONABLE_CLASS_NAME.equals(getClassName())) {
+            imports.add("java.util.Map");
+            imports.add("java.util.HashMap");
+        }
+
         if (hasDocument()) {
             imports.add("java.util.*");
             imports.add("java.io.*");
@@ -330,7 +335,7 @@ public class ModelHelper extends Helper {
         return generateEquals;
     }
 
-    private boolean isPositionable(EClass eClass) {
+    public boolean isPositionable(EClass eClass) {
         EList<EClass> eAllSuperTypes = eClass.getEAllSuperTypes();
         for (EClass superEClass : eAllSuperTypes) {
             if (POSITIONABLE_CLASS_NAME.equals(superEClass.getName()))

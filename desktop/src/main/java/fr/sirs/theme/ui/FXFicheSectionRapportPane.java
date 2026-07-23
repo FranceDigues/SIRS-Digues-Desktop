@@ -29,6 +29,8 @@ import fr.sirs.core.model.report.FicheSectionRapport;
 import fr.sirs.core.model.report.ModeleElement;
 import fr.sirs.query.FXSearchPane;
 import java.util.Optional;
+
+import fr.sirs.util.javafx.SpinnerUtils;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
@@ -111,6 +113,7 @@ public class FXFicheSectionRapportPane extends AbstractFXElementPane<FicheSectio
         });
         uiNbPhotoSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, Short.MAX_VALUE, 0));
         uiNbPhotoSpinner.managedProperty().bind(uiNbPhotoSpinner.visibleProperty());
+        SpinnerUtils.commitOnFocusLost(uiNbPhotoSpinner);
         // TODO : tooltips.
     }
 

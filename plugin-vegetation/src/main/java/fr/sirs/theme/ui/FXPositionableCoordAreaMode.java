@@ -30,6 +30,8 @@ import fr.sirs.core.model.ZoneVegetation;
 import fr.sirs.plugin.vegetation.PluginVegetation;
 import fr.sirs.util.ConvertPositionableCoordinates;
 import java.util.stream.Stream;
+
+import fr.sirs.util.javafx.SpinnerUtils;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -97,6 +99,11 @@ public class FXPositionableCoordAreaMode extends FXPositionableAbstractCoordMode
         uiEndNear.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE, 0,1));
         uiEndFar.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE, 0,1));
 
+        SpinnerUtils.commitOnFocusLost(uiStartNear);
+        SpinnerUtils.commitOnFocusLost(uiStartFar);
+        SpinnerUtils.commitOnFocusLost(uiEndNear);
+        SpinnerUtils.commitOnFocusLost(uiEndFar);
+
         final ChangeListener chgListener = (ObservableValue observable, Object oldValue, Object newValue) -> coordChange();
         uiStartNear.valueProperty().addListener(chgListener);
         uiStartFar.valueProperty().addListener(chgListener);
@@ -162,6 +169,9 @@ public class FXPositionableCoordAreaMode extends FXPositionableAbstractCoordMode
                 zone.distanceDebutMaxProperty().addListener(posListener);
                 zone.distanceFinMinProperty().addListener(posListener);
                 zone.distanceFinMaxProperty().addListener(posListener);
+                // Init crs if stored in the positionable, otherwise use the base CRS.
+                initCrsFromPos(newValue);
+                updateFields();
             }
         });
     }
@@ -189,8 +199,7 @@ public class FXPositionableCoordAreaMode extends FXPositionableAbstractCoordMode
     public void updateFields(){
         setReseting(true);
 
-        //selectionner RGF93 par defaut
-        uiCRSs.getSelectionModel().clearAndSelect(1);
+        if (updatePosAfterCrsChange) return;
 
         final PositionableVegetation pos = (PositionableVegetation) positionableProperty().get();
         final String mode = pos.getGeometryMode();
@@ -213,7 +222,7 @@ public class FXPositionableCoordAreaMode extends FXPositionableAbstractCoordMode
         } else {
             //pas de geometrie
         }
-        updateLatLongFor(startPos, endPos);
+        getCoordsForSelectedCrsAndUpdateSpinners(startPos, endPos);
         updateDistanceSpinners(pos);
 
         //on cache certains champs si c'est un ponctuel
@@ -290,6 +299,7 @@ public class FXPositionableCoordAreaMode extends FXPositionableAbstractCoordMode
         }
 
         buildCoordGeometry(zone, startPoint, endPoint, Mode.COORD_AREA);
+        zone.setCrsName(uiCRSs.getValue().getName().toString());
   }
 
     @Override

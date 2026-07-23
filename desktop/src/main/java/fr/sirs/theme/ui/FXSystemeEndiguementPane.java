@@ -23,6 +23,7 @@ import fr.sirs.SIRS;
 import fr.sirs.Injector;
 import fr.sirs.core.component.*;
 import fr.sirs.core.model.*;
+import fr.sirs.util.javafx.SpinnerUtils;
 import javafx.beans.property.ObjectProperty;
 
 import javafx.beans.value.ObservableValue;
@@ -76,6 +77,7 @@ public class FXSystemeEndiguementPane extends AbstractFXElementPane<SystemeEndig
         ui_populationProtegee.disableProperty().bind(disableFieldsProperty());
         ui_populationProtegee.setEditable(true);
         ui_populationProtegee.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, Integer.MAX_VALUE));
+        SpinnerUtils.commitOnFocusLost(ui_populationProtegee);
         ui_classement.disableProperty().bind(disableFieldsProperty());
         ui_niveauProtection.disableProperty().bind(disableFieldsProperty());
         ui_gestionnaireDecretId.disableProperty().bind(disableFieldsProperty());

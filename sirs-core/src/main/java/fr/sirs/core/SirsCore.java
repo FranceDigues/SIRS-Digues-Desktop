@@ -206,6 +206,7 @@ public class SirsCore {
     public static final String COMMENTAIRE_FIELD = "commentaire";
     public static final String GEOMETRY_FIELD = "geometry";
     public static final String GEOMETRY_MODE_FIELD = "geometryMode";
+    public static final String SELECTED_CRS_NAME = "crsName";
 
     public static final String DESIGNATION_FIELD = "designation";
     public static final String VALID_FIELD = "valid";

@@ -31,6 +31,7 @@ public class SirsFunctionFactory
 
     static {
         FUNCTIONS.put(DesordreUrgenceLayerFunction.NAME, DesordreUrgenceLayerFunction.class);
+        FUNCTIONS.put(LinearIdFilterFunction.NAME, LinearIdFilterFunction.class);
     }
 
     public SirsFunctionFactory() {

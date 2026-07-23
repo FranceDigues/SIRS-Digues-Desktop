@@ -114,7 +114,7 @@
             </TabPane>
         </Tab>
 
-        <Tab text="Voiries associés">
+        <Tab text="Voiries associées">
             <TabPane TabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
               <tabs>
                 <FXFreeTab fx:id="ui_voieAccesIds" text="%voieAccesIds"/>
@@ -131,4 +131,3 @@
   </center>
 
 </fx:root>
-

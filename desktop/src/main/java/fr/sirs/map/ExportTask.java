@@ -35,6 +35,7 @@ import org.apache.sis.util.ArraysExt;
 import org.ektorp.DocumentNotFoundException;
 import org.geotoolkit.data.*;
 import org.geotoolkit.data.bean.BeanFeature;
+import org.geotoolkit.data.csv.CSVFeatureStoreFactory;
 import org.geotoolkit.data.memory.WrapFeatureCollection;
 import org.geotoolkit.data.query.Query;
 import org.geotoolkit.data.session.Session;
@@ -54,13 +55,12 @@ import org.opengis.filter.expression.Expression;
 import org.opengis.geometry.Geometry;
 import org.opengis.util.GenericName;
 
-import java.io.File;
+import java.io.*;
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import static org.geotoolkit.feature.FeatureTypeUtilities.createSubType;
 
@@ -72,7 +72,7 @@ public class ExportTask extends Task<Boolean> {
     private final FeatureMapLayer layer;
     private final FileFeatureStoreFactory factory;
     private final File folder;
-    private final String[] columnsToFilter;
+    private final Map<String,String> columnsToFilter;
 
     // The extraFunction is used to update the created file in case some columns must be added to the file but can't via this process.
     // Example : the list of a désordre's observations is not part of its FeatureType.
@@ -96,7 +96,7 @@ public class ExportTask extends Task<Boolean> {
      * @param factory handle the data store
      * @param columnsToFilter allows to filter the features. Leave to null to keep all columns
      */
-    public ExportTask(FeatureMapLayer layer, File folder, FileFeatureStoreFactory factory, String[] columnsToFilter) {
+    public ExportTask(FeatureMapLayer layer, File folder, FileFeatureStoreFactory factory, Map<String,String> columnsToFilter) {
         this(layer, folder, factory, columnsToFilter, null, null);
     }
 
@@ -109,7 +109,7 @@ public class ExportTask extends Task<Boolean> {
      * @param extraFunction a function to add columns to the created file.
      * @param elements the list of the elements present in the file. Used for the extraFunction.
      */
-    public ExportTask(FeatureMapLayer layer, File folder, FileFeatureStoreFactory factory, String[] columnsToFilter, BiConsumer<File, List<Object>> extraFunction, final List<Object> elements) {
+    public ExportTask(FeatureMapLayer layer, File folder, FileFeatureStoreFactory factory, Map<String,String> columnsToFilter, BiConsumer<File, List<Object>> extraFunction, final List<Object> elements) {
         ArgumentChecks.ensureNonNull("layer", layer);
         updateTitle("Export de " + layer.getName());
         this.folder = folder;
@@ -196,19 +196,25 @@ public class ExportTask extends Task<Boolean> {
                 inType = filterFTByColumns(inType);
                 final String inTypeName = inType.getName().tip().toString();
                 final String filePrefix = inTypeName + extraLayerName;
-                //output file path
-                File file = new File(folder, filePrefix + factory.getFileExtensions()[0]);
-                //if file exist, add date aside it
-                if (file.exists()) {
-                    //generate name + time
-                    String name = filePrefix + " " + TemporalUtilities.toISO8601(new Date()) + factory.getFileExtensions()[0];
-                    name = name.replace(':', '_');
-                    file = new File(folder, name);
-                    //it should not exist, but delete it if there is one in case
-                    file.delete();
+                final boolean isCsvFile = factory instanceof CSVFeatureStoreFactory;
+                //output fileTmp path - If CSV file then temporary file as the header will be modified at the end
+                final String[] fileExtensions = factory.getFileExtensions();
+                final int length = fileExtensions.length;
+                if (length != 1) {
+                    if (length == 0) {
+                        throw new IllegalStateException("Factory " + factory.getClass() + " has no fileExtensions.");
+                    } else {
+                        final StringBuilder message = new StringBuilder(fileExtensions[0]);
+                        for (int i = 1; i < fileExtensions.length; i++) {
+                            message.append(", " + fileExtensions[i]);
+                        }
+                        SIRS.LOGGER.log(Level.WARNING, "Factory " + factory.getClass() + " has more than one fileExtension : " + message);
+                    }
                 }
+                final String fileExtension = fileExtensions[0];
+                File fileTmp = createFile(filePrefix, fileExtension, "_tmp");
                 //create output store
-                final FeatureStore store = factory.createDataStore(file.toURI());
+                final FeatureStore store = factory.createDataStore(fileTmp.toURI());
                 //delete feature types
                 //create output type
                 store.createFeatureType(inType.getName(), inType);
@@ -220,7 +226,31 @@ public class ExportTask extends Task<Boolean> {
                 //close store
                 store.close();
                 if (extraFunction != null && elements != null) {
-                    extraFunction.accept(file, elements);
+                    extraFunction.accept(fileTmp, elements);
+                }
+                if (isCsvFile) {
+                    // we want to override the columns header with the columns' text instead of name field
+//                    fileTmp.
+                    try (final BufferedReader br = new BufferedReader(new FileReader(fileTmp))) {
+                        //output file path
+                        File file = createFile(filePrefix, fileExtension, null);
+
+                        try (final BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+                            String line = br.readLine();
+                            // Modify header
+                            final List<String> newHeader = Arrays.stream(line.split(";"))
+                                    .map(header -> columnsToFilter.get(header.substring(0, header.indexOf("("))).replace("\n", " "))
+                                    .collect(Collectors.toList());
+                            bw.write(String.join(";", newHeader));
+
+                            // copy all remaining lines
+                            while ((line = br.readLine()) != null) {
+                                bw.newLine();
+                                bw.write(line);
+                            }
+                            fileTmp.delete();
+                        }
+                    }
                 }
             }
             if (allColsEmpty) {
@@ -236,11 +266,27 @@ public class ExportTask extends Task<Boolean> {
         return true;
     }
 
+    private File createFile(final String filePrefix, final String fileExtension, String extra) {
+        extra = extra == null ? "" : extra;
+        File file = new File(folder, filePrefix + extra + fileExtension);
+        //if fileTmp exist, add date aside it
+        if (file.exists()) {
+            //generate name + time
+            String name = filePrefix + " " + TemporalUtilities.toISO8601(new Date()) + extra + fileExtension;
+            name = name.replace(':', '_');
+            file = new File(folder, name);
+            //it should not exist, but delete it if there is one in case
+            file.delete();
+        }
+        return file;
+    }
+
     private FeatureType filterFTByColumns(final FeatureType ft) {
-        if (columnsToFilter == null) return ft;
+        if (columnsToFilter == null || columnsToFilter.isEmpty()) return ft;
         final List<GenericName> pkeys = new ArrayList<GenericName>();
 
-        for (String toKeep: columnsToFilter) {
+        final Set<String> columnsNames = columnsToFilter.keySet();
+        for (String toKeep: columnsNames) {
             PropertyDescriptor descriptor = ft.getDescriptor(toKeep);
             if (descriptor != null) pkeys.add(descriptor.getName());
         }

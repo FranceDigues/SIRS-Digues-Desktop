@@ -18,6 +18,8 @@
  */
 package fr.sirs.theme.ui;
 
+import com.drew.imaging.ImageProcessingException;
+import com.drew.metadata.MetadataException;
 import fr.sirs.SIRS;
 import fr.sirs.core.model.Photo;
 import fr.sirs.ui.Growl;
@@ -30,6 +32,10 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 
 /**
  *
@@ -61,7 +67,8 @@ public class FXPhotoPane extends FXPhotoPaneStub {
         ui_photo.setPreserveRatio(true);
         ui_chemin.textProperty().addListener((ObservableValue<? extends String> observable, String oldValue, String newValue) -> {
             if (newValue != null) {
-                ui_photo.setImage(SIRS.getOrLoadImage(ui_chemin.getURI().toString()));
+                final URI uri = ui_chemin.getURI();
+                ui_photo.setImage(SIRS.getOrLoadImage(uri.toString()));
                 ui_photo.minWidth(0);
                 ui_photo.minHeight(0);
                 Image image = ui_photo.getImage();
@@ -69,22 +76,45 @@ public class FXPhotoPane extends FXPhotoPaneStub {
                     new Growl(Growl.Type.WARNING, "Impossible de charger l'image. Veuillez vérifier le chemin d'accès.").showAndFade();
                     return;
                 }
-                isVerticalPhoto = image.getHeight() > image.getWidth();
+                double imageHeight;
+                double imageWidht;
+                try {
+                    final SIRS.ImageInformation imageInformation = SIRS.readImageInformation(new File(uri.getPath()));
+                    ui_photo.setRotate(imageInformation.rotation);
+                    imageHeight = imageInformation.height;
+                    imageWidht = imageInformation.width;
+                } catch (IOException | MetadataException | ImageProcessingException e ) {
+                    imageHeight = image.getHeight();
+                    imageWidht = image.getWidth();
+                }
+
+                isVerticalPhoto = imageHeight > imageWidht;
 
                 // Compute height when parent size or padding change.
                 ui_photo.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> {
                     double height;
                     // HACK-REDMINE-7842 : limit the image height to the max height for portrait photos.
                     // Don't apply to landscape pictures otherwise the picture box will be smaller than expected.
+                    final double rotate = ui_photo.getRotate();
+                    final Insets padding = ui_photo_stack.getPadding();
                     if (isVerticalPhoto) {
-                        height = Math.min(ui_hbox_container.getHeight(), getHeight());
+                        if (rotate == 0 || rotate == 180) {
+                            height = Math.min(ui_hbox_container.getHeight(), getHeight());
+                            if (padding != null) {
+                                height -= padding.getBottom() + padding.getTop();
+                            }
+                        } else {
+                            // Image rotated with inversion of width and height
+                            height = getWidth() - ui_scroll_pane.getWidth() - ui_hbox_container.getSpacing();
+                            if (padding != null) {
+                                height -= padding.getLeft() + padding.getRight();
+                            }
+                        }
                     } else {
                         height = ui_hbox_container.getHeight();
-                    }
-
-                    final Insets padding = ui_photo_stack.getPadding();
-                    if (padding != null) {
-                        height -= padding.getBottom() + padding.getTop();
+                        if (padding != null) {
+                            height -= padding.getBottom() + padding.getTop();
+                        }
                     }
 
                     return Math.max(0, height);
@@ -92,10 +122,20 @@ public class FXPhotoPane extends FXPhotoPaneStub {
 
                 // Compute width when parent size or padding change.
                 ui_photo.fitWidthProperty().bind(Bindings.createDoubleBinding(() -> {
-                    double width = getWidth() - ui_scroll_pane.getWidth() - ui_hbox_container.getSpacing();
+                    double width;
+                    final double rotate = ui_photo.getRotate();
                     final Insets padding = ui_photo_stack.getPadding();
-                    if (padding != null) {
-                        width -= padding.getBottom() + padding.getTop();
+                    if (rotate == 0 || rotate == 180) {
+                        width = getWidth() - ui_scroll_pane.getWidth() - ui_hbox_container.getSpacing();
+                        if (padding != null) {
+                            width -= padding.getLeft() + padding.getRight();
+                        }
+                    } else {
+                        // Image rotated with inversion of width and height
+                        width = Math.min(ui_hbox_container.getHeight(), getHeight());
+                        if (padding != null) {
+                            width -= padding.getBottom() + padding.getTop();
+                        }
                     }
                     return Math.max(0, width);
                 }, widthProperty(), ui_scroll_pane.widthProperty(), ui_hbox_container.spacingProperty()));

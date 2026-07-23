@@ -190,16 +190,11 @@ public class ObjetDependanceAhEditHandler extends AbstractNavigationHandler {
 
     @Override
     public boolean uninstall(FXMap component) {
-        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmer la fin du mode édition ? Les modifications non sauvegardées seront perdues.",
-                ButtonType.YES,ButtonType.NO);
-        if (ButtonType.YES.equals(alert.showAndWait().get())) {
-            super.uninstall(component);
-            component.removeDecoration(decorationLayer);
-            component.removeEventHandler(MouseEvent.ANY, mouseInputListener);
-            component.removeEventHandler(ScrollEvent.ANY, mouseInputListener);
-            return true;
-        }
-        return false;
+        super.uninstall(component);
+        component.removeDecoration(decorationLayer);
+        component.removeEventHandler(MouseEvent.ANY, mouseInputListener);
+        component.removeEventHandler(ScrollEvent.ANY, mouseInputListener);
+        return true;
     }
 
     /**
@@ -291,24 +286,17 @@ public class ObjetDependanceAhEditHandler extends AbstractNavigationHandler {
                         }
                         JTS.setCRS(editGeometry.geometry.get(), map.getCanvas().getObjectiveCRS2D());
                         decorationLayer.getGeometries().setAll(editGeometry.geometry.get());
-
-                        if (Point.class.isAssignableFrom(newGeomType)) {
-                            // Pour un nouveau point ajouté, on termine l'édition directement.
-                            abstractAmenagement.setGeometry(editGeometry.geometry.get());
-                            final AbstractSIRSRepository repo = Injector.getSession().getRepositoryForClass(clazz);
-                            if (abstractAmenagement.getDocumentId() != null) {
-                                repo.update(abstractAmenagement);
-                            } else {
-                                repo.add(abstractAmenagement);
-                            }
-                            // On quitte le mode d'édition.
-                            reset();
-                        }
                     } else {
                         // On réédite une géométrie existante, le double clic gauche va nous permettre d'ajouter un nouveau
                         // point à la géométrie.
+                        // Dans le cas d'un ponctuel, le simple clic gauche permet de déplacer le point.
                         final Geometry tempEditGeom = editGeometry.geometry.get();
-                        if (!Point.class.isAssignableFrom(tempEditGeom.getClass()) && e.getClickCount() >= 2) {
+                        if (Point.class.isAssignableFrom(tempEditGeom.getClass())) {
+                            final Point point = EditionHelper.createPoint(helper.toCoord(x, y));
+                            JTS.setCRS(point, map.getCanvas().getObjectiveCRS2D());
+                            editGeometry.geometry.set(point);
+                            decorationLayer.getGeometries().setAll(editGeometry.geometry.get());
+                        } else if (e.getClickCount() >= 2) {
                             final Geometry result;
                             if (tempEditGeom instanceof Polygon) {
                                 result = helper.insertNode((Polygon)editGeometry.geometry.get(), x, y);
@@ -361,6 +349,8 @@ public class ObjetDependanceAhEditHandler extends AbstractNavigationHandler {
                         } else {
                             repo.add(abstractAmenagement);
                         }
+                        // Open the sheet of the created element
+                        Injector.getSession().showEditionTab(abstractAmenagement, element -> true);
                         // On quitte le mode d'édition.
                         reset();
                     });
@@ -368,7 +358,13 @@ public class ObjetDependanceAhEditHandler extends AbstractNavigationHandler {
 
                     // action : annuler édition
                     final MenuItem cancelItem = new MenuItem("Annuler l'édition");
-                    cancelItem.setOnAction(event -> reset());
+                    cancelItem.setOnAction(event -> {
+                        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Confirmer la fin du mode édition ? Les modifications non sauvegardées seront perdues.",
+                                ButtonType.YES, ButtonType.NO);
+                        if (ButtonType.YES.equals(alert.showAndWait().get())) {
+                            reset();
+                        }
+                    });
                     popup.getItems().add(cancelItem);
 
                     // action : suppression dépendance
@@ -446,14 +442,16 @@ public class ObjetDependanceAhEditHandler extends AbstractNavigationHandler {
      * Réinitialise la carte et vide la géométrie en cours d'édition.
      */
     private void reset() {
-        newDescription = false;
-        justCreated = false;
-        decorationLayer.getGeometries().clear();
-        decorationLayer.setNodeSelection(null);
-        coords.clear();
-        editGeometry.reset();
-        abstractAmenagement = null;
-        creationDependanceAHObjectStage = null;
+        if (this.uninstall(this.map)) {
+            newDescription = false;
+            justCreated = false;
+            decorationLayer.getGeometries().clear();
+            decorationLayer.setNodeSelection(null);
+            coords.clear();
+            editGeometry.reset();
+            abstractAmenagement = null;
+            creationDependanceAHObjectStage = null;
+        }
     }
 
     private void initCreationDependanceAHObjectStage() {

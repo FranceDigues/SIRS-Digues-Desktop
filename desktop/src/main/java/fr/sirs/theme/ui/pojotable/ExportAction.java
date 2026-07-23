@@ -23,7 +23,9 @@ import fr.sirs.map.ExportTask;
 import fr.sirs.theme.ui.PojoTable;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -91,9 +93,9 @@ public class ExportAction implements EventHandler<ActionEvent> {
                             .map(b -> b.getUserData())
                             .map(map -> map.get("bean"))
                             .collect(Collectors.toList());
-                    TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory, extractVisibleColumnNames(), extraFunction, elements));
+                    TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory, extractVisibleColumnsNameText(), extraFunction, elements));
                 } else
-                    TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory, extractVisibleColumnNames()));
+                    TaskManager.INSTANCE.submit(new ExportTask(layer, folder, factory, extractVisibleColumnsNameText()));
 
             } catch (Exception ex) {
                 Dialog d = new Alert(Alert.AlertType.ERROR, "Impossible de créer le fichier CSV", ButtonType.OK);
@@ -104,22 +106,24 @@ public class ExportAction implements EventHandler<ActionEvent> {
         }
     }
 
-    protected String[] extractVisibleColumnNames() {
-        final List<String> propertyNames = new ArrayList<>();
+    protected Map<String, String> extractVisibleColumnsNameText() {
+        final Map<String, String> propertyNamesTexts = new HashMap<>();
 
-        for (final TableColumn column : extractVisibleColumnNames(currentColumns)) {
+        for (final TableColumn column : extractVisibleColumns(currentColumns)) {
             if (column.isVisible()) {
                 if (column instanceof PojoTable.PropertyColumn) {
-                    propertyNames.add(((PojoTable.PropertyColumn) column).getName());
+                    propertyNamesTexts.put(((PojoTable.PropertyColumn) column).getName(), column.getText());
                 } else if (column instanceof PojoTable.EnumColumn) {
-                    propertyNames.add(((PojoTable.EnumColumn) column).getName());
+                    propertyNamesTexts.put(((PojoTable.EnumColumn) column).getName(), column.getText());
+                } else if (column instanceof PojoTable.ObservationPropertyColumn) {
+                    propertyNamesTexts.put(((PojoTable.ObservationPropertyColumn) column).getName(), column.getText());
                 }
             }
         }
-        return propertyNames.toArray(new String[propertyNames.size()]);
+        return propertyNamesTexts;
     }
 
-    public static List<TableColumn<Element, ?>> extractVisibleColumnNames(final ObservableList<TableColumn<Element, ?>> currentColumns) {
+    public static List<TableColumn<Element, ?>> extractVisibleColumns(final ObservableList<TableColumn<Element, ?>> currentColumns) {
         final List<TableColumn<Element, ?>> propertyNames = new ArrayList<>();
 
         for (final TableColumn column : currentColumns) {

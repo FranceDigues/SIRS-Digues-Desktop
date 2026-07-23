@@ -24,7 +24,6 @@ import fr.sirs.Session;
 import fr.sirs.core.component.AbstractSIRSRepository;
 import fr.sirs.core.model.*;
 import fr.sirs.theme.ui.FXPrestationPane;
-import fr.sirs.theme.ui.PojoTableChoiceStage;
 import fr.sirs.ui.Growl;
 
 import java.util.ArrayList;
@@ -188,14 +187,16 @@ public class ElementCopier extends AbstractElementCopier{
         if (currentPojoRepo == null) {
             throw new IllegalStateException("CurrentPojoRepo must not be null when with foreignParent");
         }
-        // Si l'utilisateur est un externe, on court-circuite
-        // la copie. -> s'assurer que la copie n'est pas réalisable pour les
-        // utilisateurs externes disposant des droits sur l'élément cible.
         final Session session = Injector.getSession();
-        if (session.editionAuthorized(targetedForeignParent)) {
+
+        // Redmine 7974 - Allows externe users to copy elements. The copy must be created as "invalid"
+        final boolean isExtern = Role.EXTERN.equals(session.roleBinding().get());
+        if (isExtern || session.editionAuthorized(targetedForeignParent)) {
 
             List<AvecForeignParent> copiedPojos = new ArrayList<>();
             boolean completSuccess = true;
+
+            final String userId = session.getUtilisateur().getId();
 
             for (Element pojo : pojosToCopy) {
 
@@ -214,9 +215,9 @@ public class ElementCopier extends AbstractElementCopier{
                         prestation.setSyntheseTablePathStart(null);
                         prestation.setSyntheseTablePathEnd(null);
                     }
+
+                    setAttributes(isExtern, copiedPojo, userId, session);
                     copiedPojo.setForeignParentId(targetedForeignParent.getId());
-                    copiedPojo.setDesignation(null);
-                    session.getElementCreator().tryAutoIncrementDesignation(copiedPojo);
 
                     //CHECK BORNES TEMPORELLES Parent ET BORNES TEMPORELLLES copiedPojo
                     copiedPojos.add(copiedPojo);
@@ -258,21 +259,22 @@ public class ElementCopier extends AbstractElementCopier{
      */
     public List<? extends Element> copyPojosToContainer(Element targetedContainer, Element... pojosToCopy) {
 
-        // Si l'utilisateur est un externe, on court-circuite
-        // la copie. -> s'assurer que la copie n'est pas réalisable pour les
-        // utilisateurs externes disposant des droits sur l'élément cible.
         final Session session = Injector.getSession();
-        if (session.editionAuthorized(targetedContainer)) {
+
+        // Redmine 7974 - Allows externe users to copy elements. The copy must be created as "invalid"
+        final boolean isExtern = Role.EXTERN.equals(session.roleBinding().get());
+        if (isExtern || session.editionAuthorized(targetedContainer)) {
             boolean completSuccess = true;
 
             List<Element> copiedPojos = new ArrayList<>();
+
+            final String userId = session.getUtilisateur().getId();
 
             for (Element pojo : pojosToCopy) {
 
                 try {
                     AbstractObservation copiedPojo = ((AbstractObservation) pojo).copy();
-                    copiedPojo.setDesignation(null);
-                    session.getElementCreator().tryAutoIncrementDesignation(copiedPojo);
+                    setAttributes(isExtern, copiedPojo, userId, session);
                     copiedPojos.add(copiedPojo);
                     targetedContainer.addChild(copiedPojo);
 
@@ -319,14 +321,16 @@ public class ElementCopier extends AbstractElementCopier{
      */
     public List<RapportEtude> copyPojosToSystemeEndiguement(final Element targetedSystemeEndiguement, final Element... pojosToCopy) {
 
-        // Si l'utilisateur est un externe, on court-circuite
-        // la copie. -> s'assurer que la copie n'est pas réalisable pour les
-        // utilisateurs externes disposant des droits sur l'élément cible.
         final Session session = Injector.getSession();
-        if (session.editionAuthorized(targetedSystemeEndiguement)) {
+
+        // Redmine 7974 - Allows externe users to copy elements. The copy must be created as "invalid"
+        final boolean isExtern = Role.EXTERN.equals(session.roleBinding().get());
+        if (isExtern || session.editionAuthorized(targetedSystemeEndiguement)) {
 
             List<RapportEtude> copiedPojos = new ArrayList<>();
             boolean completSuccess = true;
+
+            final String userId = session.getUtilisateur().getId();
 
             RapportEtude copiedPojo;
             for (Element pojo : pojosToCopy) {
@@ -334,13 +338,13 @@ public class ElementCopier extends AbstractElementCopier{
                     SIRS.LOGGER.log(Level.WARNING, "Echec de la copie de l'élément :\n" + pojo.toString());
 
                 copiedPojo = (RapportEtude) pojo.copy();
+
+                setAttributes(isExtern, copiedPojo, userId, session);
+
                 copiedPojo.setSystemeEndiguementId(targetedSystemeEndiguement.getId());
-                copiedPojo.setDesignation(null);
-                session.getElementCreator().tryAutoIncrementDesignation(copiedPojo);
 
                 //CHECK BORNES TEMPORELLES Parent ET BORNES TEMPORELLLES copiedPojo
                 copiedPojos.add(copiedPojo);
-
             }
             if (currentPojoRepo == null)
                 SIRS.LOGGER.log(Level.WARNING, "Repository introuvable");
@@ -356,6 +360,30 @@ public class ElementCopier extends AbstractElementCopier{
             return null;
         }
 
+    }
+
+    /**
+     * Method to set the global attributes to the copy.
+     * If the connected user has an Extern role, then the copy must be invalid.
+     *
+     * @param isExtern whether the connected user has Extern role.
+     * @param copiedPojo the copy of the selected pojo.
+     * @param userId the id of the connected user.
+     * @param session the session :D
+     */
+    public static void setAttributes(boolean isExtern, Element copiedPojo, String userId, Session session) {
+        if (isExtern) {
+            // Redmine 7974
+            copiedPojo.setValid(false);
+        }
+        copiedPojo.setDesignation(null);
+
+        // Otherwise the copied object has the same creator as the original object and thus
+        // the info of the user making the copy is lost.
+        copiedPojo.setAuthor(userId);
+        copiedPojo.setLastUpdateAuthor(null);
+
+        session.getElementCreator().tryAutoIncrementDesignation(copiedPojo);
     }
 
     //Getters

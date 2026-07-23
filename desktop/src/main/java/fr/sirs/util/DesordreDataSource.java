@@ -46,7 +46,6 @@ import static fr.sirs.util.JRDomWriterDesordreSheet.VOIRIE_TABLE_DATA_SOURCE;
 import static fr.sirs.util.JRDomWriterDesordreSheet.IMAGE_DATA_SOURCE;
 import java.awt.Dimension;
 import java.awt.Image;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -54,6 +53,7 @@ import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
+import org.geotoolkit.map.FeatureMapLayer;
 
 /**
  * Source de données de remplissage des fiches de désordre.
@@ -65,20 +65,25 @@ public class DesordreDataSource extends ObjectDataSource<Desordre> {
     private static Logger LOGGER = Logger.getLogger(DesordreDataSource.class.getName());
 
     private final boolean printLocationInsert;
+    private final FeatureMapLayer selectionOverlayLayer;
 
-    public DesordreDataSource(Iterable<Desordre> iterable, final boolean printLocationInsert) {
+    public DesordreDataSource(Iterable<Desordre> iterable, final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer) {
         super(iterable);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
-    public DesordreDataSource(final Iterable<Desordre> iterable, final Previews previewLabelRepository, final boolean printLocationInsert){
+    public DesordreDataSource(final Iterable<Desordre> iterable, final Previews previewLabelRepository, final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer){
         super(iterable, previewLabelRepository);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
-    public DesordreDataSource(final Iterable<Desordre> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter, final boolean printLocationInsert){
+    public DesordreDataSource(final Iterable<Desordre> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter,
+                              final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer){
         super(iterable, previewLabelRepository, stringConverter);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
     @Override
@@ -158,7 +163,7 @@ public class DesordreDataSource extends ObjectDataSource<Desordre> {
             return new ObjectDataSource<>(voirieList, previewRepository, stringConverter);
         } else if (IMAGE_DATA_SOURCE.equals(name)) {
             if (this.printLocationInsert) {
-                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1200));
+                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1200), selectionOverlayLayer);
                 if (img != null) {
                     return img;
                 } else {

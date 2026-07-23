@@ -24,6 +24,7 @@ import fr.sirs.Session;
 import fr.sirs.core.component.AbstractSIRSRepository;
 import fr.sirs.core.model.*;
 import fr.sirs.theme.ui.pojotable.AbstractElementCopier;
+import fr.sirs.theme.ui.pojotable.ElementCopier;
 import fr.sirs.ui.Growl;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableList;
@@ -96,14 +97,16 @@ public class ObjetDependanceAhElementCopier extends AbstractElementCopier {
     @Override
     public List<? extends Element> copyPojosTo(final Element targetedDependanceOrAh, final Element... pojosToCopy) {
 
-        // Si l'utilisateur est un externe, on court-circuite
-        // la copie. -> s'assurer que la copie n'est pas réalisable pour les
-        // utilisateurs externes disposant des droits sur l'élément cible.
         final Session session = Injector.getSession();
-        if (session.editionAuthorized(targetedDependanceOrAh)) {
+
+        // Redmine 7974 - Allows externe users to copy elements. The copy must be created as "invalid"
+        final boolean isExtern = Role.EXTERN.equals(session.roleBinding().get());
+        if (isExtern || session.editionAuthorized(targetedDependanceOrAh)) {
 
             List<ObjetDependanceAh> copiedPojos = new ArrayList<>();
             boolean completSuccess = true;
+
+            final String userId = session.getUtilisateur().getId();
 
             for (Element pojo : pojosToCopy) {
 
@@ -122,8 +125,7 @@ public class ObjetDependanceAhElementCopier extends AbstractElementCopier {
                         copiedPojo.setAmenagementHydrauliqueId(null);
                     }
 
-                    copiedPojo.setDesignation(null);
-                    session.getElementCreator().tryAutoIncrementDesignation(copiedPojo);
+                    ElementCopier.setAttributes(isExtern, copiedPojo, userId, session);
 
                     copiedPojos.add(copiedPojo);
 

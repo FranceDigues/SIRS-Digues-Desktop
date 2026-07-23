@@ -13,6 +13,7 @@ import fr.sirs.util.FXFileTextField;
 import fr.sirs.util.FXFileWithoutRefTextField;
 import fr.sirs.util.FXComponentField;
 import fr.sirs.util.javafx.FloatSpinnerValueFactory;
+import fr.sirs.util.javafx.SpinnerUtils;
 import fr.sirs.util.StreamingIterable;
 import fr.sirs.util.FXFreeTab;
 import fr.sirs.util.DatePickerConverter;
@@ -29,6 +30,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 
+import org.ektorp.DocumentNotFoundException;
 import org.geotoolkit.gui.javafx.util.FXDateField;
 import org.geotoolkit.util.collection.CloseableIterator;
 
@@ -344,6 +346,9 @@ else if (helper.isParcelleVegetation()){
         ui_<%= eAtt.getName()  %>.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, Integer.MAX_VALUE));
 <%
                     }
+%>
+        SpinnerUtils.commitOnFocusLost(ui_<%= eAtt.getName()  %>);
+<%
                 } else if ("DatePicker".equals(attEditorName)) {
 %>
         DatePickerConverter.register(ui_<%= eAtt.getName()  %>);
@@ -714,7 +719,12 @@ else if (helper.isParcelleVegetation()){
         un tronçon de berge si on était sur un tronçon de berge etc.*/
 %>
             {
-                final Preview linearPreview = newElement.get<%= Helper.ucFirst(eRef.getName())  %>() == null ? null : previewRepository.get(newElement.get<%= Helper.ucFirst(eRef.getName())  %>());
+                Preview linearPreview = null;
+                try {
+                    linearPreview = newElement.get<%= Helper.ucFirst(eRef.getName())  %>() == null ? null : previewRepository.get(newElement.get<%= Helper.ucFirst(eRef.getName())  %>());
+                } catch (DocumentNotFoundException e) {
+                    SIRS.LOGGER.log(Level.WARNING, "<%= helper.getClassName(eRef) %> not found with id " + newElement.get<%= Helper.ucFirst(eRef.getName())  %>());
+                }
                 // HACK-REDMINE-4408 : hide archived troncons from selection lists
                 SIRS.initCombo(ui_<%= eRef.getName()  %>, SIRS.observableList(
                     previewRepository.getByClass(linearPreview == null ? <%= helper.getClassName(eRef) %>.class : linearPreview.getJavaClassOr(<%= helper.getClassName(eRef) %>.class))).sorted(),

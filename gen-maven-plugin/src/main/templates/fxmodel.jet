@@ -750,16 +750,14 @@ accessor methods specified by implemented interfaces.
     
     @Override
     public <%= helper.getClassName() %> copy() {
-    
         <%= helper.getClassName() %> <%= helper.getInstanceName() %> = new <%= helper.getClassName() %>();
-    
-<%    
+<%
         // Copy each attribute
-        for(final EAttribute att : helper.getEAllAttributes() ) { 
+        for(final EAttribute att : helper.getEAllAttributes() ) {
 %>
         <%= helper.getInstanceName() %>.<%= helper.setter(att) %>(<%= helper.getter(att) %>());
-<%    
-        } 
+<%
+        }
 
         // Copy each reference
         for(EReference att : helper.getEAllReferences() ){
@@ -767,59 +765,142 @@ accessor methods specified by implemented interfaces.
              * If we've got a reference to a parent document, we skip it because we will handle it explicitly using setParent() methods.
              */
             final EReference oppositeRef = att.getEOpposite();
-                if (oppositeRef != null && oppositeRef.isContainment()) {
-                    continue;
+            if (oppositeRef != null && oppositeRef.isContainment()) {
+                continue;
             }
-            if( att.isContainment() ) { 
+            if( att.isContainment() ) {
                 if( att.isMany() ) {
 %>
-    
-    {
-        ObservableList<<%= helper.getClassName(att) %>> list = FXCollections.observableArrayList();
-        for(<%= helper.getClassName(att) %> element: <%= helper.getter(att) %>()){
-            list.add(element.copy());
+
+        {
+            ObservableList<<%= helper.getClassName(att) %>> list = FXCollections.observableArrayList();
+            for(<%= helper.getClassName(att) %> element: <%= helper.getter(att) %>()){
+                list.add(element.copy());
+            }
+            <%= helper.getInstanceName() %>.<%= helper.setter(att) %>(list);
         }
-        <%= helper.getInstanceName() %>.<%= helper.setter(att) %>(list);
-    }
-<%      
-                } else { 
+<%
+                } else {
 %>
         <%= helper.getInstanceName() %>.<%= helper.setter(att) %>(<%= helper.getter(att) %>()==null ? null : <%= helper.getter(att) %>().copy());
-<%      
+<%
                 }
             } else {
-                if( att.isMany() ) { 
-%>
-    
-    {
-        List<String> list = new ArrayList<>();
-        for(String ref: <%= helper.getter(att) %>()){
-            list.add(ref);
-        }
-        <%= helper.getInstanceName() %>.<%= helper.setter(att) %>(list);
-    }
-<%      
-                } else { 
-%>        
-        <%= helper.getInstanceName() %>.<%= helper.setter(att) %>(<%= helper.getter(att) %>());
-<%        
-                } 
-            } 
-        } 
+                if( att.isMany() ) {
 %>
 
+        {
+            List<String> list = new ArrayList<>();
+            for(String ref: <%= helper.getter(att) %>()){
+                list.add(ref);
+            }
+            <%= helper.getInstanceName() %>.<%= helper.setter(att) %>(list);
+        }
+<%
+                } else {
+%>
+        <%= helper.getInstanceName() %>.<%= helper.setter(att) %>(<%= helper.getter(att) %>());
+<%
+                }
+            }
+        }
+%>
         return <%= helper.getInstanceName() %>;
     }
-<% 
+<%
+
+    /*
+    Method to update all ref ids with new ones - used for fusion of troncons
+    */
+        if (helper.isPositionable()) {
+%>
+
+    /**
+     * Method to update the n-relation between positionables after a split/fusion of tronçon(s)
+     *
+     * @param mapOldandNewIds map containing the old id and new id of a positionable after a split/fusion of tronçon(s)
+     * @return The map containing the old ids and their respective classes that were not found in the database,
+     * and thus not updated in the Positionable.
+     */
+    @Override
+    public Map<String, String> updatePositionableRefs(final Map<String, String> mapOldandNewIds) {
+        final Map<String, String> idsNotfound = new HashMap<>();
+<%
+            // Copy each reference
+            for (EReference att : helper.getEAllReferences()) {
+                /*
+                 * If we've got a reference to a parent document, we skip it because we will handle it explicitly using setParent() methods.
+                 */
+                final EReference oppositeRef = att.getEOpposite();
+                if (oppositeRef != null && oppositeRef.isContainment()) {
+                    continue;
+                }
+
+                if ( !att.isContainment() && helper.isPositionable(att.getEReferenceType())) {
+                    if( att.isMany() ) {
+%>
+        {
+            final List<String> oldIds = <%= helper.getter(att) %>();
+            if (oldIds != null && !oldIds.isEmpty()) {
+                final List<String> newIds = new ArrayList<>();
+                oldIds.forEach(id -> {
+                    final String newId = mapOldandNewIds.get(id);
+                    if (newId != null) {
+                        newIds.add(newId);
+                    } else {
+                    idsNotfound.put(id, "<%= helper.getClassName(att) %>");
+                    }
+                });
+                <%= helper.setter(att) %>(newIds);
+            }
+        }
+
+<%
+                  } else {
+%>
+        {
+            final String oldId = <%= helper.getter(att) %>();
+            if (oldId != null) {
+                final String newId = mapOldandNewIds.get(oldId);
+                if (newId != null) {
+                   <%= helper.setter(att) %>(newId);
+                } else {
+                    idsNotfound.put(id, "<%= helper.getClassName(att) %>");
+                }
+            }
+        }
+<%
+                    }
+                }
+            }
+%>
+        return idsNotfound;
+    }
+
+<%
+        }
     }
     /*
     If the class is not concrete but not an interface, declare abstract method.
     */
-    else if (!helper.isInterface()) { 
+    else if (!helper.isInterface()) {
+%>
+
+    @Override
+    public abstract <%= helper.getClassName() %> copy();
+
+<%
+        if (helper.isPositionable() || Helper.POSITIONABLE_CLASS_NAME.equals(helper.getClassName()) ) {
+            if (helper.isPositionable()) {
 %>
     @Override
-    public abstract <%= helper.getClassName() %> copy(); 
-<% 
+<%
+            }
+%>
+    public abstract Map<String, String> updatePositionableRefs(final Map<String, String> mapOldandNewIds);
+
+<%
+        }
     } 
 
     if(!helper.isAbstract() && helper.generateEquals()) { 

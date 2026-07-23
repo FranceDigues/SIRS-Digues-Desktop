@@ -52,10 +52,14 @@ public class ContactsTheme extends Theme {
         final PojoTable tableContact = new PojoTable(session.getRepositoryForClass(Contact.class),"Personnes physiques", null);
         final PojoTable tableOrganisme = new PojoTable(session.getRepositoryForClass(Organisme.class),"Organismes", null);
 
+        // HACK - REDMINE 8104 :
+        // Tabs should not be closeable to avoid loosing them if closed.
         final Tab tabIntervenant = new Tab("Personnes physiques");
         tabIntervenant.setContent(createTabContent(tableContact));
+        tabIntervenant.setClosable(false);
         final Tab tabOrganisme = new Tab("Organismes");
         tabOrganisme.setContent(createTabContent(tableOrganisme));
+        tabOrganisme.setClosable(false);
 
         tabPane.getTabs().add(tabIntervenant);
         tabPane.getTabs().add(tabOrganisme);

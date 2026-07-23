@@ -69,6 +69,12 @@ public class MapItemViewRealPositionColumn extends TreeTableColumn <MapItem, Boo
 
     private final static Set<String> LAYERS_IN_REALPOSITION = new HashSet<>();
 
+    /**
+     * Key used to store the original style in the MapLayer's user properties
+     * before switching to real position view.
+     */
+    private static final String ORIGINAL_STYLE_KEY = "sirs.original.style";
+
 
     public MapItemViewRealPositionColumn() {
         setEditable(true);
@@ -182,24 +188,27 @@ public class MapItemViewRealPositionColumn extends TreeTableColumn <MapItem, Boo
             }
 
             if (visible) {
+                // Store the current style before switching to real position view
+                maplayer.getUserProperties().put(ORIGINAL_STYLE_KEY, maplayer.getStyle());
 
                 LAYERS_IN_REALPOSITION.add(maplayer.getName());
 
                 final Color color = tryFindColorFromPrevious(maplayer.getStyle());
 
-                /* Following commented code tried to only modificate the rules
-                     * associated with the real positions. It worked for addition of
-                     * the rule but not for the removal. Then we choose to re-create
-                     * the full Style.
-                 */
                 maplayer.setStyle(CorePlugin.createRealPositionStyle(color));
             } else {
+                // Try to restore the original style if available
+                final Object originalStyle = maplayer.getUserProperties().remove(ORIGINAL_STYLE_KEY);
 
-                final Color color = tryFindColorFromPrevious(maplayer.getStyle());
-                maplayer.setStyle(CorePlugin.createDefaultStyle(color));
+                if (originalStyle instanceof org.geotoolkit.style.MutableStyle) {
+                    maplayer.setStyle((org.geotoolkit.style.MutableStyle) originalStyle);
+                } else {
+                    // Fallback to creating a default style if no original was stored
+                    final Color color = tryFindColorFromPrevious(maplayer.getStyle());
+                    maplayer.setStyle(CorePlugin.createDefaultStyle(color));
+                }
 
                 LAYERS_IN_REALPOSITION.remove(maplayer.getName());
-
             }
 
             maplayer.setSelectionStyle(CorePlugin.createDefaultSelectionStyle(visible));

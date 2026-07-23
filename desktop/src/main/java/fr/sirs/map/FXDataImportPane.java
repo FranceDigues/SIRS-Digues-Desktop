@@ -255,8 +255,22 @@ public class FXDataImportPane extends BorderPane {
     }
 
     protected void updateFactoryForm(ObservableValue observable, Object oldValue, Object newValue) {
-        if (newValue instanceof DataStoreFactory) {
-            ParameterValueGroup factoryParameters = ((DataStoreFactory)newValue).getParametersDescriptor().createValue();
+        forceRecreateParameters(newValue);
+    }
+
+    /**
+     * Hack to force reset the parameter object.
+     * Avoid having same parameter object in all layers added on a same session leading to layer incoherence everytime the parameter's url changes,
+     * and thus to corrupted context carto with wrong value in field <ns4:Parameter key="url" type="java.net.URL"/>
+     *
+     * @param selectedItem can be null. In this case, the value will be taken from the uiFactoryList selectedItem.
+     */
+    protected void forceRecreateParameters(Object selectedItem) {
+        if (selectedItem == null) {
+            selectedItem = uiFactoryList.getSelectionModel().getSelectedItem();
+        }
+        if (selectedItem instanceof DataStoreFactory) {
+            ParameterValueGroup factoryParameters = ((DataStoreFactory) selectedItem).getParametersDescriptor().createValue();
             parameterEditor.inputGroup.set(factoryParameters);
         }
     }

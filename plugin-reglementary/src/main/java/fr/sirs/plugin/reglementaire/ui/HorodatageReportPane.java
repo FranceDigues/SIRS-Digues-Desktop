@@ -189,6 +189,14 @@ public class HorodatageReportPane extends BorderPane {
                         setText(converter.toString(item));
                     }
                 });
+                // Comparator to sort by the displayed text (designation + libelle)
+                column.setComparator((p1, p2) -> {
+                    final String s1 = converter.toString(p1);
+                    final String s2 = converter.toString(p2);
+                    if (s1 == null) return (s2 == null) ? 0 : -1;
+                    if (s2 == null) return 1;
+                    return s1.compareToIgnoreCase(s2);
+                });
             } else if (column.equals(ui_troncon)) {
                 column.setCellValueFactory((Callback) param -> {
                     final Object item = ((TableColumn.CellDataFeatures)param).getValue();
@@ -215,6 +223,14 @@ public class HorodatageReportPane extends BorderPane {
                         if ("".equals(text)) text = item;
                         setText(text);
                     }
+                });
+                // Comparator to sort by the displayed TronconDigue libelle
+                column.setComparator((id1, id2) -> {
+                    String libelle1 = getTronconLibelle((String) id1);
+                    String libelle2 = getTronconLibelle((String) id2);
+                    if (libelle1 == null) return (libelle2 == null) ? 0 : -1;
+                    if (libelle2 == null) return 1;
+                    return libelle1.compareToIgnoreCase(libelle2);
                 });
             } else if (column.equals(ui_type)) {
                 column.setCellValueFactory((Callback) param -> {
@@ -589,6 +605,25 @@ public class HorodatageReportPane extends BorderPane {
         SIRS.openFile(output);
         // Refresh the table to update timestamp status.
         refresh();
+    }
+
+    /**
+     * Helper method to get the libelle of a TronconDigue from its ID.
+     *
+     * @param tronconId the ID of the TronconDigue
+     * @return the libelle if found, the ID as fallback, or null if the ID is null
+     */
+    private static String getTronconLibelle(final String tronconId) {
+        if (tronconId == null) return null;
+        try {
+            final TronconDigue troncon = Injector.getBean(TronconDigueRepository.class).get(tronconId);
+            if (troncon != null && troncon.getLibelle() != null && !troncon.getLibelle().isEmpty()) {
+                return troncon.getLibelle();
+            }
+        } catch (DocumentNotFoundException e) {
+            SIRS.LOGGER.warning("Error while getting TronconDigue with id: " + tronconId);
+        }
+        return tronconId;
     }
 
     public void resetPane() {

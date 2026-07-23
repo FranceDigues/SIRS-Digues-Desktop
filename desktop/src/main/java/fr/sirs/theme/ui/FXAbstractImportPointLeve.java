@@ -59,7 +59,7 @@ public abstract class FXAbstractImportPointLeve<T extends PointZ> extends FXAbst
     }
 
     @Override
-    protected void saveFieldValue() {
+    public void saveFieldValue() {
         super.saveFieldValue();
         savePreference(ATT_Z_KEY, stringConverter.toString(uiAttZ.getSelectionModel().getSelectedItem()));
         savePreference(ATT_DESIGNATION_KEY, stringConverter.toString(uiAttDesignation.getSelectionModel().getSelectedItem()));

@@ -32,12 +32,14 @@ import org.geotoolkit.data.query.QueryBuilder;
 import org.geotoolkit.display2d.GO2Utilities;
 import org.geotoolkit.feature.type.GeometryDescriptor;
 import org.geotoolkit.filter.DefaultPropertyName;
+import org.geotoolkit.data.FeatureCollection;
 import org.geotoolkit.map.*;
 import org.geotoolkit.feature.type.FeatureType;
 import org.geotoolkit.style.DefaultFont;
 import org.geotoolkit.style.MutableFeatureTypeStyle;
 import org.geotoolkit.style.MutableStyle;
 import org.geotoolkit.style.MutableStyleFactory;
+import org.geotoolkit.style.MutableRule;
 import org.geotoolkit.util.NamesExt;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
@@ -109,7 +111,7 @@ public class LocationInsertUtilities {
         final Map<MapLayer, MutableStyle> backUpStyles = new HashMap<>();
 
         // CoverageMapLayer must not be modified during printing.
-        layers.stream().filter(l -> l.isVisible() && l instanceof FeatureMapLayer).forEach(l ->
+        layers.stream().filter(l -> l instanceof FeatureMapLayer && l.isVisible()).forEach(l ->
             backUpStyles.put(l, modifyLayerSymbolsSizeAndGetBackUpStyle(l, multiplier, false)));
         return backUpStyles;
     }
@@ -140,11 +142,12 @@ public class LocationInsertUtilities {
             for (final FeatureTypeStyle ftStyle : currentStyle.featureTypeStyles()) {
                 if (ftStyle != null && ftStyle.rules() != null && !ftStyle.rules().isEmpty()) {
                     for (int ri = 0; ri < ftStyle.rules().size(); ri++) {
-                        final List<? extends Symbolizer> rSym = ftStyle.rules().get(ri).symbolizers();
+                        final Rule rulei = ftStyle.rules().get(ri);
+                        final List<? extends Symbolizer> rSym = rulei.symbolizers();
                         if (rSym != null && !rSym.isEmpty()) {
                             finalSym = new ArrayList<>();
-                            for (int i = 0; i < rSym.size(); i++) {
-                                sym = rSym.get(i);
+                            for (Symbolizer symbolizer : rSym) {
+                                sym = symbolizer;
                                 // Allows to hide the non-real position that is automatically highlighted
                                 // when the element is selected even though the real position option is at true.
                                 if (selectionStyle && sym.getGeometry() == null
@@ -154,33 +157,35 @@ public class LocationInsertUtilities {
                                 if (sym instanceof PointSymbolizer) {
                                     styleModified = true;
                                     finalSym.add(increasePointSymbolizerSize((PointSymbolizer) sym, multiplier));
-                                }
-                                else if (sym instanceof LineSymbolizer) {
+                                } else if (sym instanceof LineSymbolizer) {
                                     styleModified = true;
                                     finalSym.add(increaseLineSymbolizerSize((LineSymbolizer) sym, multiplier));
-                               } else if (sym instanceof TextSymbolizer) {
+                                } else if (sym instanceof TextSymbolizer) {
                                     styleModified = true;
                                     // increase multiplier for text symbolizer to let it be readable
                                     finalSym.add(increaseTextSymbolizerSize((TextSymbolizer) sym, multiplier * 1.5));
-                               } else {
+                                } else {
                                     // we only want the log for debugging purpose
                                     LOG.log(Level.FINER, "This type of Symbolizer is not modified : " + sym.getClass().getSimpleName());
                                 }
                             }
-                            newFts.rules().add(SF.rule(finalSym.toArray(new Symbolizer[finalSym.size()])));
+                            final MutableRule rule = SF.rule(finalSym.toArray(new Symbolizer[finalSym.size()]));
+                            rule.setFilter(rulei.getFilter());
+                            newFts.rules().add(rule);
                         }
                     }
                 }
             }
         }
-        final MutableStyle style = SF.style();
-        style.featureTypeStyles().add(newFts);
 
-        if (selectionStyle) layer.setSelectionStyle(style);
-        else layer.setStyle(style);
-
-        // if the layer's style has not been modified, it's removed from the returned Map
         if (styleModified) {
+            final MutableStyle style = SF.style();
+            style.featureTypeStyles().add(newFts);
+
+            if (selectionStyle) layer.setSelectionStyle(style);
+            else layer.setStyle(style);
+
+            // if the layer's style has not been modified, it's removed from the returned Map
             return backupStyle;
         } else
             return null;
@@ -368,5 +373,67 @@ public class LocationInsertUtilities {
                 if (toRestore != null) ((FeatureMapLayer) layer).setQuery(toRestore);
             }
         }
+    }
+
+    /**
+     *  Creates a selection overlay layer that renders the selected element on top of all other layers.
+     *  This ensures that the selected item is always visible, even if it would normally be rendered
+     *  below other features in the same layer.
+     * @param e                 the element used to create the selection layer
+     * @param multiplier        how much the symbols size should be modified by
+     * @return the created selection overlay layer
+     */
+    protected static FeatureMapLayer createSelectionOverlayLayer(final Element e, final double multiplier) {
+        ArgumentChecks.ensureNonNull("Element", e);
+
+        final MapLayer originalLayer = CorePlugin.getMapLayerForElement(e);
+        if (!(originalLayer instanceof FeatureMapLayer)) {
+            LOG.log(Level.WARNING, "Cannot create selection overlay: original layer is not a FeatureMapLayer");
+            return null;
+        }
+
+        final FeatureMapLayer fml = (FeatureMapLayer) originalLayer;
+        final FeatureCollection originalCollection = fml.getCollection();
+
+        // Create new style with no rule => the originalLayer will be used for the style.
+        final MutableFeatureTypeStyle newFts = SF.featureTypeStyle();
+        final MutableStyle style = SF.style();
+        style.featureTypeStyles().add(newFts);
+
+        // Create overlay layer with the created style and the original layer's collection.
+        final FeatureMapLayer overlayLayer = MapBuilder.createFeatureLayer(originalCollection, style);
+        // Copy selection style from original
+        overlayLayer.setSelectionStyle(fml.getSelectionStyle());
+        // Modify selectionStyle to increase its visibility
+        modifyLayerSymbolsSizeAndGetBackUpStyle(overlayLayer, multiplier, true);
+
+        overlayLayer.setName("Selection Overlay");
+        overlayLayer.setVisible(true);
+        overlayLayer.setUserProperty(Session.FLAG_SIRSLAYER, Boolean.TRUE);
+
+        // Add the overlay layer at the top of the map context
+        final MapContext context = Injector.getSession().getMapContext();
+        final List<MapLayer> layers = context.layers();
+        layers.add(layers.size(), overlayLayer);
+
+        LOG.log(Level.FINE, "Created selection overlay layer for class: {0}", e.getClass().getSimpleName());
+
+        return overlayLayer;
+    }
+
+    /**
+     * Removes the selection overlay layer from the map context.
+     *
+     * @param overlayLayer the overlay layer to remove
+     */
+    protected static void removeSelectionOverlayLayer(final FeatureMapLayer overlayLayer) {
+        if (overlayLayer == null) {
+            return;
+        }
+
+        final MapContext context = Injector.getSession().getMapContext();
+        context.layers().remove(overlayLayer);
+
+        LOG.log(Level.FINE, "Removed selection overlay layer");
     }
 }

@@ -18,20 +18,13 @@
  */
 package fr.sirs.theme.ui;
 
-import fr.sirs.Injector;
-import fr.sirs.core.TronconUtils;
-import fr.sirs.core.component.SystemeReperageRepository;
-import fr.sirs.core.model.BorneDigue;
 import fr.sirs.core.model.GeometryType;
 import fr.sirs.core.model.Positionable;
 import fr.sirs.core.model.PositionableVegetation;
-import fr.sirs.core.model.SystemeReperage;
-import fr.sirs.core.model.TronconDigue;
 import fr.sirs.core.model.ZoneVegetation;
 import fr.sirs.plugin.vegetation.PluginVegetation;
-import fr.sirs.util.ConvertPositionableCoordinates;
-import java.util.List;
-import java.util.Map;
+
+import fr.sirs.util.javafx.SpinnerUtils;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -86,6 +79,11 @@ public class FXPositionableLinearAreaMode extends FXPositionableAbstractLinearMo
         uiStartFar.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE, 0,1));
         uiEndNear.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE, 0,1));
         uiEndFar.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0, Double.MAX_VALUE, 0,1));
+
+        SpinnerUtils.commitOnFocusLost(uiStartNear);
+        SpinnerUtils.commitOnFocusLost(uiStartFar);
+        SpinnerUtils.commitOnFocusLost(uiEndNear);
+        SpinnerUtils.commitOnFocusLost(uiEndFar);
 
         final ChangeListener chgListener = (ObservableValue observable, Object oldValue, Object newValue) -> coordChange(false);
         uiStartNear.valueProperty().addListener(chgListener);

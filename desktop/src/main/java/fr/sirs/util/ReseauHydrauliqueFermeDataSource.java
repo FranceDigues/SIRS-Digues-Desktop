@@ -52,6 +52,7 @@ import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
+import org.geotoolkit.map.FeatureMapLayer;
 
 /**
  * Source de données de remplissage des fiches de réseaux hydrauliques fermés.
@@ -63,6 +64,7 @@ public class ReseauHydrauliqueFermeDataSource extends ObjectDataSource<ReseauHyd
     private static Logger LOGGER = Logger.getLogger(ReseauHydrauliqueFermeDataSource.class.getName());
 
     private final boolean printLocationInsert;
+    private final FeatureMapLayer selectionOverlayLayer;
 
     /**
      * Groupe par désignation de désordre et classe par date décroissante à l'intérieur de chaque groupe.
@@ -84,19 +86,23 @@ public class ReseauHydrauliqueFermeDataSource extends ObjectDataSource<ReseauHyd
         }
     };
 
-    public ReseauHydrauliqueFermeDataSource(Iterable<ReseauHydrauliqueFerme> iterable, final boolean printLocationInsert) {
+    public ReseauHydrauliqueFermeDataSource(Iterable<ReseauHydrauliqueFerme> iterable, final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer) {
         super(iterable);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
-    public ReseauHydrauliqueFermeDataSource(final Iterable<ReseauHydrauliqueFerme> iterable, final Previews previewLabelRepository, final boolean printLocationInsert){
+    public ReseauHydrauliqueFermeDataSource(final Iterable<ReseauHydrauliqueFerme> iterable, final Previews previewLabelRepository, final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer){
         super(iterable, previewLabelRepository);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
-    public ReseauHydrauliqueFermeDataSource(final Iterable<ReseauHydrauliqueFerme> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter, final boolean printLocationInsert){
+    public ReseauHydrauliqueFermeDataSource(final Iterable<ReseauHydrauliqueFerme> iterable, final Previews previewLabelRepository, final SirsStringConverter stringConverter,
+                                            final boolean printLocationInsert, final FeatureMapLayer selectionOverlayLayer){
         super(iterable, previewLabelRepository, stringConverter);
         this.printLocationInsert = printLocationInsert;
+        this.selectionOverlayLayer = selectionOverlayLayer;
     }
 
     @Override
@@ -162,7 +168,7 @@ public class ReseauHydrauliqueFermeDataSource extends ObjectDataSource<ReseauHyd
             return new ObjectDataSource<>(desordreRows, previewRepository, stringConverter);
         } else if (IMAGE_DATA_SOURCE.equals(name)) {
             if (this.printLocationInsert) {
-                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1080));
+                final Image img = CorePlugin.takePictureOfElement(currentObject, new Dimension(1750, 1080), selectionOverlayLayer);
                 if (img != null) {
                     return img;
                 } else {

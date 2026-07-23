@@ -73,7 +73,6 @@ public class FXImportDZ extends FXAbstractImportPointLeve<PointDZ> {
         uiAttD.setConverter(stringConverter);
         uiCRS.setDisable(true);
         this.initFieldValue();
-        this.getScene().getWindow().setOnCloseRequest(ev -> this.saveFieldValue());
     }
 
     private void initFieldValue() {
@@ -178,7 +177,7 @@ public class FXImportDZ extends FXAbstractImportPointLeve<PointDZ> {
     }
 
     @Override
-    protected void saveFieldValue() {
+    public void saveFieldValue() {
         super.saveFieldValue();
         savePreference(ATT_D_KEY, stringConverter.toString(uiAttD.getSelectionModel().getSelectedItem()));
     }

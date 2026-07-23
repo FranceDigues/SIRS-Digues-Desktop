@@ -19,6 +19,7 @@
 package fr.sirs.ui.calendar;
 
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
@@ -161,14 +162,17 @@ final class MonthView extends DatePane {
             // iterate through the columns
             for (int colIndex = 0; colIndex < numberOfDaysPerWeek; colIndex++) {
                 final GridPane grid = new GridPane();
-                grid.setMaxWidth(Double.MAX_VALUE);
-                grid.setMaxHeight(Double.MAX_VALUE);
                 setVgrow(grid, Priority.ALWAYS);
                 setHgrow(grid, Priority.ALWAYS);
                 
                 // Prepare buttons style
                 grid.setMinSize(0, 0);
-                grid.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+                grid.setMaxWidth(Double.MAX_VALUE);
+                // HACK -redmine 7611 : Allow to get even row height even
+                // when many events are on a date.
+                // The scrollPane contained in the grid will allow to see all events.
+                grid.maxHeightProperty().bind(this.heightProperty().divide(numberOfRows));
+
                 grid.getStyleClass().add(CSS_CALENDAR_DAY);
                 final ColumnConstraints eventColCstr = new ColumnConstraints(0, USE_COMPUTED_SIZE, Double.MAX_VALUE, Priority.ALWAYS, HPos.LEFT, true);
                 final ColumnConstraints labelColCstr = new ColumnConstraints(USE_PREF_SIZE, USE_COMPUTED_SIZE, Double.MAX_VALUE, Priority.ALWAYS, HPos.RIGHT, true);
@@ -290,8 +294,7 @@ final class MonthView extends DatePane {
                     eventsBox.getStyleClass().add(CSS_CALENDAR_DAY_HAS_EVENTS);
                     eventsBox.setFillWidth(true);
 
-                    for (int j=0; j<eventsForDate.size(); j++) {
-                        final CalendarEvent calendarEvent = eventsForDate.get(j);
+                    for (final CalendarEvent calendarEvent : eventsForDate) {
                         final Button control = new Button();
                         if (calendarEvent.getImage() != null) {
                             final ImageView imgView = new ImageView(calendarEvent.getImage());

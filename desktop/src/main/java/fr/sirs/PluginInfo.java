@@ -58,7 +58,7 @@ public class PluginInfo {
     private final StringProperty description = new SimpleStringProperty();
     private final StringProperty downloadURL = new SimpleStringProperty();
     private final IntegerProperty versionMajor = new SimpleIntegerProperty(2);
-    private final IntegerProperty versionMinor = new SimpleIntegerProperty(51);
+    private final IntegerProperty versionMinor = new SimpleIntegerProperty(55);
     private final IntegerProperty appVersionMin = new SimpleIntegerProperty(0);
     private final IntegerProperty appVersionMax = new SimpleIntegerProperty(0);
 

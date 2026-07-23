@@ -68,7 +68,12 @@ public class ImportAction implements EventHandler<ActionEvent> {
        stage.setScene(new Scene(bp));
        stage.setResizable(true);
        stage.setTitle(title);
-       stage.setOnCloseRequest(event -> stage.close());
+       stage.setOnCloseRequest(event -> {
+           stage.close();
+           if (FXAbstractImportPointLeve.class.isAssignableFrom(bp.getClass())) {
+               ((FXAbstractImportPointLeve) bp).saveFieldValue();
+           }
+       });
        stage.show();
     }
 }
